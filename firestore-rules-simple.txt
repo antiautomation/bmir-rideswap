@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to everything (needed for the app to work)
+    match /artifacts/bmir-rideshare/public/data/{document=**} {
+      allow read: if true;
+    }
+    
+    // Allow write access with basic authentication
+    match /artifacts/bmir-rideshare/public/data/{collection}/{document} {
+      allow create, update, delete: if request.auth != null;
+    }
+    
+    // Allow write access to stats and sessions
+    match /artifacts/bmir-rideshare/public/data/{document} {
+      allow create, update, delete: if request.auth != null;
+    }
+  }
+} 
