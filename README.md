@@ -4,7 +4,7 @@ A real-time rideshare coordination platform for Burning Man participants, built 
 
 ## 🚀 Live Demo
 
-Visit the live application at: [BMIR Rideshare Board](https://bmir-rideshare.web.app)
+Visit the live application at: [BMIR Rideshare Board](https://bmir.org/rideswap)
 
 ## 📋 Table of Contents
 
