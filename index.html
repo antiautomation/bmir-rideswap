@@ -8,8 +8,8 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
     <!-- SEO Meta Tags -->
-    <title>BMIR Rideshare - Burning Man Ride Coordination | BMIR 94.5 FM</title>
-    <meta name="description" content="Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community. Live updates, no refresh required.">
+    <title>BMIR RideSwap</title>
+    <meta name="description" content="BMIR RideSwap">
     <meta name="keywords" content="Burning Man, rideshare, BMIR, Black Rock City, playa, carpool, transportation, festival rides, BMIR 94.5 FM, Burning Man rideshare board">
     <meta name="author" content="BMIR 94.5 FM">
     <meta name="robots" content="index, follow">
@@ -18,9 +18,9 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.rideshare.auerbach.io/">
-    <meta property="og:title" content="BMIR Rideshare - Burning Man Ride Coordination">
-    <meta property="og:description" content="Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community.">
+    <meta property="og:url" content="https://rideshare.auerbach.io/">
+    <meta property="og:title" content="BMIR RideSwap">
+    <meta property="og:description" content="BMIR RideSwap">
     <meta property="og:image" content="https://bmir.org/Org.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -30,9 +30,9 @@
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://www.rideshare.auerbach.io/">
-    <meta name="twitter:title" content="BMIR Rideshare - Burning Man Ride Coordination">
-    <meta name="twitter:description" content="Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community.">
+    <meta name="twitter:url" content="https://rideshare.auerbach.io/">
+    <meta name="twitter:title" content="BMIR RideSwap">
+    <meta name="twitter:description" content="BMIR RideSwap">
     <meta name="twitter:image" content="https://bmir.org/Org.png">
     <meta name="twitter:image:alt" content="BMIR 94.5 FM - The Voice of Black Rock City">
     
@@ -60,7 +60,7 @@
     <link rel="dns-prefetch" href="//bmir.org">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://www.rideshare.auerbach.io/">
+    <link rel="canonical" href="https://rideshare.auerbach.io/">
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -101,9 +101,9 @@
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "BMIR Rideshare",
-      "description": "Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community.",
-      "url": "https://www.rideshare.auerbach.io/",
+      "name": "BMIR RideSwap",
+      "description": "BMIR RideSwap",
+      "url": "https://rideshare.auerbach.io/",
       "applicationCategory": "TravelApplication",
       "operatingSystem": "Web Browser",
       "offers": {
@@ -213,6 +213,9 @@
                     <li>Click the <strong>flag button</strong> (🚩) to report listings that should be removed or are no longer available.</li>
                     <li>You can edit or delete your own posts using the buttons that appear on your listings.</li>
                     <li>Contact information (email/phone) appears as clickable links for easy communication.</li>
+                    <li><strong>Session Key:</strong> When you first visit, you'll get a unique session code. Take a screenshot to save it - you'll need this code to edit or delete your listings from other devices.</li>
+                    <li><strong>Cross-Device Access:</strong> Use your session code to access your listings from any device. Enter the code in the session input field to regain access to your posts.</li>
+                    <li><strong>Session Management:</strong> Your session code is displayed in the header. Click "Change" to enter a different session code if needed.</li>
                 </ul>
             </details>
         </header>
@@ -221,80 +224,89 @@
         <div class="controls-section">
             <!-- Mobile Layout -->
             <div class="mobile-controls">
-                <div class="space-y-4">
-                    <!-- Direction Toggle -->
-                    <div class="form-group">
-                        <label class="form-label">Direction</label>
-                        <div id="direction-toggle" class="direction-toggle">
-                            <button id="to-brc-btn" class="active">To Burning Man</button>
-                            <button id="from-brc-btn">From Burning Man</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Day Filter -->
-                    <div class="form-group">
-                        <label for="day-filter" class="form-label">Filter by Day</label>
-                        <select id="day-filter" class="form-select">
-                            <option value="all">All Days</option>
-                            <option value="Sunday">Sunday</option>
-                            <option value="Monday">Monday</option>
-                            <option value="Tuesday">Tuesday</option>
-                            <option value="Wednesday">Wednesday</option>
-                            <option value="Thursday">Thursday</option>
-                            <option value="Friday">Friday</option>
-                            <option value="Saturday">Saturday</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Location Filter -->
-                    <div class="form-group">
-                        <label for="location-filter" class="form-label">Filter by Location</label>
-                        <select id="location-filter" class="form-select">
-                            <option value="all">All Locations</option>
-                        </select>
+                <!-- Direction Toggle (Always Visible) -->
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Direction</label>
+                    <div id="direction-toggle" class="direction-toggle">
+                        <button id="to-brc-btn" class="active">To Burning Man</button>
+                        <button id="from-brc-btn">From Burning Man</button>
                     </div>
                 </div>
                 
-                                    <!-- Buttons -->
-                    <div class="button-container">
-                        <button id="add-driver-btn" class="btn btn-primary">Offer a Ride</button>
-                        <button id="add-rider-btn" class="btn btn-secondary">Need a Ride</button>
+                <!-- Collapsible Filters Header -->
+                <details class="filters-collapsible">
+                    <summary class="filters-summary">
+                        <span>🔍 Filters & Options</span>
+                        <span class="filters-toggle">▼</span>
+                    </summary>
+                    <div class="filters-content">
+                        <div class="space-y-4">
+                            <!-- Day Filter -->
+                            <div class="form-group">
+                                <label for="day-filter" class="form-label">Filter by Day</label>
+                                <select id="day-filter" class="form-select">
+                                    <option value="all">All Days</option>
+                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Location Filter -->
+                            <div class="form-group">
+                                <label for="location-filter" class="form-label">Filter by Location</label>
+                                <select id="location-filter" class="form-select">
+                                    <option value="all">All Locations</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Show Expired Entries Toggle -->
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="show-expired-toggle">
+                                    <span class="checkmark"></span>
+                                    Show expired entries
+                                </label>
+                            </div>
+                            
+                            <!-- Show Favorites Only Toggle -->
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="show-favorites-toggle">
+                                    <span class="checkmark"></span>
+                                    Show favorites only
+                                </label>
+                            </div>
+                            
+                            <!-- Show Only Filter -->
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="show-drivers-only-toggle">
+                                    <span class="checkmark"></span>
+                                    Show only drivers
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="show-riders-only-toggle">
+                                    <span class="checkmark"></span>
+                                    Show only riders
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Show Expired Entries Toggle -->
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-expired-toggle">
-                            <span class="checkmark"></span>
-                            Show expired entries
-                        </label>
-                    </div>
-                    
-                    <!-- Show Favorites Only Toggle -->
-                    <div class="form-group" style="margin-top: 0.5rem;">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-favorites-toggle">
-                            <span class="checkmark"></span>
-                            Show favorites only
-                        </label>
-                    </div>
-                    
-                    <!-- Show Only Filter -->
-                    <div class="form-group" style="margin-top: 0.5rem;">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-drivers-only-toggle">
-                            <span class="checkmark"></span>
-                            Show only drivers
-                        </label>
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 0.5rem;">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-riders-only-toggle">
-                            <span class="checkmark"></span>
-                            Show only riders
-                        </label>
-                    </div>
+                </details>
+                
+                <!-- Buttons (Always Visible) -->
+                <div class="button-container" style="margin-top: 1rem;">
+                    <button id="add-driver-btn" class="btn btn-primary">Offer a Ride</button>
+                    <button id="add-rider-btn" class="btn btn-secondary">Need a Ride</button>
+                </div>
             </div>
             
             <!-- Desktop Layout -->
@@ -480,6 +492,19 @@
         </div>
     </div>
     
+    <!-- Restore Confirmation Modal -->
+    <div id="restore-confirm-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3 id="restore-modal-title" class="modal-title">Restore This Listing</h3>
+            <p id="restore-modal-description" style="color: #4b5563; margin-bottom: 1.5rem;">This will restore the listing and make it visible to all users again.</p>
+            <p id="restore-modal-explanation" style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem;">The listing will appear as if it was never deleted.</p>
+            <div class="modal-buttons">
+                <button id="cancel-restore-btn" class="btn btn-gray">Cancel</button>
+                <button id="confirm-restore-btn" class="btn btn-green">Restore</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Optimized external JavaScript with defer for better loading -->
     <script src="app.js" defer></script>
     
@@ -506,6 +531,9 @@
         let ridersUnsubscribe = null;
         let entryToDelete = null;
         let entryToFlag = null;
+        let entryToRestore = null;
+        let showDeletedEntries = false; // God mode toggle for showing deleted entries
+        let isSubmitting = false; // Prevent duplicate submissions
         let isGodMode = false;
         let userFlags = new Set(); // Store user's flagged entries
         let globalFlags = new Map(); // Store global flag counts
@@ -682,9 +710,13 @@
         const entryIdInput = document.getElementById('entry-id');
         const deleteConfirmModal = document.getElementById('delete-confirm-modal');
         const flagConfirmModal = document.getElementById('flag-confirm-modal');
+        const restoreConfirmModal = document.getElementById('restore-confirm-modal');
         const flagModalTitle = document.getElementById('flag-modal-title');
         const flagModalDescription = document.getElementById('flag-modal-description');
         const flagModalExplanation = document.getElementById('flag-modal-explanation');
+        const restoreModalTitle = document.getElementById('restore-modal-title');
+        const restoreModalDescription = document.getElementById('restore-modal-description');
+        const restoreModalExplanation = document.getElementById('restore-modal-explanation');
         const confirmFlagBtn = document.getElementById('confirm-flag-btn');
         const addDriverBtn = document.getElementById('add-driver-btn');
         const addRiderBtn = document.getElementById('add-rider-btn');
@@ -758,6 +790,27 @@
             indicator.style.cssText = 'position: fixed; top: 4rem; right: 1rem; background: #dc2626; color: white; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 700; z-index: 50;';
             indicator.textContent = 'GOD MODE';
             document.body.appendChild(indicator);
+            
+            // Add toggle for showing deleted entries
+            const toggleContainer = document.createElement('div');
+            toggleContainer.style.cssText = 'position: fixed; top: 6rem; right: 1rem; background: #374151; color: white; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; z-index: 50; display: flex; align-items: center; gap: 0.5rem;';
+            
+            const toggleLabel = document.createElement('label');
+            toggleLabel.style.cssText = 'display: flex; align-items: center; cursor: pointer; user-select: none; gap: 0.5rem;';
+            toggleLabel.textContent = 'Show Deleted';
+            
+            const toggleCheckbox = document.createElement('input');
+            toggleCheckbox.type = 'checkbox';
+            toggleCheckbox.style.cssText = 'margin: 0;';
+            toggleCheckbox.checked = showDeletedEntries;
+            toggleCheckbox.addEventListener('change', function() {
+                showDeletedEntries = this.checked;
+                renderFilteredLists();
+            });
+            
+            toggleLabel.appendChild(toggleCheckbox);
+            toggleContainer.appendChild(toggleLabel);
+            document.body.appendChild(toggleContainer);
         }
 
         // --- Session Code System ---
@@ -1501,6 +1554,7 @@
                 .filter(d => !shouldHideEntry(d.id, 'driver'))
                 .filter(d => showExpiredEntries || !isEntryExpired(d))
                 .filter(d => !showFavoritesOnly || isEntryFavorited(d.id, 'driver')) // Filter by favorites if enabled
+                .filter(d => isGodMode ? (showDeletedEntries ? d.deleted : !d.deleted) : !d.deleted) // Handle soft deletes
                 .sort((a, b) => {
                     // First sort by date (closest to today first)
                     const dateComparison = new Date(a.date) - new Date(b.date);
@@ -1519,6 +1573,7 @@
                 .filter(r => !shouldHideEntry(r.id, 'rider'))
                 .filter(r => showExpiredEntries || !isEntryExpired(r))
                 .filter(r => !showFavoritesOnly || isEntryFavorited(r.id, 'rider')) // Filter by favorites if enabled
+                .filter(r => isGodMode ? (showDeletedEntries ? r.deleted : !r.deleted) : !r.deleted) // Handle soft deletes
                 .sort((a, b) => {
                     // First sort by date (closest to today first)
                     const dateComparison = new Date(a.date) - new Date(b.date);
@@ -1642,7 +1697,8 @@
             const expiringClass = isCloseToExpiring ? 'expiring' : '';
             const expiredClass = isExpired ? 'expired' : '';
             const favoritedClass = isFavorited ? 'favorited' : '';
-            card.className = `card ${type} ${flaggedClass} ${expiringClass} ${expiredClass} ${favoritedClass}`;
+            const deletedClass = entry.deleted ? 'deleted' : '';
+            card.className = `card ${type} ${flaggedClass} ${expiringClass} ${expiredClass} ${favoritedClass} ${deletedClass}`;
             card.dataset.entry = JSON.stringify(entry);
 
             const entryDate = new Date(entry.date + 'T00:00:00');
@@ -1689,8 +1745,12 @@
                             <span class="tooltiptext">This listing should be removed or is no longer available</span>
                         </div>
                         ${(entry.authorId === userId || isGodMode) ? `
+                        ${entry.deleted ? `
+                        <button class="restore-btn" data-id="${entry.id}" data-type="${type}">🔄</button>
+                        ` : `
                         <button class="edit-btn" data-id="${entry.id}" data-type="${type}">✏️</button>
                         <button class="delete-btn" data-id="${entry.id}" data-type="${type}">🗑️</button>
+                        `}
                         ` : ''}
                     </div>
                 </div>
@@ -1893,12 +1953,13 @@
                 entryForm.addEventListener('submit', handleFormSubmit);
             }
 
-            // Card Edit/Delete/Flag/Favorite Buttons (delegated)
+            // Card Edit/Delete/Flag/Favorite/Restore Buttons (delegated)
             document.body.addEventListener('click', e => {
                 const editBtn = e.target.closest('.edit-btn');
                 const deleteBtn = e.target.closest('.delete-btn');
                 const flagBtn = e.target.closest('.flag-btn');
                 const favoriteBtn = e.target.closest('.favorite-btn');
+                const restoreBtn = e.target.closest('.restore-btn');
                 
                 if (editBtn) {
                     const card = editBtn.closest('[data-entry]');
@@ -1916,6 +1977,10 @@
                 if (favoriteBtn) {
                     toggleFavorite(favoriteBtn.dataset.id, favoriteBtn.dataset.type);
                 }
+                if (restoreBtn) {
+                    entryToRestore = { id: restoreBtn.dataset.id, type: restoreBtn.dataset.type };
+                    openRestoreConfirmModal();
+                }
             });
             
             // Delete Confirmation
@@ -1925,6 +1990,10 @@
             // Flag Confirmation
             document.getElementById('cancel-flag-btn').addEventListener('click', closeFlagConfirmModal);
             document.getElementById('confirm-flag-btn').addEventListener('click', handleFlag);
+            
+            // Restore Confirmation
+            document.getElementById('cancel-restore-btn').addEventListener('click', closeRestoreConfirmModal);
+            document.getElementById('confirm-restore-btn').addEventListener('click', handleRestore);
         }
 
         // Production-ready data validation function
@@ -2079,6 +2148,13 @@
 
         async function handleFormSubmit(e) {
             e.preventDefault();
+            
+            // Prevent duplicate submissions
+            if (isSubmitting) {
+                console.log('Submission already in progress, ignoring duplicate click');
+                return;
+            }
+            
             if(!userId) {
                 console.error("User not authenticated, cannot save data.");
                 return;
@@ -2122,6 +2198,14 @@
                 return;
             }
 
+            // Set submitting state and disable button
+            isSubmitting = true;
+            const saveBtn = document.getElementById('save-btn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+            }
+
             try {
                 if (id) {
                     // Handle god mode editing differently
@@ -2153,7 +2237,15 @@
                 if (isGodMode && id) {
                     alert('Error in god mode editing. This might be due to Firestore security rules. Try creating a new entry instead.');
                 } else {
-                alert('Error saving entry. Please try again.');
+                    alert('Error saving entry. Please try again.');
+                }
+            } finally {
+                // Reset submitting state and re-enable button
+                isSubmitting = false;
+                const saveBtn = document.getElementById('save-btn');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save';
                 }
             }
         }
@@ -2166,29 +2258,56 @@
             
             try {
                 if (isGodMode) {
-                    console.log('🛡️ God mode: Attempting to delete entry');
-                    // In god mode, we might not be able to delete due to security rules
-                    // But we can try, and if it fails, we'll show a helpful message
-                    try {
-                        await deleteDoc(doc(db, collectionPath, id));
-                        console.log("🛡️ God mode: Document successfully deleted!");
-                    } catch (deleteError) {
-                        console.warn("🛡️ God mode: Could not delete due to security rules:", deleteError);
-                        alert('Note: Could not delete this entry due to Firestore security rules. The entry will remain visible to others.');
-                    }
+                    console.log('🛡️ God mode: Soft deleting entry');
+                    // Soft delete - mark as deleted instead of actually deleting
+                    await updateDoc(doc(db, collectionPath, id), {
+                        deleted: true,
+                        deletedAt: new Date(),
+                        deletedBy: userId
+                    });
+                    console.log("🛡️ God mode: Entry soft deleted successfully!");
                 } else {
-                await deleteDoc(doc(db, collectionPath, id));
-                console.log("Document successfully deleted!");
+                    // For regular users, also use soft delete for safety
+                    await updateDoc(doc(db, collectionPath, id), {
+                        deleted: true,
+                        deletedAt: new Date(),
+                        deletedBy: userId
+                    });
+                    console.log("Document soft deleted successfully!");
                 }
                 closeDeleteConfirmModal();
                 entryToDelete = null;
+                renderFilteredLists(); // Refresh the lists
             } catch (error) {
-                console.error("Error removing document: ", error);
+                console.error("Error soft deleting document: ", error);
                 if (isGodMode) {
-                    alert('Error deleting entry in god mode. This might be due to Firestore security rules.');
+                    alert('Error soft deleting entry in god mode. This might be due to Firestore security rules.');
                 } else {
                     alert('Error deleting entry. Please try again.');
                 }
+            }
+        }
+
+        async function handleRestore() {
+            if (!entryToRestore || !userId) return;
+            
+            const { id, type } = entryToRestore;
+            const collectionPath = `artifacts/${appId}/public/data/${type}s`;
+            
+            try {
+                console.log('🛡️ God mode: Restoring soft deleted entry');
+                await updateDoc(doc(db, collectionPath, id), {
+                    deleted: false,
+                    deletedAt: null,
+                    deletedBy: null
+                });
+                console.log("🛡️ God mode: Entry restored successfully!");
+                closeRestoreConfirmModal();
+                entryToRestore = null;
+                renderFilteredLists(); // Refresh the lists
+            } catch (error) {
+                console.error("Error restoring document: ", error);
+                alert('Error restoring entry. Please try again.');
             }
         }
         
@@ -2275,6 +2394,13 @@
             if (modal) {
                 modal.classList.add('hidden');
             }
+            // Reset submission state when modal is closed
+            isSubmitting = false;
+            const saveBtn = document.getElementById('save-btn');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save';
+            }
         }
         
         function openDeleteConfirmModal() {
@@ -2317,6 +2443,24 @@
         function closeFlagConfirmModal() {
             if (flagConfirmModal) {
                 flagConfirmModal.classList.add('hidden');
+            }
+        }
+        
+        function openRestoreConfirmModal() {
+            if (!restoreConfirmModal) return;
+            
+            const { id, type } = entryToRestore;
+            
+            restoreModalTitle.textContent = 'Restore This Listing';
+            restoreModalDescription.textContent = 'This will restore the listing and make it visible to all users again.';
+            restoreModalExplanation.textContent = 'The listing will appear as if it was never deleted.';
+            
+            restoreConfirmModal.classList.remove('hidden');
+        }
+
+        function closeRestoreConfirmModal() {
+            if (restoreConfirmModal) {
+                restoreConfirmModal.classList.add('hidden');
             }
         }
         
