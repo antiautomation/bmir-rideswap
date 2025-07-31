@@ -1,10 +1,10 @@
-# BMIR Rideshare Board
+# BMIR RideSwap
 
-A real-time rideshare coordination platform for Burning Man participants, built with Firebase and modern web technologies.
+A real-time rideshare coordination platform for Burning Man participants, built with Firebase and modern web technologies. Features a dark theme, session management, soft deletes, and full PWA capabilities.
 
 ## 🚀 Live Demo
 
-Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerbach.io)
+Visit the live application at: [BMIR RideSwap](https://rideshare.auerbach.io)
 
 ## 📋 Table of Contents
 
@@ -12,6 +12,7 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
   - [Getting Started](#getting-started)
   - [How to Use](#how-to-use)
   - [Features](#features)
+  - [Session Management](#session-management)
   - [Tips & Best Practices](#tips--best-practices)
 - [Developer Guide](#developer-guide)
   - [Architecture Overview](#architecture-overview)
@@ -27,10 +28,11 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
 
 ### Getting Started
 
-1. **Open the App**: Visit the BMIR Rideshare Board in your web browser
+1. **Open the App**: Visit the BMIR RideSwap in your web browser
 2. **Choose Direction**: Select "To Burning Man" or "From Burning Man"
 3. **Browse Listings**: View available rides or people needing rides
 4. **Contact Users**: Click on email or phone links to get in touch
+5. **Save Your Session**: Screenshot your session code for cross-device access
 
 ### How to Use
 
@@ -44,7 +46,7 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
    - **Date**: When you're traveling
    - **Time Slot**: Specific time or "Flexible Time"
    - **Details**: Additional information (pickup location, luggage, etc.)
-3. **Click "Save"** to post your listing
+3. **Click "Save"** to post your listing (button will show "Saving..." during submission)
 
 #### 🔍 Finding Rides
 
@@ -53,6 +55,14 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
 - **Location Filter**: Filter by city/location
 - **Favorites**: Click the star (☆) to bookmark interesting listings
 - **Show Favorites Only**: Toggle to see only your bookmarked listings
+- **Mobile Filters**: Collapsible filter section on mobile devices
+
+#### 🔑 Session Management
+
+- **Session Code**: Automatically generated for new users
+- **Cross-Device Access**: Use your session code to access listings from any device
+- **Change Session**: Click "Change" button in header to enter a different session code
+- **Screenshot Recommended**: Save your session code for future access
 
 #### ⭐ Favorites System
 
@@ -70,7 +80,8 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
 #### ✏️ Managing Your Listings
 
 - **Edit**: Click the pencil (✏️) icon on your own listings
-- **Delete**: Click the trash (🗑️) icon on your own listings
+- **Delete**: Click the trash (🗑️) icon on your own listings (soft delete)
+- **Restore**: God mode users can restore deleted entries with 🔄 button
 - **Real-time Updates**: Changes appear immediately
 
 ### Features
@@ -81,19 +92,55 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
 - **Contact Integration**: Click to email or call
 - **Mobile Responsive**: Works on all devices
 - **Offline Support**: Basic functionality when disconnected
+- **Dark Theme**: Modern dark interface
+- **PWA Support**: Install as app on mobile/desktop
 
 #### 🔧 Advanced Features
 - **Smart Expiration**: Listings automatically hide after 12 hours
 - **Flexible Time Slots**: "Flexible Time" option for open schedules
 - **City Autocomplete**: 500+ US cities with smart search
 - **Rate Limiting**: Prevents spam (5 submissions per hour)
+- **Soft Deletes**: Deleted entries can be restored by admins
 - **God Mode**: Administrative features for moderators
+- **Duplicate Prevention**: Prevents accidental multiple submissions
 
 #### 📊 User Experience
 - **Loading States**: Visual feedback during data loading
 - **Error Handling**: Graceful failure recovery
 - **Pagination**: Browse large lists efficiently
 - **Search & Filter**: Multiple ways to find relevant listings
+- **Collapsible Filters**: Space-saving mobile interface
+- **Session Persistence**: Access your listings from any device
+
+#### 🎨 Design Features
+- **Dark Theme**: Modern dark interface throughout
+- **BMIR Branding**: Custom header with logo and taglines
+- **Responsive Design**: Optimized for all screen sizes
+- **Smooth Animations**: Enhanced user experience
+- **Accessibility**: Screen reader friendly
+
+### Session Management
+
+#### 🔑 Session Code System
+
+- **Automatic Generation**: New users get a unique 8-character session code
+- **Cross-Device Access**: Use your session code on any device
+- **No Registration**: No account creation required
+- **Secure**: Session codes are unique and private
+
+#### 📱 How to Use Sessions
+
+1. **New User**: Session code appears automatically
+2. **Screenshot**: Save your session code for future use
+3. **Returning User**: Click "Change" to enter your session code
+4. **Cross-Device**: Enter your session code on any device to access your listings
+
+#### 🔄 Session Features
+
+- **Edit Listings**: Modify your existing posts
+- **Delete Listings**: Remove your posts (soft delete)
+- **View History**: See all your previous submissions
+- **Device Independent**: Works on any browser or device
 
 ### Tips & Best Practices
 
@@ -109,10 +156,17 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
 - **Bookmark Favorites**: Star interesting listings to review later
 - **Contact Quickly**: Good rides fill up fast
 
+#### 🔑 Session Management Tips
+- **Save Your Code**: Screenshot your session code immediately
+- **Use Same Code**: Enter the same session code on all devices
+- **Keep It Private**: Don't share your session code publicly
+- **Backup**: Store your session code in multiple places
+
 #### ⚡ Performance Tips
 - **Stable Connection**: Better experience with good internet
 - **Refresh if Needed**: If the app seems stuck, refresh the page
 - **Clear Cache**: If you experience issues, clear browser cache
+- **Install PWA**: Add to home screen for app-like experience
 
 ---
 
@@ -127,16 +181,22 @@ Visit the live application at: [BMIR Rideshare Board](https://www.rideswap.auerb
 - **Hosting**: Firebase Hosting
 - **Security**: Firestore Security Rules
 - **Performance**: Client-side caching, pagination, debounced rendering
+- **PWA**: Service Worker, Web App Manifest
+- **SEO**: Meta tags, Open Graph, Twitter Cards, JSON-LD
 
 #### 📁 Project Structure
 ```
-bmirrideshare/
-├── bmirrideshare.html          # Main application file
-├── firestore-rules.txt         # Firestore security rules
-├── firestore.indexes.json      # Database indexes
-├── deploy-indexes.sh           # Index deployment script
-├── package.json                # Dependencies (if any)
-└── README.md                   # This file
+bmir-rideswap/
+├── index.html                 # Main application file
+├── styles.css                 # External CSS styles
+├── app.js                     # External JavaScript
+├── manifest.json              # PWA manifest
+├── sw.js                      # Service worker
+├── firestore-rules.txt        # Firestore security rules
+├── firestore.indexes.json     # Database indexes
+├── deploy-indexes.sh          # Index deployment script
+├── package.json               # Dependencies
+└── README.md                  # This file
 ```
 
 #### 🔄 Data Flow
@@ -158,7 +218,7 @@ bmirrideshare/
 1. **Clone the Repository**
    ```bash
    git clone <repository-url>
-   cd bmirrideshare
+   cd bmir-rideswap
    ```
 
 2. **Install Firebase CLI**
@@ -209,6 +269,7 @@ bmirrideshare/
    - Add `?god=true` to URL for admin features
    - Allows editing/deleting any entry
    - Bypasses rate limiting
+   - Shows deleted entries toggle
 
 #### 🛠️ Development Features
 
@@ -216,6 +277,7 @@ bmirrideshare/
 - **Console Logging**: Detailed logs for debugging
 - **Error Handling**: Graceful fallbacks for all operations
 - **Performance Monitoring**: Built-in performance tracking
+- **Soft Delete Testing**: God mode can view/restore deleted entries
 
 #### 🔍 Debugging Tips
 
@@ -223,6 +285,7 @@ bmirrideshare/
 - **Network Tab**: Monitor Firebase requests
 - **Firebase Console**: Real-time database monitoring
 - **Security Rules**: Test in Firebase console
+- **PWA Testing**: Use Chrome DevTools Application tab
 
 ### Deployment
 
@@ -254,6 +317,9 @@ bmirrideshare/
 - [ ] **Test Core Features**: Create, edit, delete entries
 - [ ] **Test Performance**: Load with many entries
 - [ ] **Test Security**: Verify rules are working
+- [ ] **Test PWA**: Install and test offline functionality
+- [ ] **Test Session Codes**: Verify cross-device access
+- [ ] **Test Soft Deletes**: Verify god mode restore functionality
 - [ ] **Monitor Logs**: Check Firebase console for errors
 - [ ] **Update Documentation**: Keep README current
 
@@ -271,11 +337,19 @@ bmirrideshare/
    - Debounced rendering (300ms delay)
    - Virtual scrolling for large lists
    - Local storage for user preferences
+   - Duplicate submission prevention
 
 3. **Caching Strategy**
    - localStorage for favorites and flags
    - Session-based rate limiting
    - Optimistic UI updates
+   - Service worker for offline support
+
+4. **PWA Features**
+   - Service worker caching
+   - Offline functionality
+   - App-like installation
+   - Background sync capabilities
 
 #### 📈 Performance Metrics
 
@@ -283,6 +357,7 @@ bmirrideshare/
 - **Real-time Updates**: < 100ms
 - **Search Response**: < 200ms
 - **Memory Usage**: < 50MB for 1000 entries
+- **PWA Install Time**: < 30 seconds
 
 #### 🔧 Scaling Considerations
 
@@ -290,6 +365,7 @@ bmirrideshare/
 - **Rate Limiting**: Prevents abuse
 - **Pagination**: Handles large datasets
 - **Caching**: Reduces server load
+- **Soft Deletes**: Preserves data integrity
 
 ### Security
 
@@ -302,17 +378,22 @@ bmirrideshare/
    
    // God mode bypass for admins
    allow update: if isGodMode();
+   
+   // Soft delete support
+   allow update: if resource.data.deleted == true;
    ```
 
 2. **Client-Side Validation**
    - Input sanitization
    - Rate limiting
    - Data validation
+   - Duplicate submission prevention
 
 3. **Anonymous Authentication**
    - No personal data required
    - Session-based tracking
    - Device-specific storage
+   - Session code system
 
 #### 🔒 Security Best Practices
 
@@ -321,6 +402,7 @@ bmirrideshare/
 - **Content Moderation**: Community flagging system
 - **Data Privacy**: No personal data stored on server
 - **HTTPS Only**: All connections are encrypted
+- **Soft Deletes**: Prevents accidental data loss
 
 #### 🚨 Security Monitoring
 
@@ -328,6 +410,7 @@ bmirrideshare/
 - **Error Logging**: Track security rule violations
 - **Rate Limit Monitoring**: Watch for abuse patterns
 - **Content Moderation**: Review flagged content
+- **Session Monitoring**: Track session code usage
 
 ### Configuration
 
@@ -357,6 +440,9 @@ const RATE_LIMIT_CONFIG = {
   MAX_SUBMISSIONS_PER_HOUR: 5,
   RATE_LIMIT_WINDOW: 60 * 60 * 1000
 };
+
+// Session management
+const SESSION_CODE_LENGTH = 8;
 ```
 
 ### Troubleshooting
@@ -379,6 +465,14 @@ const RATE_LIMIT_CONFIG = {
    - **Symptom**: Changes don't appear immediately
    - **Solution**: Check Firebase connection, refresh page
 
+5. **Session Code Issues**
+   - **Symptom**: Can't access listings from other devices
+   - **Solution**: Use the same session code on all devices
+
+6. **PWA Installation Issues**
+   - **Symptom**: Can't install as app
+   - **Solution**: Check HTTPS, verify manifest.json
+
 #### 🔧 Debug Commands
 
 ```bash
@@ -393,6 +487,9 @@ firebase firestore:rules:test
 
 # Monitor performance
 firebase hosting:channel:list
+
+# Test PWA
+lighthouse https://your-site.com
 ```
 
 ### Contributing
@@ -403,16 +500,20 @@ firebase hosting:channel:list
    - Use ES6+ features
    - Follow existing naming conventions
    - Add comments for complex logic
+   - Maintain dark theme consistency
 
 2. **Testing**
    - Test all user flows
    - Verify performance with large datasets
    - Check mobile responsiveness
+   - Test PWA functionality
+   - Verify session code system
 
 3. **Security**
    - Validate all inputs
    - Test security rules
    - Review for potential vulnerabilities
+   - Test soft delete functionality
 
 #### 📝 Pull Request Process
 
@@ -434,4 +535,4 @@ For support, please contact the BMIR team or create an issue in the repository.
 
 ---
 
-*Last updated: August 2025* 
+*Last updated: January 2025* 
