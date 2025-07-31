@@ -365,7 +365,7 @@
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
@@ -656,6 +656,12 @@
             sessionCode = generateSessionCode(userId);
             hasShownSessionCode = true;
             
+            // Save session code to localStorage for persistence across browser refreshes
+            if (userId) {
+                localStorage.setItem(`bmir_session_code_${userId}`, sessionCode);
+                console.log('Generated session code saved to localStorage for user:', userId);
+            }
+            
             // Update the session code display in header
             const sessionCodeDisplay = document.getElementById('session-code-display');
             const sessionCodeText = document.getElementById('session-code-text');
@@ -718,6 +724,12 @@
             sessionCode = code;
             hasShownSessionCode = true;
             
+            // Save session code to localStorage for persistence across browser refreshes
+            if (userId) {
+                localStorage.setItem(`bmir_session_code_${userId}`, sessionCode);
+                console.log('Session code saved to localStorage for user:', userId);
+            }
+            
             // Update the display
             const sessionCodeDisplay = document.getElementById('session-code-display');
             const sessionCodeText = document.getElementById('session-code-text');
@@ -757,10 +769,23 @@
             }
         }
 
+        // Helper function to clear session cache (for testing/debugging)
+        function clearSessionCache() {
+            if (userId) {
+                localStorage.removeItem(`bmir_session_code_${userId}`);
+                console.log('Session cache cleared for user:', userId);
+            }
+            // Also clear other related cache items
+            localStorage.removeItem('userFlags');
+            localStorage.removeItem('userFavorites');
+            console.log('All user cache cleared');
+        }
+
         // Make functions globally accessible
         window.showSessionCodeInput = showSessionCodeInput;
         window.hideSessionCodeInput = hideSessionCodeInput;
         window.enterSessionCode = enterSessionCode;
+        window.clearSessionCache = clearSessionCache;
 
         // --- Location Autocomplete ---
         function setupLocationAutocomplete() {
@@ -980,6 +1005,14 @@
             db = getFirestore(app);
             auth = getAuth(app);
             
+            // Ensure Firebase Auth persistence is set to LOCAL (browser storage)
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+                console.log('Firebase Auth persistence set to LOCAL');
+            } catch (error) {
+                console.warn('Failed to set Auth persistence (may already be set):', error);
+            }
+            
             // Initialize App Check with development mode detection
             const isDevelopment = location.hostname === 'localhost' || 
                                 location.hostname === '127.0.0.1' || 
@@ -1003,6 +1036,9 @@
                 }
             }
 
+            // Track if we've already attempted authentication to prevent infinite loops
+            let authAttempted = false;
+            
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
@@ -1012,6 +1048,24 @@
                     if (addRiderBtnDesktop) addRiderBtnDesktop.disabled = false;
                     setupListeners();
                     setupSessionTracking();
+                    
+                    // Restore session code from localStorage if available
+                    const savedSessionCode = localStorage.getItem(`bmir_session_code_${userId}`);
+                    if (savedSessionCode && !sessionCode) {
+                        sessionCode = savedSessionCode;
+                        console.log('Restored session code from localStorage:', sessionCode);
+                        
+                        // Update UI to show the restored session code
+                        const sessionCodeDisplay = document.getElementById('session-code-display');
+                        const sessionCodeText = document.getElementById('session-code-text');
+                        const sessionCodeInput = document.getElementById('session-code-input');
+                        
+                        if (sessionCodeDisplay && sessionCodeText && sessionCodeInput) {
+                            sessionCodeDisplay.style.display = 'flex';
+                            sessionCodeText.textContent = sessionCode;
+                            sessionCodeInput.style.display = 'none';
+                        }
+                    }
                     
                     // Show session code for new users (not returning from custom token)
                     if (!sessionCode && typeof __initial_auth_token === 'undefined') {
@@ -1030,12 +1084,23 @@
                     if (isGodMode) {
                         createGodModeDocument();
                     }
-                } else {
+                } else if (!authAttempted) {
+                    // Only attempt authentication once to prevent creating new users on every refresh
+                    authAttempted = true;
                     try {
                         if (typeof __initial_auth_token !== 'undefined') {
                             await signInWithCustomToken(auth, __initial_auth_token);
                         } else {
-                            await signInAnonymously(auth);
+                            // Give Firebase a moment to restore any existing session
+                            setTimeout(async () => {
+                                // Check one more time if auth state was restored
+                                if (!auth.currentUser) {
+                                    console.log('No existing session found, creating new anonymous user');
+                                    await signInAnonymously(auth);
+                                } else {
+                                    console.log('Existing session restored');
+                                }
+                            }, 500);
                         }
                     } catch (error) {
                         console.error("Authentication failed:", error);
