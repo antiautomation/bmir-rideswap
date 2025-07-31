@@ -6,12 +6,61 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://bmir.org data:; frame-src 'self' https://www.google.com https://www.gstatic.com; connect-src 'self' https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://securetoken.googleapis.com https://www.google.com https://www.gstatic.com/recaptcha/ https://www.google.com/recaptcha/;">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- SEO Meta Tags -->
+    <title>BMIR Rideshare - Burning Man Ride Coordination | BMIR 94.5 FM</title>
+    <meta name="description" content="Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community. Live updates, no refresh required.">
+    <meta name="keywords" content="Burning Man, rideshare, BMIR, Black Rock City, playa, carpool, transportation, festival rides, BMIR 94.5 FM, Burning Man rideshare board">
+    <meta name="author" content="BMIR 94.5 FM">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.rideshare.auerbach.io/">
+    <meta property="og:title" content="BMIR Rideshare - Burning Man Ride Coordination">
+    <meta property="og:description" content="Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community.">
+    <meta property="og:image" content="https://bmir.org/Org.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="BMIR 94.5 FM - The Voice of Black Rock City">
+    <meta property="og:site_name" content="BMIR 94.5 FM">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.rideshare.auerbach.io/">
+    <meta name="twitter:title" content="BMIR Rideshare - Burning Man Ride Coordination">
+    <meta name="twitter:description" content="Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community.">
+    <meta name="twitter:image" content="https://bmir.org/Org.png">
+    <meta name="twitter:image:alt" content="BMIR 94.5 FM - The Voice of Black Rock City">
+    
+    <!-- WhatsApp, Telegram, and other social platforms -->
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:secure_url" content="https://bmir.org/Org.png">
+    
     <!-- Performance optimizations -->
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#e4622f">
+    <meta name="msapplication-TileColor" content="#e4622f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BMIR Rideshare">
+    
+    <!-- Favicon and app icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://bmir.org/Org.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://bmir.org/Org.png">
+    <link rel="apple-touch-icon" href="https://bmir.org/Org.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- DNS prefetch for performance -->
     <link rel="dns-prefetch" href="//www.gstatic.com">
     <link rel="dns-prefetch" href="//firestore.googleapis.com">
-    <title>Burning Man Rideshare Board</title>
+    <link rel="dns-prefetch" href="//bmir.org">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.rideshare.auerbach.io/">
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,12 +80,84 @@
 
       gtag('config', 'G-NXHN9M6GQX');
     </script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "BMIR Rideshare",
+      "description": "Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board. Find rides, offer seats, and connect with the Black Rock City community.",
+      "url": "https://www.rideshare.auerbach.io/",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "BMIR 94.5 FM",
+        "url": "https://bmir.org",
+        "description": "The Voice of Black Rock City"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "BMIR 94.5 FM",
+        "url": "https://bmir.org"
+      },
+      "image": "https://bmir.org/Org.png",
+      "screenshot": "https://bmir.org/Org.png",
+      "softwareVersion": "1.0",
+      "datePublished": "2024-01-01",
+      "dateModified": "2024-12-19",
+      "inLanguage": "en-US",
+      "isAccessibleForFree": true,
+      "featureList": [
+        "Real-time ride coordination",
+        "Live updates without page refresh",
+        "Session management for editing listings",
+        "Mobile-responsive design",
+        "Contact information sharing",
+        "Ride filtering and search"
+      ]
+    }
+    </script>
 
 </head>
 <body>
     <!-- Status Bar -->
     <div id="status-bar" class="status-bar">
         🟢 Live Updating App, No Refresh Required 🟢
+    </div>
+    
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" style="display: none; position: fixed; top: 1rem; right: 1rem; background: #e4622f; color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1000; max-width: 300px;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span>📱</span>
+            <strong>Install App</strong>
+        </div>
+        <p style="margin: 0 0 1rem 0; font-size: 0.875rem;">Add BMIR Rideshare to your home screen for quick access!</p>
+        <div style="display: flex; gap: 0.5rem;">
+            <button onclick="installPWA()" style="background: white; color: #e4622f; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; font-size: 0.875rem;">Install</button>
+            <button onclick="hidePWAInstallPrompt()" style="background: transparent; color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.875rem;">Not Now</button>
+        </div>
     </div>
     
     <!-- Station Mode Badge -->
@@ -785,6 +906,51 @@
         window.showSessionCodeInput = showSessionCodeInput;
         window.hideSessionCodeInput = hideSessionCodeInput;
         window.enterSessionCode = enterSessionCode;
+        
+        // PWA Installation Functions
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install prompt
+            showPWAInstallPrompt();
+        });
+        
+        function showPWAInstallPrompt() {
+            const prompt = document.getElementById('pwa-install-prompt');
+            if (prompt) {
+                prompt.style.display = 'block';
+            }
+        }
+        
+        function hidePWAInstallPrompt() {
+            const prompt = document.getElementById('pwa-install-prompt');
+            if (prompt) {
+                prompt.style.display = 'none';
+            }
+        }
+        
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                    hidePWAInstallPrompt();
+                });
+            }
+        }
+        
+        // Make PWA functions globally accessible
+        window.installPWA = installPWA;
+        window.hidePWAInstallPrompt = hidePWAInstallPrompt;
         window.clearSessionCache = clearSessionCache;
 
         // --- Location Autocomplete ---

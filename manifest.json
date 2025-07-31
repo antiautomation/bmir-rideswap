@@ -1,0 +1,61 @@
+{
+  "name": "BMIR Rideshare",
+  "short_name": "BMIR Rideshare",
+  "description": "Coordinate your journey to and from Burning Man with BMIR's real-time rideshare board",
+  "start_url": "https://www.rideshare.auerbach.io/",
+  "display": "standalone",
+  "background_color": "#212529",
+  "theme_color": "#e4622f",
+  "orientation": "portrait-primary",
+  "scope": "https://www.rideshare.auerbach.io/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "https://bmir.org/Org.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://bmir.org/Org.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["travel", "social", "utilities"],
+  "screenshots": [
+    {
+      "src": "https://bmir.org/Org.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find a Ride",
+      "short_name": "Find Ride",
+      "description": "Search for available rides to Burning Man",
+      "url": "https://www.rideshare.auerbach.io/?direction=to-brc",
+      "icons": [
+        {
+          "src": "https://bmir.org/Org.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Offer a Ride",
+      "short_name": "Offer Ride",
+      "description": "Post your available seats for Burning Man",
+      "url": "https://www.rideshare.auerbach.io/?direction=to-brc&action=offer",
+      "icons": [
+        {
+          "src": "https://bmir.org/Org.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+} 
