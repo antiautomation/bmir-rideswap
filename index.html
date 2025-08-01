@@ -1020,6 +1020,7 @@
                     if (desktopShowDeletedToggle) {
                         desktopShowDeletedToggle.checked = this.checked;
                     }
+                    updateLocationFilter();
                     renderFilteredLists();
                 });
             }
@@ -1032,6 +1033,7 @@
                     if (mobileShowDeletedToggle) {
                         mobileShowDeletedToggle.checked = this.checked;
                     }
+                    updateLocationFilter();
                     renderFilteredLists();
                 });
             }
@@ -1944,23 +1946,22 @@
         }
 
         function updateLocationFilter() {
-            // Check cache first
-            const cacheKey = 'locationFilter';
-            const cachedLocations = getCachedData(cacheKey);
-            
-            if (cachedLocations) {
-                updateLocationFilterOptions(cachedLocations);
-                return;
-            }
-            
-            const allEntries = [...allDrivers, ...allRiders];
-            const locations = [...new Set(allEntries.map(entry => entry.location).filter(Boolean))];
+            // Get locations from upcoming, non-expired entries regardless of current visibility filters
+            const upcomingDrivers = allDrivers
+                .filter(d => d.direction === currentDirection)
+                .filter(d => !isEntryExpired(d)) // Only upcoming entries
+                .filter(d => !d.deleted); // Exclude deleted entries
+
+            const upcomingRiders = allRiders
+                .filter(r => r.direction === currentDirection)
+                .filter(r => !isEntryExpired(r)) // Only upcoming entries
+                .filter(r => !r.deleted); // Exclude deleted entries
+
+            const upcomingEntries = [...upcomingDrivers, ...upcomingRiders];
+            const locations = [...new Set(upcomingEntries.map(entry => entry.location).filter(Boolean))];
             
             // Update existing cities for autocomplete
             existingCities = new Set(locations);
-            
-            // Cache the locations for 5 minutes
-            setCachedData(cacheKey, locations);
             
             updateLocationFilterOptions(locations);
         }
@@ -2107,6 +2108,7 @@
                             });
                         }
                         
+                        updateLocationFilter();
                         renderFilteredLists();
                     }
                 });
@@ -2130,6 +2132,7 @@
                             });
                         }
                         
+                        updateLocationFilter();
                         renderFilteredLists();
                     }
                 });
@@ -2143,6 +2146,7 @@
                         currentPage = 0; // Reset to first page
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
+                        updateLocationFilter();
                         debouncedRender();
                     });
                 }
@@ -2177,6 +2181,7 @@
                         currentPage = 0; // Reset to first page
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
+                        updateLocationFilter();
                         debouncedRender();
                     });
                 }
@@ -2198,6 +2203,7 @@
                         currentPage = 0; // Reset to first page
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
+                        updateLocationFilter();
                         debouncedRender();
                     });
                 }
