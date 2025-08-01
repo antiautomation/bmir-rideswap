@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://bmir.org data:; frame-src 'self' https://www.google.com https://www.gstatic.com; connect-src 'self' https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://securetoken.googleapis.com https://www.google.com https://www.gstatic.com/recaptcha/ https://www.google.com/recaptcha/;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com https://www.gstatic.com/recaptcha/ https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://bmir.org data:; frame-src 'self' https://www.google.com https://www.gstatic.com; connect-src 'self' https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://securetoken.googleapis.com https://www.google.com https://www.gstatic.com/recaptcha/ https://www.google.com/recaptcha/ https://www.googletagmanager.com https://*.google-analytics.com https://analytics.google.com;">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
@@ -18,7 +18,7 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://rideshare.auerbach.io/">
+    <meta property="og:url" content="https://rideswap.auerbach.io/">
     <meta property="og:title" content="BMIR RideSwap">
     <meta property="og:description" content="BMIR RideSwap">
     <meta property="og:image" content="https://bmir.org/Org.png">
@@ -30,7 +30,7 @@
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://rideshare.auerbach.io/">
+    <meta name="twitter:url" content="https://rideswap.auerbach.io/">
     <meta name="twitter:title" content="BMIR RideSwap">
     <meta name="twitter:description" content="BMIR RideSwap">
     <meta name="twitter:image" content="https://bmir.org/Org.png">
@@ -45,6 +45,7 @@
     <meta name="theme-color" content="#e4622f">
     <meta name="msapplication-TileColor" content="#e4622f">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BMIR Rideshare">
     
@@ -52,7 +53,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="https://bmir.org/Org.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://bmir.org/Org.png">
     <link rel="apple-touch-icon" href="https://bmir.org/Org.png">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="./manifest.json">
     
     <!-- DNS prefetch for performance -->
     <link rel="dns-prefetch" href="//www.gstatic.com">
@@ -60,7 +61,7 @@
     <link rel="dns-prefetch" href="//bmir.org">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://rideshare.auerbach.io/">
+    <link rel="canonical" href="https://rideswap.auerbach.io/">
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,27 +72,43 @@
     <!-- External CSS file for better caching -->
     <link rel="stylesheet" href="styles.css">
     
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js?render=6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5" async defer></script>
+    
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NXHN9M6GQX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
-      gtag('config', 'G-NXHN9M6GQX');
+      
+      // Track in production and optionally in development
+      if (location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        gtag('config', 'G-NXHN9M6GQX');
+        console.log('📊 Analytics enabled for production');
+      } else {
+        // Enable for testing - comment out this line to disable local tracking
+        gtag('config', 'G-NXHN9M6GQX');
+        console.log('📊 Analytics enabled for local development (testing)');
+      }
     </script>
     
     <!-- PWA Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
-            });
+          // Only register service worker if we're on HTTPS or localhost
+          if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            navigator.serviceWorker.register('./sw.js')
+              .then(registration => {
+                console.log('SW registered: ', registration);
+              })
+              .catch(registrationError => {
+                console.log('SW registration failed: ', registrationError);
+              });
+          } else {
+            console.log('SW registration skipped: Not on HTTPS or localhost');
+          }
         });
       }
     </script>
@@ -103,7 +120,7 @@
       "@type": "WebApplication",
       "name": "BMIR RideSwap",
       "description": "BMIR RideSwap",
-      "url": "https://rideshare.auerbach.io/",
+      "url": "https://rideswap.auerbach.io/",
       "applicationCategory": "TravelApplication",
       "operatingSystem": "Web Browser",
       "offers": {
@@ -190,7 +207,7 @@
                     <span>🔑</span>
                     <span><span id="session-code-text">-</span></span>
                     <button onclick="showSessionCodeInput()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #4b5563; color: white; border: none; border-radius: 0.25rem; cursor: pointer; margin-left: 0.5rem;">Change</button>
-                </div>
+            </div>
                 <div class="visitor-item" id="session-code-input" style="display: none;">
                     <span>🔑</span>
                     <input type="text" id="session-code-field" placeholder="Enter session code" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; width: 120px;">
@@ -198,26 +215,6 @@
                     <button onclick="hideSessionCodeInput()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #6b7280; color: white; border: none; border-radius: 0.25rem; cursor: pointer; margin-left: 0.25rem;">Cancel</button>
                 </div>
             </div>
-            
-            <!-- FAQ Section -->
-            <details class="faq-section">
-                <summary class="faq-summary">How This App Works</summary>
-                <ul class="faq-list">
-                    <li>This app runs in real-time while connected. New posts will appear without refreshing.</li>
-                    <li>Please be sure to choose your <strong>Direction</strong> before posting your seat/request!</li>
-                    <li>Please be sure to include information about your <strong>pickup and drop-off location</strong> in the notes!</li>
-                    <li>You can provide either an <strong>email</strong> or <strong>phone number</strong> (or both) for contact information.</li>
-                    <li>Use the <strong>Location/Destination</strong> field to specify your city, and the <strong>Details</strong> field for additional information.</li>
-                    <li>For rides <strong>From Burning Man</strong>, include your playa location (e.g., "at 9:00 & Esplanade") in the details.</li>
-                    <li>Use the <strong>Day</strong> and <strong>Location</strong> filters to find specific rides.</li>
-                    <li>Click the <strong>flag button</strong> (🚩) to report listings that should be removed or are no longer available.</li>
-                    <li>You can edit or delete your own posts using the buttons that appear on your listings.</li>
-                    <li>Contact information (email/phone) appears as clickable links for easy communication.</li>
-                    <li><strong>Session Key:</strong> When you first visit, you'll get a unique session code. Take a screenshot to save it - you'll need this code to edit or delete your listings from other devices.</li>
-                    <li><strong>Cross-Device Access:</strong> Use your session code to access your listings from any device. Enter the code in the session input field to regain access to your posts.</li>
-                    <li><strong>Session Management:</strong> Your session code is displayed in the header. Click "Change" to enter a different session code if needed.</li>
-                </ul>
-            </details>
         </header>
         
         <!-- Controls Section -->
@@ -226,13 +223,13 @@
             <div class="mobile-controls">
                 <!-- Direction Toggle (Always Visible) -->
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label class="form-label">Direction</label>
-                    <div id="direction-toggle" class="direction-toggle">
-                        <button id="to-brc-btn" class="active">To Burning Man</button>
-                        <button id="from-brc-btn">From Burning Man</button>
+                        <label class="form-label">Direction</label>
+                        <div id="direction-toggle" class="direction-toggle">
+                            <button id="to-brc-btn" class="active">To Burning Man</button>
+                            <button id="from-brc-btn">From Burning Man</button>
+                        </div>
                     </div>
-                </div>
-                
+                    
                 <!-- Collapsible Filters Header -->
                 <details class="filters-collapsible">
                     <summary class="filters-summary">
@@ -241,62 +238,100 @@
                     </summary>
                     <div class="filters-content">
                         <div class="space-y-4">
-                            <!-- Day Filter -->
+                    <!-- Day Filter -->
+                    <div class="form-group">
+                        <label for="day-filter" class="form-label">Filter by Day</label>
+                        <select id="day-filter" class="form-select">
+                            <option value="all">All Days</option>
+                            <option value="Sunday">Sunday</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Location Filter -->
+                    <div class="form-group">
+                        <label for="location-filter" class="form-label">Filter by Location</label>
+                        <select id="location-filter" class="form-select">
+                            <option value="all">All Locations</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Show Expired Entries Toggle -->
                             <div class="form-group">
-                                <label for="day-filter" class="form-label">Filter by Day</label>
-                                <select id="day-filter" class="form-select">
-                                    <option value="all">All Days</option>
-                                    <option value="Sunday">Sunday</option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
-                                </select>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="show-expired-toggle">
+                            <span class="checkmark"></span>
+                            Show expired entries
+                        </label>
+                    </div>
+                    
+                    <!-- Show Favorites Only Toggle -->
+                            <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="show-favorites-toggle">
+                            <span class="checkmark"></span>
+                            Show favorites only
+                        </label>
+                    </div>
+                    
+                    <!-- Show Only Filter -->
+                            <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="show-drivers-only-toggle">
+                            <span class="checkmark"></span>
+                            Show only drivers
+                        </label>
+                    </div>
+                    
+                            <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="show-riders-only-toggle">
+                            <span class="checkmark"></span>
+                            Show only riders
+                        </label>
                             </div>
                             
-                            <!-- Location Filter -->
-                            <div class="form-group">
-                                <label for="location-filter" class="form-label">Filter by Location</label>
-                                <select id="location-filter" class="form-select">
-                                    <option value="all">All Locations</option>
-                                </select>
+                            <!-- God Mode Filters -->
+                            <div id="god-mode-filters" style="display: none;">
+                                <div class="form-group" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
+                                    <label class="form-label" style="color: #dc2626; font-weight: 600;">🛡️ God Mode Filters</label>
+                                    
+                                    <!-- Show Deleted Entries Toggle -->
+                                    <div class="form-group" style="margin-top: 0.5rem;">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="show-deleted-toggle">
+                                            <span class="checkmark"></span>
+                                            Show deleted entries
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <!-- Show Expired Entries Toggle -->
-                            <div class="form-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-expired-toggle">
-                                    <span class="checkmark"></span>
-                                    Show expired entries
-                                </label>
-                            </div>
-                            
-                            <!-- Show Favorites Only Toggle -->
-                            <div class="form-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-favorites-toggle">
-                                    <span class="checkmark"></span>
-                                    Show favorites only
-                                </label>
-                            </div>
-                            
-                            <!-- Show Only Filter -->
-                            <div class="form-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-drivers-only-toggle">
-                                    <span class="checkmark"></span>
-                                    Show only drivers
-                                </label>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-riders-only-toggle">
-                                    <span class="checkmark"></span>
-                                    Show only riders
-                                </label>
+                            <!-- FAQ Section (Mobile Only) -->
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <details class="faq-section" style="margin: 0; background: none; box-shadow: none; padding: 0;">
+                                    <summary class="faq-summary" style="font-size: 1rem; color: #374151;">📖 How This App Works</summary>
+                                    <ul class="faq-list" style="margin-top: 0.75rem; padding-left: 1rem;">
+                                        <li>This app runs in real-time while connected. New posts will appear without refreshing.</li>
+                                        <li>Please be sure to choose your <strong>Direction</strong> before posting your seat/request!</li>
+                                        <li>Please be sure to include information about your <strong>pickup and drop-off location</strong> in the notes!</li>
+                                        <li>You can provide either an <strong>email</strong> or <strong>phone number</strong> (or both) for contact information.</li>
+                                        <li>Use the <strong>Location/Destination</strong> field to specify your city, and the <strong>Details</strong> field for additional information.</li>
+                                        <li>For rides <strong>From Burning Man</strong>, include your playa location (e.g., "at 9:00 & Esplanade") in the details.</li>
+                                        <li>Use the <strong>Day</strong> and <strong>Location</strong> filters to find specific rides.</li>
+                                        <li>Click the <strong>flag button</strong> (🚩) to report listings that should be removed or are no longer available.</li>
+                                        <li>You can edit or delete your own posts using the buttons that appear on your listings.</li>
+                                        <li>Contact information (email/phone) appears as clickable links for easy communication.</li>
+                                        <li><strong>Session Key:</strong> When you first visit, you'll get a unique session code. Take a screenshot to save it - you'll need this code to edit or delete your listings from other devices.</li>
+                                        <li><strong>Cross-Device Access:</strong> Use your session code to access your listings from any device. Enter the code in the session input field to regain access to your posts.</li>
+                                        <li><strong>Session Management:</strong> Your session code is displayed in the header. Click "Change" to enter a different session code if needed.</li>
+                                    </ul>
+                                </details>
                             </div>
                         </div>
                     </div>
@@ -306,7 +341,7 @@
                 <div class="button-container" style="margin-top: 1rem;">
                     <button id="add-driver-btn" class="btn btn-primary">Offer a Ride</button>
                     <button id="add-rider-btn" class="btn btn-secondary">Need a Ride</button>
-                </div>
+                    </div>
             </div>
             
             <!-- Desktop Layout -->
@@ -383,6 +418,44 @@
                             <span class="checkmark"></span>
                             Show only riders
                         </label>
+                    </div>
+                    
+                    <!-- God Mode Filters (Desktop) -->
+                    <div id="god-mode-filters-desktop" style="display: none;">
+                        <div class="form-group" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
+                            <label class="form-label" style="color: #dc2626; font-weight: 600;">🛡️ God Mode Filters</label>
+                            
+                            <!-- Show Deleted Entries Toggle -->
+                            <div class="form-group" style="margin-top: 0.5rem;">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="show-deleted-toggle-desktop">
+                                    <span class="checkmark"></span>
+                                    Show deleted entries
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ Section (Desktop) -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <details class="faq-section" style="margin: 0; background: none; box-shadow: none; padding: 0;">
+                            <summary class="faq-summary" style="font-size: 1rem; color: #374151;">📖 How This App Works</summary>
+                            <ul class="faq-list" style="margin-top: 0.75rem; padding-left: 1rem;">
+                                <li>This app runs in real-time while connected. New posts will appear without refreshing.</li>
+                                <li>Please be sure to choose your <strong>Direction</strong> before posting your seat/request!</li>
+                                <li>Please be sure to include information about your <strong>pickup and drop-off location</strong> in the notes!</li>
+                                <li>You can provide either an <strong>email</strong> or <strong>phone number</strong> (or both) for contact information.</li>
+                                <li>Use the <strong>Location/Destination</strong> field to specify your city, and the <strong>Details</strong> field for additional information.</li>
+                                <li>For rides <strong>From Burning Man</strong>, include your playa location (e.g., "at 9:00 & Esplanade") in the details.</li>
+                                <li>Use the <strong>Day</strong> and <strong>Location</strong> filters to find specific rides.</li>
+                                <li>Click the <strong>flag button</strong> (🚩) to report listings that should be removed or are no longer available.</li>
+                                <li>You can edit or delete your own posts using the buttons that appear on your listings.</li>
+                                <li>Contact information (email/phone) appears as clickable links for easy communication.</li>
+                                <li><strong>Session Key:</strong> When you first visit, you'll get a unique session code. Take a screenshot to save it - you'll need this code to edit or delete your listings from other devices.</li>
+                                <li><strong>Cross-Device Access:</strong> Use your session code to access your listings from any device. Enter the code in the session input field to regain access to your posts.</li>
+                                <li><strong>Session Management:</strong> Your session code is displayed in the header. Click "Change" to enter a different session code if needed.</li>
+                            </ul>
+                        </details>
                     </div>
                 </div>
             </div>
@@ -512,8 +585,53 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+
+        // --- Caching System ---
+        const cache = new Map();
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+        function getCachedData(key) {
+            const cached = cache.get(key);
+            if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                return cached.data;
+            }
+            return null;
+        }
+
+        function setCachedData(key, data) {
+            cache.set(key, {
+                data: data,
+                timestamp: Date.now()
+            });
+        }
+
+        function clearExpiredCache() {
+            const now = Date.now();
+            for (const [key, value] of cache.entries()) {
+                if (now - value.timestamp > CACHE_DURATION) {
+                    cache.delete(key);
+                }
+            }
+        }
+
+        // Clean up expired cache every 10 minutes
+        setInterval(clearExpiredCache, 10 * 60 * 1000);
+
+        // --- Error Handling ---
+        window.addEventListener('unhandledrejection', function(event) {
+            // Ignore null rejections (likely from manifest warnings)
+            if (event.reason === null) {
+                console.log('Ignoring null promise rejection (likely manifest warning)');
+                event.preventDefault();
+                return;
+            }
+            
+            console.warn('Unhandled promise rejection:', event.reason);
+            // Prevent the default browser behavior
+            event.preventDefault();
+        });
 
         // --- App State ---
         let db, auth;
@@ -686,6 +804,12 @@
             measurementId: "G-NXHN9M6GQX"
         };
 
+        // Check if running locally
+        const isLocalDevelopment = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (isLocalDevelopment) {
+            console.log('🔧 Local development mode detected');
+        }
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'bmir-rideshare';
 
         // --- UI Elements ---
@@ -791,26 +915,44 @@
             indicator.textContent = 'GOD MODE';
             document.body.appendChild(indicator);
             
-            // Add toggle for showing deleted entries
-            const toggleContainer = document.createElement('div');
-            toggleContainer.style.cssText = 'position: fixed; top: 6rem; right: 1rem; background: #374151; color: white; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; z-index: 50; display: flex; align-items: center; gap: 0.5rem;';
+            // Show god mode filters in both mobile and desktop sections
+            const mobileGodModeFilters = document.getElementById('god-mode-filters');
+            const desktopGodModeFilters = document.getElementById('god-mode-filters-desktop');
             
-            const toggleLabel = document.createElement('label');
-            toggleLabel.style.cssText = 'display: flex; align-items: center; cursor: pointer; user-select: none; gap: 0.5rem;';
-            toggleLabel.textContent = 'Show Deleted';
+            if (mobileGodModeFilters) {
+                mobileGodModeFilters.style.display = 'block';
+            }
+            if (desktopGodModeFilters) {
+                desktopGodModeFilters.style.display = 'block';
+            }
             
-            const toggleCheckbox = document.createElement('input');
-            toggleCheckbox.type = 'checkbox';
-            toggleCheckbox.style.cssText = 'margin: 0;';
-            toggleCheckbox.checked = showDeletedEntries;
-            toggleCheckbox.addEventListener('change', function() {
-                showDeletedEntries = this.checked;
-                renderFilteredLists();
-            });
+            // Set up event listeners for the show deleted toggles
+            const mobileShowDeletedToggle = document.getElementById('show-deleted-toggle');
+            const desktopShowDeletedToggle = document.getElementById('show-deleted-toggle-desktop');
             
-            toggleLabel.appendChild(toggleCheckbox);
-            toggleContainer.appendChild(toggleLabel);
-            document.body.appendChild(toggleContainer);
+            if (mobileShowDeletedToggle) {
+                mobileShowDeletedToggle.checked = showDeletedEntries;
+                mobileShowDeletedToggle.addEventListener('change', function() {
+                    showDeletedEntries = this.checked;
+                    // Sync with desktop toggle
+                    if (desktopShowDeletedToggle) {
+                        desktopShowDeletedToggle.checked = this.checked;
+                    }
+                    renderFilteredLists();
+                });
+            }
+            
+            if (desktopShowDeletedToggle) {
+                desktopShowDeletedToggle.checked = showDeletedEntries;
+                desktopShowDeletedToggle.addEventListener('change', function() {
+                    showDeletedEntries = this.checked;
+                    // Sync with mobile toggle
+                    if (mobileShowDeletedToggle) {
+                        mobileShowDeletedToggle.checked = this.checked;
+                    }
+                    renderFilteredLists();
+                });
+            }
         }
 
         // --- Session Code System ---
@@ -1220,9 +1362,83 @@
             // Set default direction based on date
             setDefaultDirection();
             
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
+            try {
+                const firebaseApp = initializeApp(firebaseConfig);
+                db = getFirestore(firebaseApp);
+                auth = getAuth(firebaseApp);
+                console.log('✅ Firebase initialized successfully');
+                
+                // Initialize App Check with development mode detection
+                const isDevelopment = location.hostname === 'localhost' || 
+                                    location.hostname === '127.0.0.1' || 
+                                    location.hostname === '' ||
+                                    location.protocol === 'file:';
+                
+                if (isDevelopment) {
+                    console.log('🚀 Development mode detected - App Check disabled');
+                    if (devBadge) devBadge.style.display = 'block';
+                    window.DEBUG_MODE = true;
+                } else {
+                    console.log('🛡️ Production mode detected - App Check enabled');
+                    window.DEBUG_MODE = false;
+                    // Wait for reCAPTCHA to be ready before initializing App Check
+                    const initAppCheck = () => {
+                        try {
+                            const appCheck = initializeAppCheck(firebaseApp, {
+                                provider: new ReCaptchaV3Provider('6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5'),
+                                isTokenAutoRefreshEnabled: true
+                            });
+                            console.log('✅ App Check initialized successfully');
+                            
+                            // Test reCAPTCHA token generation
+                            setTimeout(() => {
+                                if (typeof grecaptcha !== 'undefined') {
+                                    grecaptcha.ready(function() {
+                                        grecaptcha.execute('6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5', {action: 'submit'})
+                                        .then(function(token) {
+                                            console.log('✅ reCAPTCHA token generated successfully');
+                                        })
+                                        .catch(function(error) {
+                                            console.warn('⚠️ reCAPTCHA token generation failed:', error);
+                                        });
+                                    });
+                                } else {
+                                    console.warn('⚠️ reCAPTCHA not loaded');
+                                }
+                            }, 2000);
+                        } catch (error) {
+                            console.warn("App Check initialization failed:", error);
+                        }
+                    };
+                    
+                    // Check if reCAPTCHA is already loaded
+                    if (typeof grecaptcha !== 'undefined') {
+                        grecaptcha.ready(() => {
+                            console.log('✅ reCAPTCHA ready, initializing App Check');
+                            initAppCheck();
+                        });
+                    } else {
+                        // Wait for reCAPTCHA to load
+                        const checkRecaptcha = setInterval(() => {
+                            if (typeof grecaptcha !== 'undefined') {
+                                clearInterval(checkRecaptcha);
+                                grecaptcha.ready(() => {
+                                    console.log('✅ reCAPTCHA loaded, initializing App Check');
+                                    initAppCheck();
+                                });
+                            }
+                        }, 100);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Firebase initialization failed:', error);
+                // Show user-friendly error message
+                if (statusBar) {
+                    statusBar.innerHTML = '⚠️ Connection Error - Please check your internet connection and refresh the page';
+                    statusBar.style.backgroundColor = '#dc2626';
+                }
+                return;
+            }
             
             // Ensure Firebase Auth persistence is set to LOCAL (browser storage)
             try {
@@ -1231,33 +1447,10 @@
             } catch (error) {
                 console.warn('Failed to set Auth persistence (may already be set):', error);
             }
-            
-            // Initialize App Check with development mode detection
-            const isDevelopment = location.hostname === 'localhost' || 
-                                location.hostname === '127.0.0.1' || 
-                                location.hostname === '' ||
-                                location.protocol === 'file:';
-            
-            if (isDevelopment) {
-                console.log('🚀 Development mode detected - App Check disabled');
-                if (devBadge) devBadge.style.display = 'block';
-                window.DEBUG_MODE = true;
-            } else {
-                console.log('🛡️ Production mode detected - App Check enabled');
-                window.DEBUG_MODE = false;
-                try {
-                    const appCheck = initializeAppCheck(app, {
-                        provider: new ReCaptchaV3Provider('6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5'),
-                        isTokenAutoRefreshEnabled: true
-                    });
-                } catch (error) {
-                    console.warn("App Check initialization failed:", error);
-                }
-            }
 
             // Track if we've already attempted authentication to prevent infinite loops
             let authAttempted = false;
-            
+
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
@@ -1312,12 +1505,16 @@
                         } else {
                             // Give Firebase a moment to restore any existing session
                             setTimeout(async () => {
-                                // Check one more time if auth state was restored
-                                if (!auth.currentUser) {
-                                    console.log('No existing session found, creating new anonymous user');
-                                    await signInAnonymously(auth);
-                                } else {
-                                    console.log('Existing session restored');
+                                try {
+                                    // Check one more time if auth state was restored
+                                    if (!auth.currentUser) {
+                                        console.log('No existing session found, creating new anonymous user');
+                                        await signInAnonymously(auth);
+                                    } else {
+                                        console.log('Existing session restored');
+                                    }
+                                } catch (error) {
+                                    console.error("Anonymous authentication failed:", error);
                                 }
                             }, 500);
                         }
@@ -1394,19 +1591,22 @@
                     baseQuery = query(baseQuery, where('direction', '==', currentDirection));
                 }
                 
+                // Server-side filtering for deleted entries
+                baseQuery = query(baseQuery, where('deleted', '==', false));
+                
                 // Server-side filtering for date (only show recent entries)
                 const cutoffDate = new Date();
                 cutoffDate.setDate(cutoffDate.getDate() - 7); // Only show entries from last 7 days
                 baseQuery = query(baseQuery, where('date', '>=', cutoffDate.toISOString().split('T')[0]));
                 
                 // Limit results to prevent overwhelming the client
-                baseQuery = query(baseQuery, limit(100));
+                baseQuery = query(baseQuery, limit(50));
                 
                 // Order by date (most recent first)
                 baseQuery = query(baseQuery, orderBy('date', 'desc'));
             } else {
                 // Simple fallback query - client-side filtering will handle the rest
-                baseQuery = query(baseQuery, limit(200));
+                baseQuery = query(baseQuery, limit(100));
             }
             
             return baseQuery;
@@ -1615,7 +1815,7 @@
 
             // Use separate page variables for drivers and riders
             const pageVar = type === 'driver' ? driversPage : ridersPage;
-            
+
             // Calculate pagination
             const startIndex = pageVar * ITEMS_PER_PAGE;
             const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -1662,12 +1862,28 @@
         }
 
         function updateLocationFilter() {
+            // Check cache first
+            const cacheKey = 'locationFilter';
+            const cachedLocations = getCachedData(cacheKey);
+            
+            if (cachedLocations) {
+                updateLocationFilterOptions(cachedLocations);
+                return;
+            }
+            
             const allEntries = [...allDrivers, ...allRiders];
             const locations = [...new Set(allEntries.map(entry => entry.location).filter(Boolean))];
             
             // Update existing cities for autocomplete
             existingCities = new Set(locations);
             
+            // Cache the locations for 5 minutes
+            setCachedData(cacheKey, locations);
+            
+            updateLocationFilterOptions(locations);
+        }
+        
+        function updateLocationFilterOptions(locations) {
             const filters = [locationFilter, locationFilterDesktop];
             filters.forEach(filter => {
                 if (!filter) return;
@@ -1761,7 +1977,24 @@
                         return `<p><a href="mailto:${entry.email}?subject=${emailContent.subject}&body=${emailContent.body}">${entry.email}</a></p>`;
                     })() : ''}
                     ${entry.phone ? `<p><a href="sms:${entry.phone}">📱 ${entry.phone}</a></p>` : ''}
-                    ${entry.location ? `<p class="card-location">📍 ${entry.location}</p>` : ''}
+                    ${entry.location ? (() => {
+                        const burningManLocation = 'Burning Man, Black Rock City, NV';
+                        const userLocation = entry.location;
+                        let mapsUrl;
+                        
+                        if (currentDirection === 'to-brc') {
+                            // Rides TO Burning Man: user location -> Burning Man
+                            mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(userLocation)}/${encodeURIComponent(burningManLocation)}`;
+                        } else {
+                            // Rides FROM Burning Man: Burning Man -> user location
+                            mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(burningManLocation)}/${encodeURIComponent(userLocation)}`;
+                        }
+                        
+                        // Open in new window on desktop, same window on mobile
+                        const target = window.innerWidth > 768 ? '_blank' : '_self';
+                        
+                        return `<p class="card-location"><a href="${mapsUrl}" target="${target}" style="color: inherit; text-decoration: none;">📍 ${entry.location}</a></p>`;
+                    })() : ''}
                 </div>
                 
                 <div class="card-details">
@@ -1778,9 +2011,20 @@
             if (directionToggle) {
                 directionToggle.addEventListener('click', (e) => {
                     if (e.target.tagName === 'BUTTON') {
-                        currentDirection = e.target.id === 'to-brc-btn' ? 'to-brc' : 'from-brc';
+                        const newDirection = e.target.id === 'to-brc-btn' ? 'to-brc' : 'from-brc';
+                        currentDirection = newDirection;
                         toBrcBtn.classList.toggle('active', currentDirection === 'to-brc');
                         fromBrcBtn.classList.toggle('active', currentDirection === 'from-brc');
+                        
+                        // Track direction change
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'direction_changed', {
+                                'event_category': 'navigation',
+                                'event_label': newDirection,
+                                'value': 1
+                            });
+                        }
+                        
                         renderFilteredLists();
                     }
                 });
@@ -1790,9 +2034,20 @@
             if (directionToggleDesktop) {
                 directionToggleDesktop.addEventListener('click', (e) => {
                     if (e.target.tagName === 'BUTTON') {
-                        currentDirection = e.target.id === 'to-brc-btn-desktop' ? 'to-brc' : 'from-brc';
+                        const newDirection = e.target.id === 'to-brc-btn-desktop' ? 'to-brc' : 'from-brc';
+                        currentDirection = newDirection;
                         toBrcBtnDesktop.classList.toggle('active', currentDirection === 'to-brc');
                         fromBrcBtnDesktop.classList.toggle('active', currentDirection === 'from-brc');
+                        
+                        // Track direction change
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'direction_changed', {
+                                'event_category': 'navigation',
+                                'event_label': newDirection,
+                                'value': 1
+                            });
+                        }
+                        
                         renderFilteredLists();
                     }
                 });
@@ -2223,6 +2478,16 @@
                 } else {
                     await addDoc(collection(db, collectionPath), data);
                 }
+                
+                // Track successful entry creation/update
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'entry_saved', {
+                        'event_category': 'engagement',
+                        'event_label': type,
+                        'value': 1
+                    });
+                }
+                
                 closeModal();
                 
                 // Show success message with rate limit info
@@ -2237,7 +2502,7 @@
                 if (isGodMode && id) {
                     alert('Error in god mode editing. This might be due to Firestore security rules. Try creating a new entry instead.');
                 } else {
-                    alert('Error saving entry. Please try again.');
+                alert('Error saving entry. Please try again.');
                 }
             } finally {
                 // Reset submitting state and re-enable button
@@ -2331,9 +2596,109 @@
             }
         }
 
+        // --- Batch Operations ---
+        async function batchUpdateEntries(updates) {
+            if (!updates || updates.length === 0) return;
+            
+            try {
+                const batch = writeBatch(db);
+                
+                updates.forEach(({id, type, data}) => {
+                    const collectionPath = `artifacts/${appId}/public/data/${type}s`;
+                    const docRef = doc(db, collectionPath, id);
+                    batch.update(docRef, data);
+                });
+                
+                await batch.commit();
+                console.log(`✅ Batch updated ${updates.length} entries`);
+            } catch (error) {
+                console.error("Error in batch update:", error);
+                throw error;
+            }
+        }
+
+        async function batchDeleteEntries(entries) {
+            if (!entries || entries.length === 0) return;
+            
+            try {
+                const batch = writeBatch(db);
+                
+                entries.forEach(({id, type}) => {
+                    const collectionPath = `artifacts/${appId}/public/data/${type}s`;
+                    const docRef = doc(db, collectionPath, id);
+                    batch.update(docRef, {
+                        deleted: true,
+                        deletedAt: new Date(),
+                        deletedBy: userId
+                    });
+                });
+                
+                await batch.commit();
+                console.log(`✅ Batch soft deleted ${entries.length} entries`);
+            } catch (error) {
+                console.error("Error in batch delete:", error);
+                throw error;
+            }
+        }
+
+        // --- Data Cleanup Functions ---
+        async function cleanupOldEntries() {
+            try {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - 30); // 30 days old
+                
+                const oldEntriesQuery = query(
+                    collection(db, `artifacts/${appId}/public/data/drivers`),
+                    where('date', '<', cutoffDate.toISOString().split('T')[0]),
+                    where('deleted', '==', false),
+                    limit(50)
+                );
+                
+                const snapshot = await getDocs(oldEntriesQuery);
+                if (snapshot.docs.length > 0) {
+                    await batchDeleteEntries(snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        type: 'driver'
+                    })));
+                }
+                
+                // Also cleanup riders
+                const oldRidersQuery = query(
+                    collection(db, `artifacts/${appId}/public/data/riders`),
+                    where('date', '<', cutoffDate.toISOString().split('T')[0]),
+                    where('deleted', '==', false),
+                    limit(50)
+                );
+                
+                const ridersSnapshot = await getDocs(oldRidersQuery);
+                if (ridersSnapshot.docs.length > 0) {
+                    await batchDeleteEntries(ridersSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        type: 'rider'
+                    })));
+                }
+                
+                console.log(`🧹 Cleaned up ${snapshot.docs.length + ridersSnapshot.docs.length} old entries`);
+            } catch (error) {
+                console.error("Error cleaning up old entries:", error);
+            }
+        }
+
+        // Run cleanup every 24 hours
+        setInterval(cleanupOldEntries, 24 * 60 * 60 * 1000);
+
         // --- Modal Logic ---
         function openModal(type, entry = null) {
             if (!modal) return;
+            
+            // Track modal opening
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'modal_opened', {
+                    'event_category': 'engagement',
+                    'event_label': entry ? 'edit' : 'new',
+                    'custom_parameter_type': type
+                });
+            }
             
             entryForm.reset();
             entryTypeInput.value = type;
@@ -2538,9 +2903,16 @@
                     setupLocalStorageTracking();
                 });
                 
-                // Update activity every 30 seconds
-                setInterval(() => {
-                    // Find and update this session in Firestore
+                // Smart activity tracking - only update if user is active
+                let lastActivity = Date.now();
+                let activityTimeout;
+                
+                function updateActivity() {
+                    clearTimeout(activityTimeout);
+                    lastActivity = Date.now();
+                    activityTimeout = setTimeout(() => {
+                        // Only update if user has been active in the last 5 minutes
+                        if (Date.now() - lastActivity < 5 * 60 * 1000) {
                     getDocs(query(sessionsCollection, where('sessionId', '==', sessionId)))
                         .then((querySnapshot) => {
                             querySnapshot.forEach((doc) => {
@@ -2552,7 +2924,17 @@
                         .catch((error) => {
                             console.log("Failed to update session activity:", error);
                         });
-                }, 30000);
+                        }
+                    }, 60000); // Check every minute
+                }
+                
+                // Track user activity
+                ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+                    document.addEventListener(event, updateActivity, { passive: true });
+                });
+                
+                // Initial activity update
+                updateActivity();
                 
                 // Mark session as inactive when user leaves
                 window.addEventListener('beforeunload', () => {

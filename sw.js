@@ -2,8 +2,8 @@ const CACHE_NAME = 'bmir-rideshare-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json',
-  'https://bmir.org/Org.png',
+  './manifest.json',
+      // 'https://bmir.org/Org.png', // Commented out due to CORS issues
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',

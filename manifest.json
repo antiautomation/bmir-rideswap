@@ -2,12 +2,12 @@
   "name": "BMIR RideSwap",
   "short_name": "BMIR RideSwap",
   "description": "BMIR RideSwap",
-  "start_url": "https://rideshare.auerbach.io/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#212529",
   "theme_color": "#e4622f",
   "orientation": "portrait-primary",
-  "scope": "https://rideshare.auerbach.io/",
+  "scope": "./",
   "lang": "en",
   "icons": [
     {
@@ -37,7 +37,7 @@
       "name": "Find a Ride",
       "short_name": "Find Ride",
       "description": "Search for available rides to Burning Man",
-      "url": "https://rideshare.auerbach.io/?direction=to-brc",
+      "url": "./?direction=to-brc",
       "icons": [
         {
           "src": "https://bmir.org/Org.png",
@@ -49,7 +49,7 @@
       "name": "Offer a Ride",
       "short_name": "Offer Ride",
       "description": "Post your available seats for Burning Man",
-      "url": "https://rideshare.auerbach.io/?direction=to-brc&action=offer",
+      "url": "./?direction=to-brc&action=offer",
       "icons": [
         {
           "src": "https://bmir.org/Org.png",
