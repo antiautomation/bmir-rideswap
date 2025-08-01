@@ -46,6 +46,275 @@ const performanceUtils = {
     }
 };
 
+// Enhanced Firebase operations with retry logic
+const FirebaseUtils = {
+    // Retry configuration
+    maxRetries: 3,
+    baseDelay: 1000, // 1 second
+    maxDelay: 10000, // 10 seconds
+    
+    // Exponential backoff with jitter
+    async retry(operation, context = '') {
+        let lastError;
+        
+        for (let attempt = 0; attempt < this.maxRetries; attempt++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error;
+                console.warn(`❌ Firebase operation failed (attempt ${attempt + 1}/${this.maxRetries}) - ${context}:`, error);
+                
+                // Don't retry on certain errors
+                if (error.code === 'permission-denied' || error.code === 'invalid-argument') {
+                    throw error;
+                }
+                
+                // Calculate delay with exponential backoff and jitter
+                if (attempt < this.maxRetries - 1) {
+                    const delay = Math.min(
+                        this.baseDelay * Math.pow(2, attempt) + Math.random() * 1000,
+                        this.maxDelay
+                    );
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        // All retries failed
+        throw lastError;
+    },
+    
+    // Enhanced query with timeout and retry
+    async queryWithRetry(queryFn, context = 'query') {
+        return this.retry(async () => {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('Query timeout'));
+                }, 15000); // 15 second timeout
+                
+                try {
+                    const unsubscribe = queryFn((snapshot) => {
+                        clearTimeout(timeout);
+                        resolve({ snapshot, unsubscribe });
+                    }, (error) => {
+                        clearTimeout(timeout);
+                        reject(error);
+                    });
+                } catch (error) {
+                    clearTimeout(timeout);
+                    reject(error);
+                }
+            });
+        }, context);
+    },
+    
+    // Enhanced write operations with retry
+    async writeWithRetry(writeFn, context = 'write') {
+        return this.retry(writeFn, context);
+    }
+};
+
+// Add to the global window object for access
+window.FirebaseUtils = FirebaseUtils;
+
+// Optimized Firebase query patterns for poor connectivity
+const OptimizedQueries = {
+    // Limit data transfer with efficient queries
+    QUERY_LIMITS: {
+        INITIAL_LOAD: 10,  // Reduced initial load
+        PAGE_SIZE: 5,      // Smaller pages for better performance
+        MAX_CACHE_SIZE: 50 // Limit memory usage
+    },
+    
+    // Connection-aware query strategy
+    async getOptimizedQuery(collection, filters = {}) {
+        const isOnline = navigator.onLine;
+        const limit = isOnline ? this.QUERY_LIMITS.INITIAL_LOAD : this.QUERY_LIMITS.PAGE_SIZE;
+        
+        try {
+            let baseQuery = window.firebase.collection(AppState.db, collection);
+            
+            // Apply filters efficiently
+            if (filters.direction) {
+                baseQuery = window.firebase.query(baseQuery, 
+                    window.firebase.where('direction', '==', filters.direction));
+            }
+            
+            if (filters.date) {
+                baseQuery = window.firebase.query(baseQuery, 
+                    window.firebase.where('date', '>=', filters.date));
+            }
+            
+            // Optimize ordering for better performance
+            baseQuery = window.firebase.query(baseQuery, 
+                window.firebase.orderBy('timestamp', 'desc'),
+                window.firebase.limit(limit));
+            
+            return baseQuery;
+        } catch (error) {
+            console.warn('Failed to create optimized query, falling back to basic query:', error);
+            return window.firebase.collection(AppState.db, collection);
+        }
+    },
+    
+    // Debounced subscription management
+    createDebouncedSubscription(queryFn, callback, delay = 500) {
+        let timeoutId;
+        let unsubscribe;
+        
+        const debouncedCallback = performanceUtils.debounce(callback, delay);
+        
+        return (filters) => {
+            // Cancel previous subscription
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(async () => {
+                try {
+                    const query = await this.getOptimizedQuery(queryFn, filters);
+                    unsubscribe = window.firebase.onSnapshot(query, debouncedCallback, (error) => {
+                        console.error('Query subscription error:', error);
+                        // Implement exponential backoff for retries
+                        setTimeout(() => {
+                            if (navigator.onLine) {
+                                // Retry subscription
+                                unsubscribe = window.firebase.onSnapshot(query, debouncedCallback);
+                            }
+                        }, Math.min(1000 * Math.pow(2, Math.random()), 10000));
+                    });
+                } catch (error) {
+                    console.error('Failed to create subscription:', error);
+                }
+            }, 100); // Small delay to batch multiple filter changes
+        };
+    },
+    
+    // Efficient data loading with progressive enhancement
+    async loadDataProgressive(collection, onData) {
+        const isSlowConnection = this.isSlowConnection();
+        const batchSize = isSlowConnection ? 3 : this.QUERY_LIMITS.PAGE_SIZE;
+        
+        let lastDoc = null;
+        let allData = [];
+        
+        const loadBatch = async () => {
+            try {
+                let query = window.firebase.collection(AppState.db, collection);
+                query = window.firebase.query(query, 
+                    window.firebase.orderBy('timestamp', 'desc'),
+                    window.firebase.limit(batchSize));
+                
+                if (lastDoc) {
+                    query = window.firebase.query(query, 
+                        window.firebase.startAfter(lastDoc));
+                }
+                
+                const snapshot = await window.firebase.getDocs(query);
+                const docs = snapshot.docs;
+                
+                if (docs.length > 0) {
+                    lastDoc = docs[docs.length - 1];
+                    const newData = docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    allData = [...allData, ...newData];
+                    onData(allData);
+                    
+                    // Load next batch with delay for slow connections
+                    if (docs.length === batchSize && !isSlowConnection) {
+                        setTimeout(loadBatch, 100);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load data batch:', error);
+                throw error;
+            }
+        };
+        
+        return loadBatch();
+    },
+    
+    // Detect slow connection
+    isSlowConnection() {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (connection) {
+            const slowConnections = ['slow-2g', '2g', '3g'];
+            return slowConnections.includes(connection.effectiveType) || connection.downlink < 1;
+        }
+        return false; // Assume good connection if API not available
+    }
+};
+
+// Add to window for global access
+window.OptimizedQueries = OptimizedQueries;
+
+// Code splitting and lazy loading utilities
+const LazyLoader = {
+    cache: new Map(),
+    
+    // Lazy load modules only when needed
+    async loadModule(moduleUrl, identifier) {
+        if (this.cache.has(identifier)) {
+            return this.cache.get(identifier);
+        }
+        
+        try {
+            const module = await import(moduleUrl);
+            this.cache.set(identifier, module);
+            return module;
+        } catch (error) {
+            console.error(`Failed to load module ${identifier}:`, error);
+            throw error;
+        }
+    },
+    
+    // Load Firebase modules progressively
+    async loadFirebaseModules() {
+        const coreModules = await Promise.all([
+            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js', 'app'),
+            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js', 'firestore'),
+            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js', 'auth')
+        ]);
+        
+        // Load optional modules later
+        setTimeout(() => {
+            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js', 'app-check')
+                .catch(err => console.warn('Optional module failed to load:', err));
+        }, 2000);
+        
+        return {
+            app: coreModules[0],
+            firestore: coreModules[1],
+            auth: coreModules[2]
+        };
+    },
+    
+    // Preload critical resources based on user interaction
+    preloadOnInteraction() {
+        let interactionHandled = false;
+        
+        const handleInteraction = () => {
+            if (interactionHandled) return;
+            interactionHandled = true;
+            
+            // Preload form submission dependencies
+            window.loadRecaptcha();
+            
+            // Remove listeners after first interaction
+            document.removeEventListener('mousedown', handleInteraction);
+            document.removeEventListener('touchstart', handleInteraction);
+            document.removeEventListener('keydown', handleInteraction);
+        };
+        
+        document.addEventListener('mousedown', handleInteraction, { passive: true });
+        document.addEventListener('touchstart', handleInteraction, { passive: true });
+        document.addEventListener('keydown', handleInteraction, { passive: true });
+    }
+};
+
+// Add to window for access
+window.LazyLoader = LazyLoader;
+
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAG2DaZhdjCYAyIGQ7k5ZKcBWGkLBFUBzE",
@@ -454,22 +723,44 @@ async function initialize() {
     try {
         console.log('🚀 Initializing optimized app...');
         
-        // Import Firebase modules dynamically for better loading
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const { getFirestore, collection, query, where, orderBy, limit, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const { initializeAppCheck, ReCaptchaV3Provider } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js');
+        // Import Firebase modules dynamically for better loading - Updated to v11.6.1
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+        const { getFirestore, collection, query, where, orderBy, limit, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, enableNetwork, disableNetwork, connectFirestoreEmulator } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+        const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+        const { initializeAppCheck, ReCaptchaV3Provider } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js');
         
         // Store Firebase imports globally
         window.firebase = {
             initializeApp, getFirestore, collection, query, where, orderBy, limit, onSnapshot,
             addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, getAuth, signInAnonymously,
-            signInWithCustomToken, onAuthStateChanged, initializeAppCheck, ReCaptchaV3Provider
+            signInWithCustomToken, onAuthStateChanged, initializeAppCheck, ReCaptchaV3Provider,
+            enableNetwork, disableNetwork
         };
         
         const app = initializeApp(firebaseConfig);
         AppState.db = getFirestore(app);
         AppState.auth = getAuth(app);
+        
+        // Enable offline persistence for poor connectivity
+        try {
+            await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js').then(module => {
+                if (module.enablePersistence) {
+                    return module.enablePersistence(AppState.db, {
+                        synchronizeTabs: true
+                    });
+                }
+            });
+            console.log('✅ Offline persistence enabled');
+        } catch (err) {
+            if (err.code === 'failed-precondition') {
+                console.warn('⚠️ Multiple tabs open, persistence can only be enabled in one tab at a time.');
+            } else if (err.code === 'unimplemented') {
+                console.warn('⚠️ The current browser does not support persistence.');
+            }
+        }
+        
+        // Monitor connection state
+        setupConnectionMonitoring();
         
         // Setup with performance monitoring
         performance.mark('app-init-start');
@@ -485,6 +776,37 @@ async function initialize() {
         console.error('❌ App initialization failed:', error);
         showError(document.body, 'Failed to load the application. Please refresh the page.');
     }
+}
+
+// Add connection monitoring
+function setupConnectionMonitoring() {
+    let isOnline = navigator.onLine;
+    
+    const updateConnectionStatus = (online) => {
+        isOnline = online;
+        const statusBar = document.querySelector('.status-bar');
+        if (statusBar) {
+            if (online) {
+                statusBar.classList.remove('offline');
+                statusBar.textContent = '🔥 BMIR RideSwap - Connect with the Playa Community';
+                if (AppState.db && window.firebase.enableNetwork) {
+                    window.firebase.enableNetwork(AppState.db);
+                }
+            } else {
+                statusBar.classList.add('offline');
+                statusBar.textContent = '📴 Offline Mode - Your data will sync when connection returns';
+                if (AppState.db && window.firebase.disableNetwork) {
+                    window.firebase.disableNetwork(AppState.db);
+                }
+            }
+        }
+    };
+    
+    window.addEventListener('online', () => updateConnectionStatus(true));
+    window.addEventListener('offline', () => updateConnectionStatus(false));
+    
+    // Initial status
+    updateConnectionStatus(isOnline);
 }
 
 function setupApp() {
