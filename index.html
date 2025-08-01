@@ -59,7 +59,30 @@
     <link rel="dns-prefetch" href="//www.gstatic.com">
     <link rel="dns-prefetch" href="//firestore.googleapis.com">
     <link rel="dns-prefetch" href="//bmir.org">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
     
+    <!-- Preload critical resources -->
+    <link rel="preload" href="./styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./styles.css"></noscript>
+    <link rel="preload" href="./app.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    
+    <!-- Critical CSS inlined for immediate rendering -->
+    <style>
+        /* Critical above-the-fold styles */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f3f4f6;color:#1f2937;line-height:1.6}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .header{text-align:center;margin-bottom:2rem;padding-top:3rem}
+        .title{font-size:2.25rem;font-weight:700;color:#1f2937;margin-bottom:1.5rem}
+        .status-bar{position:fixed;top:0;left:0;right:0;background-color:#10b981;color:white;padding:.5rem 1rem;text-align:center;font-size:.875rem;font-weight:500;z-index:50;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+        .status-bar.offline{background-color:#ef4444}
+        .loading-spinner{display:inline-block;width:2rem;height:2rem;border:2px solid #e5e7eb;border-top:2px solid #6366f1;border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    </style>
+
     <!-- Canonical URL -->
     <link rel="canonical" href="https://rideswap.auerbach.io/">
     <!-- Preconnect to external domains for faster loading -->
@@ -67,29 +90,57 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://www.googletagmanager.com">
     <link rel="preconnect" href="https://bmir.org">
-    <!-- Optimized font loading with font-display swap -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- External CSS file for better caching -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://firestore.googleapis.com">
     
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js?render=6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5" async defer></script>
+    <!-- Remove external CSS as it's now preloaded above -->
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NXHN9M6GQX"></script>
+    <!-- Google reCAPTCHA - Defer loading -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        // Lazy load reCAPTCHA only when needed
+        window.loadRecaptcha = function() {
+            if (!window.grecaptcha) {
+                const script = document.createElement('script');
+                script.src = 'https://www.google.com/recaptcha/api.js?render=6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5';
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+        };
+    </script>
+    
+    <!-- Google tag (gtag.js) - Load after page is interactive -->
+    <script>
+      // Lazy load analytics to not block initial page load
+      function loadAnalytics() {
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-NXHN9M6GQX';
+        document.head.appendChild(script);
+        
+        script.onload = function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          
+          // Track in production and optionally in development
+          if (location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            gtag('config', 'G-NXHN9M6GQX');
+            console.log('📊 Analytics enabled for production');
+          } else {
+            // Enable for testing - comment out this line to disable local tracking
+            gtag('config', 'G-NXHN9M6GQX');
+            console.log('📊 Analytics enabled for local development (testing)');
+          }
+        };
+      }
       
-      // Track in production and optionally in development
-      if (location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        gtag('config', 'G-NXHN9M6GQX');
-        console.log('📊 Analytics enabled for production');
+      // Load analytics after the page is interactive
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadAnalytics);
       } else {
-        // Enable for testing - comment out this line to disable local tracking
-        gtag('config', 'G-NXHN9M6GQX');
-        console.log('📊 Analytics enabled for local development (testing)');
+        // Page is already loaded
+        setTimeout(loadAnalytics, 1000);
       }
     </script>
     
@@ -579,7 +630,38 @@
     </div>
     
     <!-- Optimized external JavaScript with defer for better loading -->
-    <script src="app.js" defer></script>
+    <!-- Load main app script with proper error handling -->
+<script>
+  // Load app.js with fallback and error handling
+  function loadMainApp() {
+    const script = document.createElement('script');
+    script.src = './app.js';
+    script.defer = true;
+    script.onerror = function() {
+      console.error('Failed to load app.js');
+      document.body.innerHTML = '<div style="text-align: center; padding: 2rem; color: #dc2626;"><h2>Loading Error</h2><p>Failed to load the application. Please check your connection and refresh the page.</p><button onclick="location.reload()" style="padding: 0.5rem 1rem; margin-top: 1rem; background: #e4622f; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">Retry</button></div>';
+    };
+    document.head.appendChild(script);
+  }
+  
+  // Load after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMainApp);
+  } else {
+    loadMainApp();
+  }
+</script>
+
+<!-- Development Testing Script -->
+<script>
+  // Load testing script in development
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    const testScript = document.createElement('script');
+    testScript.src = './test-poor-connectivity.js';
+    testScript.defer = true;
+    document.head.appendChild(testScript);
+  }
+</script>
     
     <script type="module">
         // Firebase Imports
