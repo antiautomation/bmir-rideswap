@@ -892,6 +892,19 @@
                 return;
             }
             
+            // Ignore Firebase WebChannel transport errors (expected when offline)
+            if (event.reason && typeof event.reason === 'object') {
+                const errorMessage = event.reason.message || event.reason.toString();
+                if (errorMessage.includes('transport') || 
+                    errorMessage.includes('webchannel') ||
+                    errorMessage.includes('connection') ||
+                    errorMessage.includes('network')) {
+                    console.log('🔇 Suppressing expected Firebase offline error:', errorMessage);
+                    event.preventDefault();
+                    return;
+                }
+            }
+            
             console.warn('Unhandled promise rejection:', event.reason);
             // Prevent the default browser behavior
             event.preventDefault();
@@ -1835,8 +1848,17 @@
                 renderFilteredLists();
                 updateLocationFilter();
             }, (error) => {
-                console.error("Drivers listener error:", error);
-                if (driversList) showError(driversList, "Failed to load drivers. Please check your connection.");
+                // Check if this is an expected offline error
+                const errorMessage = error.message || error.toString();
+                if (errorMessage.includes('transport') || 
+                    errorMessage.includes('webchannel') ||
+                    errorMessage.includes('connection') ||
+                    errorMessage.includes('network')) {
+                    console.log('🔇 Expected offline error for drivers:', errorMessage);
+                } else {
+                    console.error("Drivers listener error:", error);
+                    if (driversList) showError(driversList, "Failed to load drivers. Please check your connection.");
+                }
             });
 
             ridersUnsubscribe = onSnapshot(ridersQuery, (snapshot) => {
@@ -1844,8 +1866,17 @@
                 renderFilteredLists();
                 updateLocationFilter();
             }, (error) => {
-                console.error("Riders listener error:", error);
-                if (ridersList) showError(ridersList, "Failed to load riders. Please check your connection.");
+                // Check if this is an expected offline error
+                const errorMessage = error.message || error.toString();
+                if (errorMessage.includes('transport') || 
+                    errorMessage.includes('webchannel') ||
+                    errorMessage.includes('connection') ||
+                    errorMessage.includes('network')) {
+                    console.log('🔇 Expected offline error for riders:', errorMessage);
+                } else {
+                    console.error("Riders listener error:", error);
+                    if (ridersList) showError(ridersList, "Failed to load riders. Please check your connection.");
+                }
             });
 
             // Listen for flags (keep as is since flags are small)
@@ -1859,7 +1890,16 @@
                 });
                 renderFilteredLists();
             }, (error) => {
-                console.error("Flags listener error:", error);
+                // Check if this is an expected offline error
+                const errorMessage = error.message || error.toString();
+                if (errorMessage.includes('transport') || 
+                    errorMessage.includes('webchannel') ||
+                    errorMessage.includes('connection') ||
+                    errorMessage.includes('network')) {
+                    console.log('🔇 Expected offline error for flags:', errorMessage);
+                } else {
+                    console.error("Flags listener error:", error);
+                }
             });
         }
 
