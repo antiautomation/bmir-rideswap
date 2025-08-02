@@ -844,6 +844,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
         // --- Caching System ---
         const cache = new Map();
@@ -924,6 +925,21 @@
             RATE_LIMIT_WINDOW: 60 * 60 * 1000, // 1 hour in milliseconds
             STORAGE_KEY: 'bmir_rate_limit'
         };
+
+        // --- Notification System ---
+        let messaging = null;
+        let notificationToken = null;
+        let notificationPreferences = {
+            newRides: true,
+            rideMatches: true,
+            rideUpdates: true,
+            sound: true,
+            vibration: true
+        };
+        let lastNotificationCheck = 0;
+        const NOTIFICATION_CHECK_INTERVAL = 30000; // 30 seconds
+        const NOTIFICATION_STORAGE_KEY = 'bmir_notification_preferences';
+        const NOTIFICATION_TOKEN_KEY = 'bmir_notification_token';
 
         // Comprehensive list of continental USA cities for autocomplete
         const commonCities = [
@@ -1720,6 +1736,9 @@
                     setupListeners();
                     setupSessionTracking();
                     
+                    // Initialize notifications after user is authenticated
+                    initializeNotifications();
+                    
                     // Restore session code from localStorage if available
                     const savedSessionCode = localStorage.getItem(`bmir_session_code_${userId}`);
                     if (savedSessionCode && !sessionCode) {
@@ -2263,6 +2282,185 @@
                 </div>
             `;
             return card;
+        }
+
+        // --- Notification System Functions ---
+        async function initializeNotifications() {
+            try {
+                // Check if browser supports notifications
+                if (!('Notification' in window)) {
+                    console.log('🔔 Notifications not supported in this browser');
+                    return;
+                }
+
+                // Check if service worker is supported (required for FCM)
+                if (!('serviceWorker' in navigator)) {
+                    console.log('🔔 Service Worker not supported, notifications disabled');
+                    return;
+                }
+
+                // Register Firebase messaging service worker
+                try {
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    console.log('🔔 Firebase messaging service worker registered:', registration);
+                } catch (error) {
+                    console.error('❌ Failed to register Firebase messaging service worker:', error);
+                    return;
+                }
+
+                // Initialize Firebase Messaging
+                messaging = getMessaging();
+                
+                // Request notification permission
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('🔔 Notification permission denied');
+                    return;
+                }
+
+                console.log('🔔 Notification permission granted');
+
+                // Get FCM token
+                try {
+                    notificationToken = await getToken(messaging, {
+                        vapidKey: 'YOUR_VAPID_KEY_HERE' // We'll need to add this
+                    });
+                    
+                    if (notificationToken) {
+                        console.log('🔔 FCM Token obtained:', notificationToken.substring(0, 20) + '...');
+                        localStorage.setItem(NOTIFICATION_TOKEN_KEY, notificationToken);
+                        
+                        // Save token to Firestore for server-side notifications
+                        await saveNotificationToken(notificationToken);
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to get FCM token:', error);
+                }
+
+                // Handle foreground messages
+                onMessage(messaging, (payload) => {
+                    console.log('🔔 Foreground message received:', payload);
+                    showInAppNotification(payload);
+                });
+
+                // Load saved preferences
+                loadNotificationPreferences();
+                
+                // Start notification checking
+                startNotificationChecking();
+
+            } catch (error) {
+                console.error('❌ Failed to initialize notifications:', error);
+            }
+        }
+
+        async function saveNotificationToken(token) {
+            try {
+                if (!userId) return;
+                
+                const tokenDoc = {
+                    userId: userId,
+                    token: token,
+                    timestamp: new Date(),
+                    preferences: notificationPreferences
+                };
+                
+                await setDoc(doc(collection(db, 'notification_tokens')), tokenDoc);
+                console.log('🔔 Notification token saved to Firestore');
+            } catch (error) {
+                console.error('❌ Failed to save notification token:', error);
+            }
+        }
+
+        function loadNotificationPreferences() {
+            try {
+                const saved = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+                if (saved) {
+                    notificationPreferences = { ...notificationPreferences, ...JSON.parse(saved) };
+                }
+            } catch (error) {
+                console.error('❌ Failed to load notification preferences:', error);
+            }
+        }
+
+        function saveNotificationPreferences() {
+            try {
+                localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(notificationPreferences));
+            } catch (error) {
+                console.error('❌ Failed to save notification preferences:', error);
+            }
+        }
+
+        function showInAppNotification(payload) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification-toast';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <h4>${payload.notification?.title || 'New Ride Available'}</h4>
+                    <p>${payload.notification?.body || 'Check out this new ride!'}</p>
+                    <button class="notification-close">×</button>
+                </div>
+            `;
+            
+            // Add to page
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+            
+            // Close button
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.parentNode.removeChild(notification);
+            });
+        }
+
+        function startNotificationChecking() {
+            // Check for new rides every 30 seconds
+            setInterval(async () => {
+                if (Date.now() - lastNotificationCheck < NOTIFICATION_CHECK_INTERVAL) {
+                    return;
+                }
+                
+                lastNotificationCheck = Date.now();
+                await checkForNewRides();
+            }, NOTIFICATION_CHECK_INTERVAL);
+        }
+
+        async function checkForNewRides() {
+            try {
+                // Get user's notification preferences
+                if (!notificationPreferences.rideMatches) return;
+                
+                // Check for new rides that match user's criteria
+                const newRides = await getNewRidesForUser();
+                
+                if (newRides.length > 0) {
+                    console.log(`🔔 Found ${newRides.length} new rides matching criteria`);
+                    
+                    // Show in-app notification
+                    if (document.visibilityState === 'visible') {
+                        showInAppNotification({
+                            notification: {
+                                title: 'New Rides Available!',
+                                body: `${newRides.length} new rides match your criteria`
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error checking for new rides:', error);
+            }
+        }
+
+        async function getNewRidesForUser() {
+            // This would check for rides matching user's saved criteria
+            // For now, return empty array - we'll implement this later
+            return [];
         }
 
         // --- Event Handlers ---
