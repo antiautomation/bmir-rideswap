@@ -27,9 +27,12 @@ if [ -f "firebase-messaging-sw.js" ]; then
     cp firebase-messaging-sw.js dist/
 fi
 
-# Optional: Add external config if needed
+# Add external config (required for production)
 if [ -f "config.js" ]; then
     cp config.js dist/
+    echo "✅ Added config.js to production build"
+else
+    echo "⚠️  Warning: config.js not found - using hardcoded values"
 fi
 
 echo "✅ Production build complete!"
