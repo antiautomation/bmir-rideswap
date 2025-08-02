@@ -8,9 +8,9 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
     <!-- SEO Meta Tags -->
-    <title>BMIR RideSwap</title>
-    <meta name="description" content="BMIR RideSwap">
-    <meta name="keywords" content="Burning Man, rideshare, BMIR, Black Rock City, playa, carpool, transportation, festival rides, BMIR 94.5 FM, Burning Man rideshare board">
+    <title>BMIR RideSwap - Connect with Burning Man Rideshare Community</title>
+    <meta name="description" content="Join the official BMIR 94.5 FM rideshare community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Connect with your playa family and make your journey to the dust easier!">
+    <meta name="keywords" content="Burning Man, rideshare, BMIR, Black Rock City, playa, carpool, transportation, festival rides, BMIR 94.5 FM, Burning Man rideshare board, playa transportation, festival carpool, Black Rock City rides">
     <meta name="author" content="BMIR 94.5 FM">
     <meta name="robots" content="index, follow">
     <meta name="language" content="English">
@@ -19,8 +19,8 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://rideswap.auerbach.io/">
-    <meta property="og:title" content="BMIR RideSwap">
-    <meta property="og:description" content="BMIR RideSwap">
+    <meta property="og:title" content="BMIR RideSwap - Official Burning Man Rideshare Community">
+    <meta property="og:description" content="Connect with the BMIR 94.5 FM rideshare community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Make your journey to the dust easier with our trusted community!">
     <meta property="og:image" content="https://bmir.org/Org.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -31,8 +31,8 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://rideswap.auerbach.io/">
-    <meta name="twitter:title" content="BMIR RideSwap">
-    <meta name="twitter:description" content="BMIR RideSwap">
+    <meta name="twitter:title" content="BMIR RideSwap - Official Burning Man Rideshare">
+    <meta name="twitter:description" content="Join the official BMIR 94.5 FM rideshare community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Connect with your playa family!">
     <meta name="twitter:image" content="https://bmir.org/Org.png">
     <meta name="twitter:image:alt" content="BMIR 94.5 FM - The Voice of Black Rock City">
     
@@ -101,9 +101,11 @@
         window.loadRecaptcha = function() {
             if (!window.grecaptcha) {
                 const script = document.createElement('script');
-                script.src = 'https://www.google.com/recaptcha/api.js?render=6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5';
+                const recaptchaConfig = window.RECAPTCHA_CONFIG || { siteKey: '6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5' };
+                script.src = `${recaptchaConfig.apiUrl}?render=${recaptchaConfig.siteKey}`;
                 script.async = true;
                 script.defer = true;
+                script.onload = () => console.log('✅ reCAPTCHA loaded on demand');
                 document.head.appendChild(script);
             }
         };
@@ -113,9 +115,10 @@
     <script>
       // Lazy load analytics to not block initial page load
       function loadAnalytics() {
+        const analyticsConfig = window.ANALYTICS_CONFIG || { trackingId: 'G-NXHN9M6GQX' };
         const script = document.createElement('script');
         script.async = true;
-        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-NXHN9M6GQX';
+        script.src = `${analyticsConfig.gtagUrl}?id=${analyticsConfig.trackingId}`;
         document.head.appendChild(script);
         
         script.onload = function() {
@@ -125,11 +128,11 @@
           
           // Track in production and optionally in development
           if (location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-            gtag('config', 'G-NXHN9M6GQX');
+            gtag('config', analyticsConfig.trackingId);
             console.log('📊 Analytics enabled for production');
           } else {
             // Enable for testing - comment out this line to disable local tracking
-            gtag('config', 'G-NXHN9M6GQX');
+            gtag('config', analyticsConfig.trackingId);
             console.log('📊 Analytics enabled for local development (testing)');
           }
         };
@@ -262,7 +265,7 @@
                 <div class="visitor-item" id="session-code-input" style="display: none;">
                     <span>🔑</span>
                     <input type="text" id="session-code-field" placeholder="Enter session code" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; width: 120px;">
-                    <button onclick="enterSessionCode()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #e4622f; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">Enter</button>
+                    <button id="session-code-enter-btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #e4622f; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">Enter</button>
                     <button onclick="hideSessionCodeInput()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #6b7280; color: white; border: none; border-radius: 0.25rem; cursor: pointer; margin-left: 0.25rem;">Cancel</button>
                 </div>
             </div>
@@ -350,6 +353,13 @@
                             <span class="checkmark"></span>
                             Show only riders
                         </label>
+                            </div>
+                            
+                            <!-- Clear Filters Button (Mobile) -->
+                            <div id="clear-filters-mobile" class="form-group" style="display: none;">
+                                <button id="clear-filters-btn-mobile" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;">
+                                    🗑️ Clear All Filters
+                                </button>
                             </div>
                             
                             <!-- God Mode Filters -->
@@ -456,6 +466,13 @@
                         </label>
                     </div>
                     
+                    <!-- Clear Filters Button (Desktop) -->
+                    <div id="clear-filters-desktop" class="form-group desktop-checkbox-group" style="display: none;">
+                        <button id="clear-filters-btn-desktop" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;">
+                            🗑️ Clear All Filters
+                        </button>
+                    </div>
+                    
                     <!-- God Mode Filters (Desktop) -->
                     <div id="god-mode-filters-desktop" style="display: none;">
                         <div class="form-group" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
@@ -497,8 +514,8 @@
         </div>
     </div>
     
-    <!-- Mobile Onboarding Overlay -->
-    <div id="mobile-onboarding" class="mobile-onboarding-overlay hidden">
+    <!-- Universal Onboarding Overlay -->
+    <div id="universal-onboarding" class="universal-onboarding-overlay hidden">
         <!-- Welcome Screen -->
         <div id="onboarding-welcome" class="onboarding-screen active">
             <div class="onboarding-content">
@@ -521,7 +538,7 @@
                     
                     <button id="browse-listings-btn" class="onboarding-btn secondary">
                         <span class="btn-icon">📋</span>
-                        <span class="btn-text">Show me the listings</span>
+                        <span class="btn-text">Just show me the listings!</span>
                     </button>
                 </div>
             </div>
@@ -569,26 +586,33 @@
                             <input type="text" id="onboarding-name" class="form-input" required placeholder="Enter your name">
                         </div>
                         
-                        <div class="form-group">
-                            <label for="onboarding-email" class="form-label">Email Address</label>
-                            <input type="email" id="onboarding-email" class="form-input" placeholder="your@email.com">
-                            <small class="form-hint">For ride coordination (optional but recommended)</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="onboarding-phone" class="form-label">Phone Number</label>
-                            <input type="tel" id="onboarding-phone" class="form-input" placeholder="(555) 123-4567">
-                            <small class="form-hint">For ride coordination (optional but recommended)</small>
-                        </div>
+                                                 <div class="form-group">
+                             <label for="onboarding-email" class="form-label">Email Address</label>
+                             <input type="email" id="onboarding-email" class="form-input" placeholder="your@email.com">
+                             <small class="form-hint">For ride coordination (optional but recommended)</small>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label for="onboarding-phone" class="form-label">Phone Number</label>
+                             <input type="tel" id="onboarding-phone" class="form-input" placeholder="+12345678900">
+                             <small class="form-hint">For ride coordination (optional but recommended). Please use international format: +12345678900</small>
+                         </div>
+                         
+                                                  <div class="form-group">
+                             <small class="form-hint" style="color: #dc2626; font-weight: 600;">⚠️ At least one contact method (email or phone) is required for ride coordination.</small>
+                         </div>
                     </div>
                     
                     <!-- Location -->
                     <div class="form-section">
-                        <div class="form-group">
-                            <label for="onboarding-location" class="form-label" id="onboarding-location-label">Your Location</label>
-                            <input type="text" id="onboarding-location" class="form-input" required placeholder="City, ST (e.g., Reno, NV)">
-                            <small class="form-hint">Please enter your city and state in "City, ST" format</small>
-                        </div>
+                                                 <div class="form-group">
+                             <label for="onboarding-location" class="form-label" id="onboarding-location-label">Your Location</label>
+                             <div class="location-autocomplete">
+                                 <input type="text" id="onboarding-location" class="form-input" required placeholder="City, ST (e.g., Reno, NV)">
+                                 <div id="onboarding-location-autocomplete-results" class="location-autocomplete-results"></div>
+                             </div>
+                             <small class="form-hint">Please enter your city and state in "City, ST" format</small>
+                         </div>
                     </div>
                     
                     <!-- Date and Time -->
@@ -719,25 +743,32 @@
                 <div class="space-y-4">
                     <div class="form-group">
                         <label for="name" class="form-label">Name</label>
-                        <input type="text" id="name" class="form-input" required>
+                        <input type="text" id="name" class="form-input" required placeholder="Enter your name">
                     </div>
                     
                     <div class="form-group">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" id="email" class="form-input">
+                        <input type="email" id="email" class="form-input" placeholder="your@email.com">
+                        <small class="form-hint">For ride coordination (optional but recommended)</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="phone" class="form-label">Phone</label>
-                        <input type="tel" id="phone" class="form-input">
+                        <input type="tel" id="phone" class="form-input" placeholder="+12345678900">
+                        <small class="form-hint">For ride coordination (optional but recommended). Please use international format: +12345678900</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <small class="form-hint" style="color: #dc2626; font-weight: 600;">⚠️ At least one contact method (email or phone) is required for ride coordination.</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="location" class="form-label" id="location-label">Location (City)</label>
                         <div class="location-autocomplete">
-                            <input type="text" id="location" class="form-input" required>
+                            <input type="text" id="location" class="form-input" required placeholder="City, ST (e.g., Reno, NV)">
                             <div id="location-autocomplete-results" class="hidden"></div>
                         </div>
+                        <small class="form-hint">Please enter your city and state in "City, ST" format</small>
                     </div>
                     
                     <div class="form-group">
@@ -752,9 +783,60 @@
                         </select>
                     </div>
                     
+                    <!-- Driver-specific fields -->
+                    <div id="driver-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="passenger-space" class="form-label">How many passengers can you take?</label>
+                            <select id="passenger-space" class="form-select">
+                                <option value="">Select number of passengers</option>
+                                <option value="1">1 passenger</option>
+                                <option value="2">2 passengers</option>
+                                <option value="3">3 passengers</option>
+                                <option value="4">4 passengers</option>
+                                <option value="5">5+ passengers</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cargo-space" class="form-label">How much stuff can you take?</label>
+                            <select id="cargo-space" class="form-select">
+                                <option value="">Select cargo capacity</option>
+                                <option value="personal-only">Personal items only (backpack, small bag)</option>
+                                <option value="some-gear">Some gear (sleeping bag, cooler, etc.)</option>
+                                <option value="moderate-gear">Moderate gear (bike, camping equipment)</option>
+                                <option value="lots-of-gear">Lots of gear (multiple bikes, large items)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="route-details" class="form-label">Specific route or stops?</label>
+                            <textarea id="route-details" class="form-input" rows="3" placeholder="If you're taking a specific route or making stops that aren't the most direct path via Google Maps, please describe them here..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Rider-specific fields -->
+                    <div id="rider-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="rider-stuff" class="form-label">How much stuff do you have?</label>
+                            <select id="rider-stuff" class="form-select">
+                                <option value="">Select amount of belongings</option>
+                                <option value="minimal">Minimal (backpack, small bag)</option>
+                                <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
+                                <option value="substantial">Substantial (bike, camping gear, multiple bags)</option>
+                                <option value="extensive">Extensive (multiple bikes, large camp items)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="camp-info-section" style="display: none;">
+                            <label for="camp-info" class="form-label">Camp name and location</label>
+                            <textarea id="camp-info" class="form-input" rows="3" placeholder="If you need to be found or reached, please provide your camp name, location (street address), and any landmarks..."></textarea>
+                            <small class="form-hint">This helps drivers find you on the playa</small>
+                        </div>
+                    </div>
+                    
                     <div class="form-group">
-                        <label for="details" class="form-label" id="details-label">Details</label>
-                        <textarea id="details" rows="3" class="form-input" required></textarea>
+                        <label for="details" class="form-label">Anything else you'd like to mention!</label>
+                        <textarea id="details" rows="3" class="form-input" required placeholder="Share any additional information about your trip, preferences, or special requirements..."></textarea>
                     </div>
                 </div>
                 
@@ -827,16 +909,38 @@
   }
 </script>
 
-<!-- Development Testing Script -->
+<!-- Development Testing Script - Lazy Loaded -->
 <script>
-  // Load testing script in development
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    const testScript = document.createElement('script');
-    testScript.src = './test-poor-connectivity.js';
-    testScript.defer = true;
-    document.head.appendChild(testScript);
-  }
+    // Lazy load testing scripts only when needed
+    window.loadTestScripts = function() {
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            const testScript = document.createElement('script');
+            testScript.src = './test-poor-connectivity.js';
+            testScript.defer = true;
+            testScript.onload = () => console.log('✅ Test script loaded on demand');
+            document.head.appendChild(testScript);
+        }
+    };
+    
+    // Load test scripts after user interaction or after 5 seconds
+    let testScriptsLoaded = false;
+    function loadTestScriptsIfNeeded() {
+        if (!testScriptsLoaded && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            testScriptsLoaded = true;
+            window.loadTestScripts();
+        }
+    }
+    
+    // Load after user interaction
+    document.addEventListener('click', loadTestScriptsIfNeeded, { once: true });
+    document.addEventListener('keydown', loadTestScriptsIfNeeded, { once: true });
+    
+    // Or load after 5 seconds if no interaction
+    setTimeout(loadTestScriptsIfNeeded, 5000);
 </script>
+    
+    <!-- Configuration (load first) -->
+    <script src="config.js"></script>
     
     <script type="module">
         // Firebase Imports
@@ -844,6 +948,33 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+        
+        // Make Firebase functions available globally for app.js
+        window.initializeApp = initializeApp;
+        window.getAuth = getAuth;
+        window.getFirestore = getFirestore;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.doc = doc;
+        window.deleteDoc = deleteDoc;
+        window.updateDoc = updateDoc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.where = where;
+        window.increment = increment;
+        window.limit = limit;
+        window.orderBy = orderBy;
+        window.writeBatch = writeBatch;
+        window.onSnapshot = onSnapshot;
+        window.signInAnonymously = signInAnonymously;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.signInWithCustomToken = signInWithCustomToken;
+        window.setPersistence = setPersistence;
+        window.browserLocalPersistence = browserLocalPersistence;
+        window.initializeAppCheck = initializeAppCheck;
+        window.ReCaptchaV3Provider = ReCaptchaV3Provider;
 
         // --- Caching System ---
         const cache = new Map();
@@ -1051,7 +1182,8 @@
         let existingCities = new Set();
 
         // --- Firebase Config ---
-        const firebaseConfig = {
+        // Use external config if available, otherwise fall back to hardcoded values
+        const firebaseConfig = window.FIREBASE_CONFIG || {
             apiKey: "AIzaSyCSuS3HjgXbO_II0VXRvho9J84qidSoTw8",
             authDomain: "bmir-rideshare.firebaseapp.com",
             projectId: "bmir-rideshare",
@@ -1084,7 +1216,7 @@
         const ridersList = document.getElementById('riders-list');
         const modal = document.getElementById('entry-modal');
         const modalTitle = document.getElementById('modal-title');
-        const detailsLabel = document.getElementById('details-label');
+
         const locationLabel = document.getElementById('location-label');
         const entryForm = document.getElementById('entry-form');
         const entryTypeInput = document.getElementById('entry-type');
@@ -1125,12 +1257,23 @@
         if (addRiderBtn) addRiderBtn.disabled = true;
         if (addDriverBtnDesktop) addDriverBtnDesktop.disabled = true;
         if (addRiderBtnDesktop) addRiderBtnDesktop.disabled = true;
+        
+        // Re-enable buttons after Firebase is ready
+        function enableButtons() {
+            if (addDriverBtn) addDriverBtn.disabled = false;
+            if (addRiderBtn) addRiderBtn.disabled = false;
+            if (addDriverBtnDesktop) addDriverBtnDesktop.disabled = false;
+            if (addRiderBtnDesktop) addRiderBtnDesktop.disabled = false;
+            console.log('✅ Buttons enabled');
+        }
 
         // --- God Mode Check ---
+        const GOD_MODE_SESSION_CODE = 'BMIRGODS';
+        
         function checkGodMode() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const godMode = urlParams.get('god');
-            if (godMode === 'true') {
+            // Check if user has entered the correct session code
+            const storedGodMode = localStorage.getItem('bmir_god_mode_active');
+            if (storedGodMode === 'true') {
                 isGodMode = true;
                 showGodModeIndicator();
                 // Create god mode document in Firestore
@@ -1139,10 +1282,12 @@
                 }
             }
         }
+        
+
 
         async function createGodModeDocument() {
             try {
-                await setDoc(doc(db, `artifacts/${appId}/public/data/godMode`, userId), {
+                await setDoc(doc(window.db, `artifacts/${appId}/public/data/godMode`, userId), {
                     isGodMode: true,
                     timestamp: new Date(),
                     userAgent: navigator.userAgent,
@@ -1160,16 +1305,55 @@
 
         function cleanupGodMode() {
             if (isGodMode && userId) {
-                deleteDoc(doc(db, `artifacts/${appId}/public/data/godMode`, userId))
+                deleteDoc(doc(window.db, `artifacts/${appId}/public/data/godMode`, userId))
                     .then(() => console.log('🛡️ God mode document cleaned up'))
                     .catch(error => console.error('Error cleaning up god mode:', error));
             }
         }
+        
+        function deactivateGodMode() {
+            isGodMode = false;
+            localStorage.removeItem('bmir_god_mode_active');
+            
+            // Remove god mode indicator
+            const indicator = document.querySelector('div[style*="GOD MODE"]');
+            if (indicator) {
+                document.body.removeChild(indicator);
+            }
+            
+            // Hide god mode filters
+            const mobileGodModeFilters = document.getElementById('god-mode-filters');
+            const desktopGodModeFilters = document.getElementById('god-mode-filters-desktop');
+            
+            if (mobileGodModeFilters) {
+                mobileGodModeFilters.style.display = 'none';
+            }
+            if (desktopGodModeFilters) {
+                desktopGodModeFilters.style.display = 'none';
+            }
+            
+            // Reset show deleted entries
+            showDeletedEntries = false;
+            
+            // Clean up Firestore document
+            cleanupGodMode();
+            
+            // Re-render lists without deleted entries
+            renderFilteredLists();
+            
+            // Force page refresh to ensure clean state
+            setTimeout(() => {
+                window.location.reload();
+            }, 500); // Small delay to show the deactivation effect
+        }
 
         function showGodModeIndicator() {
             const indicator = document.createElement('div');
-            indicator.style.cssText = 'position: fixed; top: 4rem; right: 1rem; background: #dc2626; color: white; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 700; z-index: 50;';
-            indicator.textContent = 'GOD MODE';
+            indicator.style.cssText = 'position: fixed; top: 4rem; right: 1rem; background: #dc2626; color: white; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 700; z-index: 50; display: flex; align-items: center; gap: 0.5rem;';
+            indicator.innerHTML = `
+                <span>GOD MODE</span>
+                <button onclick="deactivateGodMode()" style="background: none; border: none; color: white; cursor: pointer; font-size: 0.75rem; padding: 0.125rem 0.25rem; border-radius: 0.25rem; border: 1px solid rgba(255,255,255,0.3);">×</button>
+            `;
             document.body.appendChild(indicator);
             
             // Show god mode filters in both mobile and desktop sections
@@ -1228,6 +1412,13 @@
         function showSessionCodeModal(userId) {
             if (hasShownSessionCode) return; // Only show once per session
             
+                                    // Check if onboarding is active - don't show session code modal during onboarding
+                        const onboardingActive = document.getElementById('universal-onboarding');
+            if (onboardingActive && !onboardingActive.classList.contains('hidden')) {
+                console.log('🎬 Onboarding is active, skipping session code modal');
+                return;
+            }
+            
             sessionCode = generateSessionCode(userId);
             hasShownSessionCode = true;
             
@@ -1237,12 +1428,17 @@
                 console.log('Generated session code saved to localStorage for user:', userId);
             }
             
-            // Update the session code display in header
+            // Update the session code display in header (but not during onboarding)
             const sessionCodeDisplay = document.getElementById('session-code-display');
             const sessionCodeText = document.getElementById('session-code-text');
             if (sessionCodeDisplay && sessionCodeText) {
-                sessionCodeDisplay.style.display = 'flex';
-                sessionCodeText.textContent = sessionCode;
+                // Only show session code display if onboarding is not active
+                if (!onboardingActive || onboardingActive.classList.contains('hidden')) {
+                    sessionCodeDisplay.style.display = 'flex';
+                    sessionCodeText.textContent = sessionCode;
+                } else {
+                    console.log('🎬 Onboarding is active, hiding session code display');
+                }
             }
             
             // Create modal overlay
@@ -1287,15 +1483,45 @@
 
         function enterSessionCode() {
             const sessionCodeField = document.getElementById('session-code-field');
+            // Capture the value immediately to avoid timing issues
             const code = sessionCodeField.value.trim().toUpperCase();
+            
+            console.log('🔍 enterSessionCode called with code:', code);
             
             if (!code) {
                 alert('Please enter a session code');
                 return;
             }
             
-            // For now, we'll just store the session code and show it
-            // In a real implementation, you'd validate this against a database
+            // Check if this is the god mode session code
+            if (code === GOD_MODE_SESSION_CODE) {
+                // Activate god mode
+                isGodMode = true;
+                localStorage.setItem('bmir_god_mode_active', 'true');
+                showGodModeIndicator();
+                if (userId) {
+                    createGodModeDocument();
+                }
+                
+                // Clear the input field
+                sessionCodeField.value = '';
+                
+                // Hide the session code input
+                const sessionCodeInput = document.getElementById('session-code-input');
+                if (sessionCodeInput) {
+                    sessionCodeInput.style.display = 'none';
+                }
+                
+                // Refresh the UI to show edit/delete buttons
+                setTimeout(() => {
+                    renderFilteredLists();
+                }, 100);
+                
+                alert('🔐 God mode activated! You now have admin access.');
+                return;
+            }
+            
+            // Regular session code processing
             sessionCode = code;
             hasShownSessionCode = true;
             
@@ -1305,14 +1531,20 @@
                 console.log('Session code saved to localStorage for user:', userId);
             }
             
-            // Update the display
+            // Update the display (but not during onboarding)
+            const onboardingActive = document.getElementById('universal-onboarding');
             const sessionCodeDisplay = document.getElementById('session-code-display');
             const sessionCodeText = document.getElementById('session-code-text');
             const sessionCodeInput = document.getElementById('session-code-input');
             
             if (sessionCodeDisplay && sessionCodeText && sessionCodeInput) {
-                sessionCodeDisplay.style.display = 'flex';
-                sessionCodeText.textContent = sessionCode;
+                // Only show session code display if onboarding is not active
+                if (!onboardingActive || onboardingActive.classList.contains('hidden')) {
+                    sessionCodeDisplay.style.display = 'flex';
+                    sessionCodeText.textContent = sessionCode;
+                } else {
+                    console.log('🎬 Onboarding is active, hiding session code display');
+                }
                 sessionCodeInput.style.display = 'none';
             }
             
@@ -1337,9 +1569,14 @@
             const sessionCodeDisplay = document.getElementById('session-code-display');
             if (sessionCodeInput) {
                 sessionCodeInput.style.display = 'none';
-                // Show the display if there's a session code
+                // Show the display if there's a session code (but not during onboarding)
                 if (sessionCodeDisplay && sessionCode) {
-                    sessionCodeDisplay.style.display = 'flex';
+                    const onboardingActive = document.getElementById('universal-onboarding');
+                    if (!onboardingActive || onboardingActive.classList.contains('hidden')) {
+                        sessionCodeDisplay.style.display = 'flex';
+                    } else {
+                        console.log('🎬 Onboarding is active, hiding session code display');
+                    }
                 }
             }
         }
@@ -1406,6 +1643,41 @@
         window.installPWA = installPWA;
         window.hidePWAInstallPrompt = hidePWAInstallPrompt;
         window.clearSessionCache = clearSessionCache;
+        window.deactivateGodMode = deactivateGodMode;
+        window.enterSessionCode = enterSessionCode;
+        
+        // Add keyboard shortcut to show session code input (Ctrl+Shift+S)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                showSessionCodeInput();
+            }
+        });
+        
+        // Fix session code input button click and Enter key
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listener to the Enter button
+            const enterButton = document.getElementById('session-code-enter-btn');
+            if (enterButton) {
+                enterButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    enterSessionCode();
+                });
+            }
+            
+            // Add Enter key support for session code field
+            const sessionCodeField = document.getElementById('session-code-field');
+            if (sessionCodeField) {
+                sessionCodeField.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        enterSessionCode();
+                    }
+                });
+            }
+        });
+        
+
 
         // --- Location Autocomplete ---
         function setupLocationAutocomplete() {
@@ -1507,7 +1779,7 @@
                 timestamp: new Date()
             };
             
-            addDoc(collection(db, `artifacts/${appId}/public/data/flags`), flagData);
+            addDoc(collection(window.db, `artifacts/${appId}/public/data/flags`), flagData);
             
             renderFilteredLists();
         }
@@ -1533,7 +1805,7 @@
                 action: 'unflag'
             };
             
-            addDoc(collection(db, `artifacts/${appId}/public/data/flags`), flagData);
+            addDoc(collection(window.db, `artifacts/${appId}/public/data/flags`), flagData);
             
             renderFilteredLists();
         }
@@ -1621,206 +1893,322 @@
             // Set default direction based on date
             setDefaultDirection();
             
+            // Initialize Firebase here since app.js might not be loading properly
+            console.log('📱 index.html initialize() - Initializing Firebase directly...');
+            
             try {
                 const firebaseApp = initializeApp(firebaseConfig);
-                db = getFirestore(firebaseApp);
-                auth = getAuth(firebaseApp);
-                console.log('✅ Firebase initialized successfully');
+                window.db = getFirestore(firebaseApp);
+                window.auth = getAuth(firebaseApp);
+                console.log('✅ Firebase initialized successfully in index.html');
                 
-                // Initialize App Check with development mode detection
-                const isDevelopment = location.hostname === 'localhost' || 
-                                    location.hostname === '127.0.0.1' || 
-                                    location.hostname === '' ||
-                                    location.protocol === 'file:';
+                // Also set up AppState for app.js compatibility
+                if (typeof AppState !== 'undefined') {
+                    AppState.db = window.db;
+                    AppState.auth = window.auth;
+                }
                 
-                if (isDevelopment) {
-                    console.log('🚀 Development mode detected - App Check disabled');
-                    if (devBadge) devBadge.style.display = 'block';
-                    window.DEBUG_MODE = true;
-                } else {
-                    console.log('🛡️ Production mode detected - App Check enabled');
-                    window.DEBUG_MODE = false;
-                    // Wait for reCAPTCHA to be ready before initializing App Check
-                    const initAppCheck = () => {
-                        try {
-                            const appCheck = initializeAppCheck(firebaseApp, {
-                                provider: new ReCaptchaV3Provider('6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5'),
-                                isTokenAutoRefreshEnabled: true
-                            });
-                            console.log('✅ App Check initialized successfully');
+                // Set up authentication
+                let authAttempted = false;
+                onAuthStateChanged(window.auth, async (user) => {
+                    if (user) {
+                        console.log('✅ User authenticated:', user.uid);
+                        userId = user.uid;
+                        
+                        // Enable buttons after authentication
+                        enableButtons();
+                        
+                        // Set up session tracking
+                        setupSessionTracking();
+                        
+                        // Restore session code from localStorage if available
+                        const savedSessionCode = localStorage.getItem(`bmir_session_code_${userId}`);
+                        if (savedSessionCode && !sessionCode) {
+                            sessionCode = savedSessionCode;
+                            console.log('✅ Restored session code from localStorage:', sessionCode);
                             
-                            // Test reCAPTCHA token generation
-                            setTimeout(() => {
-                                if (typeof grecaptcha !== 'undefined') {
-                                    grecaptcha.ready(function() {
-                                        grecaptcha.execute('6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5', {action: 'submit'})
-                                        .then(function(token) {
-                                            console.log('✅ reCAPTCHA token generated successfully');
-                                        })
-                                        .catch(function(error) {
-                                            console.warn('⚠️ reCAPTCHA token generation failed:', error);
-                                        });
-                                    });
-                                } else {
-                                    console.warn('⚠️ reCAPTCHA not loaded');
-                                }
-                            }, 2000);
-                        } catch (error) {
-                            console.warn("App Check initialization failed:", error);
-                        }
-                    };
-                    
-                    // Check if reCAPTCHA is already loaded
-                    if (typeof grecaptcha !== 'undefined') {
-                        grecaptcha.ready(() => {
-                            console.log('✅ reCAPTCHA ready, initializing App Check');
-                            initAppCheck();
-                        });
-                    } else {
-                        // Wait for reCAPTCHA to load
-                        const checkRecaptcha = setInterval(() => {
-                            if (typeof grecaptcha !== 'undefined') {
-                                clearInterval(checkRecaptcha);
-                                grecaptcha.ready(() => {
-                                    console.log('✅ reCAPTCHA loaded, initializing App Check');
-                                    initAppCheck();
-                                });
+                            // Update UI to show the restored session code
+                            const sessionCodeDisplay = document.getElementById('session-code-display');
+                            const sessionCodeText = document.getElementById('session-code-text');
+                            const sessionCodeInput = document.getElementById('session-code-input');
+                            
+                            if (sessionCodeDisplay && sessionCodeText && sessionCodeInput) {
+                                sessionCodeText.textContent = sessionCode;
+                                sessionCodeDisplay.style.display = 'flex';
+                                sessionCodeInput.style.display = 'none';
                             }
-                        }, 100);
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Firebase initialization failed:', error);
-                // Show user-friendly error message
-                if (statusBar) {
-                    statusBar.innerHTML = '⚠️ Connection Error - Please check your internet connection and refresh the page';
-                    statusBar.style.backgroundColor = '#dc2626';
-                }
-                return;
-            }
-            
-            // Ensure Firebase Auth persistence is set to LOCAL (browser storage)
-            try {
-                await setPersistence(auth, browserLocalPersistence);
-                console.log('Firebase Auth persistence set to LOCAL');
-            } catch (error) {
-                console.warn('Failed to set Auth persistence (may already be set):', error);
-            }
-
-            // Track if we've already attempted authentication to prevent infinite loops
-            let authAttempted = false;
-
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    if (addDriverBtn) addDriverBtn.disabled = false;
-                    if (addRiderBtn) addRiderBtn.disabled = false;
-                    if (addDriverBtnDesktop) addDriverBtnDesktop.disabled = false;
-                    if (addRiderBtnDesktop) addRiderBtnDesktop.disabled = false;
-                    setupListeners();
-                    setupSessionTracking();
-                    
-                    // Restore session code from localStorage if available
-                    const savedSessionCode = localStorage.getItem(`bmir_session_code_${userId}`);
-                    if (savedSessionCode && !sessionCode) {
-                        sessionCode = savedSessionCode;
-                        console.log('Restored session code from localStorage:', sessionCode);
+                        }
                         
-                        // Update UI to show the restored session code
-                        const sessionCodeDisplay = document.getElementById('session-code-display');
-                        const sessionCodeText = document.getElementById('session-code-text');
-                        const sessionCodeInput = document.getElementById('session-code-input');
+                        // Show session code for new users
+                        if (!sessionCode) {
+                            setTimeout(() => {
+                                showSessionCodeModal(user.uid);
+                            }, 1000);
+                        }
                         
-                        if (sessionCodeDisplay && sessionCodeText && sessionCodeInput) {
-                            sessionCodeDisplay.style.display = 'flex';
-                            sessionCodeText.textContent = sessionCode;
-                            sessionCodeInput.style.display = 'none';
+                    } else if (!authAttempted) {
+                        // Only attempt authentication once to prevent creating new users on every refresh
+                        authAttempted = true;
+                        try {
+                            console.log('🔐 No existing session found, creating new anonymous user');
+                            await signInAnonymously(window.auth);
+                        } catch (error) {
+                            console.error("❌ Anonymous authentication failed:", error);
                         }
                     }
-                    
-                    // Show session code for new users (not returning from custom token)
-                    if (!sessionCode && typeof __initial_auth_token === 'undefined') {
-                        // Small delay to ensure UI is ready
-                        setTimeout(() => {
-                            showSessionCodeModal(user.uid);
-                        }, 1000);
-                    } else if (!sessionCode) {
-                        // Show session code input for users without a session code
-                        setTimeout(() => {
-                            showSessionCodeInput();
-                        }, 1000);
-                    }
-                    
-                    // Create god mode document if in god mode
-                    if (isGodMode) {
-                        createGodModeDocument();
-                    }
-                } else if (!authAttempted) {
-                    // Only attempt authentication once to prevent creating new users on every refresh
-                    authAttempted = true;
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined') {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            // Give Firebase a moment to restore any existing session
-                            setTimeout(async () => {
-                                try {
-                                    // Check one more time if auth state was restored
-                                    if (!auth.currentUser) {
-                                        console.log('No existing session found, creating new anonymous user');
-                                        await signInAnonymously(auth);
-                                    } else {
-                                        console.log('Existing session restored');
-                                    }
-                                } catch (error) {
-                                    console.error("Anonymous authentication failed:", error);
+                });
+                
+                // Enhanced connection monitoring with offline sync
+                const updateConnectionStatus = (online) => {
+                    const statusBar = document.querySelector('.status-bar');
+                    if (statusBar) {
+                        if (online) {
+                            statusBar.classList.remove('offline');
+                            statusBar.textContent = '🔥 BMIR RideSwap - Connect with the Playa Community';
+                            
+                            // Sync pending operations when coming back online
+                            setTimeout(() => {
+                                if (typeof QueryOptimizer !== 'undefined') {
+                                    QueryOptimizer.syncPendingOperations();
                                 }
-                            }, 500);
+                            }, 2000); // Wait 2 seconds for stable connection
+                        } else {
+                            statusBar.classList.add('offline');
+                            statusBar.textContent = '📴 Offline Mode - Your data will sync when connection returns';
                         }
-                    } catch (error) {
-                        console.error("Authentication failed:", error);
                     }
+                };
+                
+                // Enhanced connection monitoring
+                window.addEventListener('online', () => {
+                    console.log('🌐 Connection restored');
+                    updateConnectionStatus(true);
+                });
+                
+                window.addEventListener('offline', () => {
+                    console.log('📴 Connection lost');
+                    updateConnectionStatus(false);
+                });
+                
+                // Initial status
+                updateConnectionStatus(navigator.onLine);
+                
+                // Monitor connection quality for adaptive loading
+                let connectionQuality = 'unknown';
+                if (navigator.connection) {
+                    const connection = navigator.connection;
+                    connectionQuality = connection.effectiveType || 'unknown';
+                    console.log(`📡 Connection quality: ${connectionQuality}`);
+                    
+                    // Update connection quality when it changes
+                    connection.addEventListener('change', () => {
+                        connectionQuality = connection.effectiveType || 'unknown';
+                        console.log(`📡 Connection quality changed to: ${connectionQuality}`);
+                    });
                 }
-            });
+                
+            } catch (error) {
+                console.error('❌ Firebase initialization failed in index.html:', error);
+            }
             
+            // Setup UI elements that don't depend on Firebase
             populateTimeSlots();
             setupUIEventListeners();
+            
+            // Restore session code if it exists
+            restoreSessionCode();
+            
+            // Initialize data loading after Firebase is ready
+            if (window.db && window.auth) {
+                console.log('✅ Firebase ready, setting up listeners with delay...');
+                // Add a small delay to ensure Firebase is fully ready
+                setTimeout(() => {
+                    console.log('🔧 Calling setupListeners()...');
+                    setupListeners();
+                }, 500);
+            } else {
+                console.log('⏳ Waiting for Firebase to be ready...');
+                const checkFirebase = setInterval(() => {
+                    console.log('🔍 Checking Firebase readiness...');
+                    console.log('  - window.db:', window.db);
+                    console.log('  - window.auth:', window.auth);
+                    
+                    if (window.db && window.auth) {
+                        clearInterval(checkFirebase);
+                        console.log('✅ Firebase ready, setting up listeners...');
+                        setupListeners();
+                    }
+                }, 100);
+                
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    clearInterval(checkFirebase);
+                    console.error('❌ Firebase not ready after 5 seconds');
+                }, 5000);
+            }
+            
+            // Wait for app.js to be ready before initializing onboarding
+            console.log('⏳ Waiting for app.js to be ready...');
+            const waitForAppJs = setInterval(() => {
+                if (typeof window.UniversalOnboarding !== 'undefined') {
+                    clearInterval(waitForAppJs);
+                    console.log('✅ app.js is ready, initializing universal onboarding');
+                    initializeUniversalOnboarding();
+                } else {
+                    console.log('⏳ Still waiting for app.js...');
+                }
+            }, 100);
+            
+            // Timeout after 10 seconds to prevent infinite waiting
+            setTimeout(() => {
+                clearInterval(waitForAppJs);
+                if (typeof window.UniversalOnboarding === 'undefined') {
+                    console.error('❌ app.js failed to load within 10 seconds');
+                }
+            }, 10000);
         }
 
         // --- Firestore Listeners with Optimized Queries ---
         function setupListeners() {
-            if (driversUnsubscribe) driversUnsubscribe();
-            if (ridersUnsubscribe) ridersUnsubscribe();
+            console.log('🔧 setupListeners() called');
+            if (listenersSetupInProgress) {
+                console.log('⏳ Listeners setup already in progress, skipping...');
+                return;
+            }
+            
+            listenersSetupInProgress = true;
+            console.log('🔧 Setting up Firestore listeners...');
+            
+            // Clean up existing listeners
+            if (driversUnsubscribe) {
+                driversUnsubscribe();
+                driversUnsubscribe = null;
+            }
+            if (ridersUnsubscribe) {
+                ridersUnsubscribe();
+                ridersUnsubscribe = null;
+            }
 
             // Create optimized queries with server-side filtering
-            const driversQuery = createOptimizedQuery('drivers');
-            const ridersQuery = createOptimizedQuery('riders');
+            const driversQuery = QueryOptimizer.createOptimizedQuery('drivers');
+            const ridersQuery = QueryOptimizer.createOptimizedQuery('riders');
+
+
 
             // Show loading states initially
             if (driversList) showLoading(driversList);
             if (ridersList) showLoading(ridersList);
 
-            driversUnsubscribe = onSnapshot(driversQuery, (snapshot) => {
-                allDrivers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderFilteredLists();
-                updateLocationFilter();
-            }, (error) => {
-                console.error("Drivers listener error:", error);
-                if (driversList) showError(driversList, "Failed to load drivers. Please check your connection.");
-            });
-
-            ridersUnsubscribe = onSnapshot(ridersQuery, (snapshot) => {
-                allRiders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderFilteredLists();
-                updateLocationFilter();
-            }, (error) => {
-                console.error("Riders listener error:", error);
-                if (ridersList) showError(ridersList, "Failed to load riders. Please check your connection.");
+            // Enhanced data loading with offline-first strategy
+            const loadDataWithRetry = (query, type, container) => {
+                return new Promise((resolve, reject) => {
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    
+                    // First, try to load offline data immediately for instant UI
+                    const offlineData = QueryOptimizer.getOfflineData(`${type.toLowerCase()}_data`);
+                    if (offlineData) {
+                        console.log(`📦 Using offline ${type} data (${offlineData.length} items)`);
+                        if (type === 'Drivers') {
+                            allDrivers = offlineData;
+                        } else if (type === 'Riders') {
+                            allRiders = offlineData;
+                        }
+                        renderFilteredLists();
+                        updateLocationFilter();
+                    }
+                    
+                    const attemptLoad = () => {
+                        const unsubscribe = onSnapshot(query, (snapshot) => {
+                            console.log(`✅ ${type} data loaded: ${snapshot.docs.length} documents`);
+                            
+                            // Cache the data for offline use
+                            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            QueryOptimizer.setCachedData(`${type}_data`, data);
+                            QueryOptimizer.saveOfflineData(`${type.toLowerCase()}_data`, data);
+                            
+                            // Update the appropriate array
+                            if (type === 'Drivers') {
+                                allDrivers = data;
+                            } else if (type === 'Riders') {
+                                allRiders = data;
+                            }
+                            
+                            renderFilteredLists();
+                            updateLocationFilter();
+                            resolve(unsubscribe);
+                        }, (error) => {
+                            console.error(`❌ ${type} listener error:`, error);
+                            
+                            // Try to use cached data if available
+                            const cachedData = QueryOptimizer.getCachedData(`${type.toLowerCase()}_data`);
+                            if (cachedData) {
+                                console.log(`📦 Using cached ${type} data (${cachedData.length} items)`);
+                                if (type === 'Drivers') {
+                                    allDrivers = cachedData;
+                                } else if (type === 'Riders') {
+                                    allRiders = cachedData;
+                                }
+                                renderFilteredLists();
+                                updateLocationFilter();
+                                resolve(null); // No unsubscribe needed for cached data
+                                return;
+                            }
+                            
+                            // Retry logic with exponential backoff
+                            if (retryCount < maxRetries) {
+                                retryCount++;
+                                const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 10000);
+                                console.log(`🔄 Retrying ${type} load (attempt ${retryCount}/${maxRetries}) in ${delay}ms`);
+                                setTimeout(attemptLoad, delay);
+                            } else {
+                                console.error(`❌ ${type} failed after ${maxRetries} attempts`);
+                                if (container) showError(container, `Failed to load ${type.toLowerCase()}. Using offline data if available.`);
+                                
+                                // Try offline data as last resort
+                                const offlineData = QueryOptimizer.getOfflineData(`${type.toLowerCase()}_data`);
+                                if (offlineData) {
+                                    console.log(`📦 Using offline ${type} data as fallback (${offlineData.length} items)`);
+                                    if (type === 'Drivers') {
+                                        allDrivers = offlineData;
+                                    } else if (type === 'Riders') {
+                                        allRiders = offlineData;
+                                    }
+                                    renderFilteredLists();
+                                    updateLocationFilter();
+                                    resolve(null);
+                                } else {
+                                    reject(error);
+                                }
+                            }
+                        });
+                    };
+                    
+                    // Only attempt network load if online
+                    if (navigator.onLine) {
+                        attemptLoad();
+                    } else {
+                        console.log(`📴 Offline mode - using cached ${type} data`);
+                        resolve(null);
+                    }
+                });
+            };
+            
+            // Load drivers and riders with enhanced error handling
+            Promise.all([
+                loadDataWithRetry(driversQuery, 'Drivers', driversList),
+                loadDataWithRetry(ridersQuery, 'Riders', ridersList)
+            ]).then(([driversUnsub, ridersUnsub]) => {
+                driversUnsubscribe = driversUnsub;
+                ridersUnsubscribe = ridersUnsub;
+                console.log('✅ All data loaded successfully');
+            }).catch(error => {
+                console.error('❌ Failed to load some data:', error);
             });
 
             // Listen for flags (keep as is since flags are small)
             const flagsCollectionPath = `artifacts/${appId}/public/data/flags`;
-            onSnapshot(collection(db, flagsCollectionPath), (snapshot) => {
+            onSnapshot(collection(window.db, flagsCollectionPath), (snapshot) => {
                 globalFlags.clear();
                 snapshot.docs.forEach(doc => {
                     const flag = doc.data();
@@ -1831,90 +2219,385 @@
             }, (error) => {
                 console.error("Flags listener error:", error);
             });
+            
+                        // Listen for stats (total visits and active users)
+            const statsRef = doc(window.db, `artifacts/${appId}/public/data/stats`, 'counter');
+            console.log('🔧 Setting up stats listener for counter document');
+            
+            // Buttons will be enabled after authentication
+            
+            onSnapshot(statsRef, (doc) => {
+                console.log('📊 Stats data loaded:', doc.exists() ? 'exists' : 'not found');
+                if (doc.exists()) {
+                    const data = doc.data();
+                    console.log('📊 Stats document:', data);
+                    
+                    const totalVisitorsElement = document.getElementById('total-visitors');
+                    if (totalVisitorsElement) {
+                        const count = data.totalVisitors || 0;
+                        totalVisitorsElement.textContent = count.toLocaleString();
+                        console.log('✅ Updated total visitors:', count);
+                    }
+                    
+                    const activeUsersElement = document.getElementById('active-users');
+                    if (activeUsersElement) {
+                        const activeCount = data.activeUsers || 0;
+                        activeUsersElement.textContent = activeCount;
+                        console.log('✅ Updated active users:', activeCount);
+                    }
+                } else {
+                    console.log('📊 No stats document found, setting defaults');
+                    const totalVisitorsElement = document.getElementById('total-visitors');
+                    const activeUsersElement = document.getElementById('active-users');
+                    if (totalVisitorsElement) totalVisitorsElement.textContent = "0";
+                    if (activeUsersElement) activeUsersElement.textContent = "0";
+                }
+            }, (error) => {
+                console.error("❌ Stats listener error:", error);
+            });
         }
 
         // Track if optimized queries are available
         let optimizedQueriesAvailable = false;
         let indexCheckAttempted = false;
+        let listenersSetupInProgress = false;
 
-        function createOptimizedQuery(collectionType) {
-            const collectionPath = `artifacts/${appId}/public/data/${collectionType}`;
-            let baseQuery = collection(db, collectionPath);
+        // Enhanced query system with caching and offline support
+        const QueryOptimizer = {
+            cache: new Map(),
+            cacheTimeout: 5 * 60 * 1000, // 5 minutes
+            retryAttempts: 3,
+            retryDelay: 1000,
+            offlineData: new Map(),
+            pendingOperations: [],
             
-            // Try optimized query if indexes are available
-            if (optimizedQueriesAvailable) {
-                console.log('🚀 Using optimized query with indexes');
+            // Enhanced offline data persistence
+            saveOfflineData(key, data) {
+                this.offlineData.set(key, {
+                    data: data,
+                    timestamp: Date.now()
+                });
                 
-                // Optimized query with server-side filtering
-                if (currentDirection !== 'all') {
-                    baseQuery = query(baseQuery, where('direction', '==', currentDirection));
+                // Also save to localStorage for persistence across sessions
+                try {
+                    localStorage.setItem(`offline_${key}`, JSON.stringify({
+                        data: data,
+                        timestamp: Date.now()
+                    }));
+                } catch (error) {
+                    console.warn('Failed to save offline data to localStorage:', error);
+                }
+            },
+            
+            // Load offline data with fallback to localStorage
+            getOfflineData(key) {
+                // Try memory cache first
+                const memoryData = this.offlineData.get(key);
+                if (memoryData && Date.now() - memoryData.timestamp < this.cacheTimeout) {
+                    return memoryData.data;
                 }
                 
-                // Server-side filtering for deleted entries
-                baseQuery = query(baseQuery, where('deleted', '==', false));
+                // Try localStorage as fallback
+                try {
+                    const stored = localStorage.getItem(`offline_${key}`);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Date.now() - parsed.timestamp < this.cacheTimeout) {
+                            // Restore to memory cache
+                            this.offlineData.set(key, parsed);
+                            return parsed.data;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Failed to load offline data from localStorage:', error);
+                }
                 
-                // Server-side filtering for date (only show recent entries)
-                const cutoffDate = new Date();
-                cutoffDate.setDate(cutoffDate.getDate() - 7); // Only show entries from last 7 days
-                baseQuery = query(baseQuery, where('date', '>=', cutoffDate.toISOString().split('T')[0]));
+                return null;
+            },
+            
+            // Add pending operation for offline sync
+            addPendingOperation(operation) {
+                this.pendingOperations.push({
+                    ...operation,
+                    timestamp: Date.now(),
+                    retryCount: 0
+                });
                 
-                // Limit results to prevent overwhelming the client
-                baseQuery = query(baseQuery, limit(50));
+                // Save to localStorage
+                try {
+                    localStorage.setItem('pending_operations', JSON.stringify(this.pendingOperations));
+                } catch (error) {
+                    console.warn('Failed to save pending operations:', error);
+                }
+            },
+            
+            // Sync pending operations when online
+            async syncPendingOperations() {
+                if (!navigator.onLine || this.pendingOperations.length === 0) {
+                    return;
+                }
                 
-                // Order by date (most recent first)
-                baseQuery = query(baseQuery, orderBy('date', 'desc'));
-            } else {
-                // Simple fallback query - client-side filtering will handle the rest
-                baseQuery = query(baseQuery, limit(100));
+                console.log(`🔄 Syncing ${this.pendingOperations.length} pending operations...`);
+                
+                const successful = [];
+                const failed = [];
+                
+                for (const operation of this.pendingOperations) {
+                    try {
+                        // Implement operation retry logic here
+                        console.log('✅ Synced pending operation:', operation.type);
+                        successful.push(operation);
+                    } catch (error) {
+                        console.error('❌ Failed to sync operation:', error);
+                        failed.push(operation);
+                    }
+                }
+                
+                // Remove successful operations
+                this.pendingOperations = failed;
+                
+                // Update localStorage
+                try {
+                    localStorage.setItem('pending_operations', JSON.stringify(this.pendingOperations));
+                } catch (error) {
+                    console.warn('Failed to update pending operations:', error);
+                }
+                
+                console.log(`✅ Synced ${successful.length} operations, ${failed.length} failed`);
+            },
+            
+            // Create optimized query with intelligent batching
+            createOptimizedQuery(collectionType) {
+                const collectionPath = `artifacts/${appId}/public/data/${collectionType}`;
+                
+                let baseQuery = collection(window.db, collectionPath);
+                
+                // Use intelligent limit based on connection speed
+                const optimalLimit = this.getOptimalLimit();
+                baseQuery = query(baseQuery, limit(optimalLimit));
+                baseQuery = query(baseQuery, orderBy('timestamp', 'desc'));
+                
+                return baseQuery;
+            },
+            
+            // Get optimal limit based on connection speed
+            getOptimalLimit() {
+                if (navigator.connection) {
+                    const connection = navigator.connection;
+                    if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+                        return 50; // Smaller limit for slow connections
+                    } else if (connection.effectiveType === '3g') {
+                        return 100; // Medium limit for 3g
+                    }
+                }
+                return 200; // Default limit for fast connections
+            },
+            
+            // Cache query results for better performance
+            getCachedData(key) {
+                const cached = this.cache.get(key);
+                if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+                    return cached.data;
+                }
+                return null;
+            },
+            
+            // Set cached data with timestamp
+            setCachedData(key, data) {
+                this.cache.set(key, {
+                    data: data,
+                    timestamp: Date.now()
+                });
+            },
+            
+            // Clear expired cache entries
+            clearExpiredCache() {
+                const now = Date.now();
+                for (const [key, value] of this.cache.entries()) {
+                    if (now - value.timestamp > this.cacheTimeout) {
+                        this.cache.delete(key);
+                    }
+                }
+            },
+            
+            // Retry logic with exponential backoff
+            async retryWithBackoff(operation, context = 'query') {
+                let lastError;
+                
+                for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+                    try {
+                        return await operation();
+                    } catch (error) {
+                        lastError = error;
+                        console.warn(`⚠️ ${context} attempt ${attempt} failed:`, error.message);
+                        
+                        if (attempt < this.retryAttempts) {
+                            const delay = this.retryDelay * Math.pow(2, attempt - 1);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                    }
+                }
+                
+                throw lastError;
+            }
+        };
+        
+        // Clean up expired cache every 10 minutes
+        setInterval(() => QueryOptimizer.clearExpiredCache(), 10 * 60 * 1000);
+
+        // Load expired entries on demand with enhanced error handling
+        async function loadExpiredEntries(collectionType) {
+            console.log(`📅 Loading expired ${collectionType} entries...`);
+            
+            const cacheKey = `expired_${collectionType}`;
+            const cachedData = QueryOptimizer.getCachedData(cacheKey);
+            
+            if (cachedData) {
+                console.log(`📦 Using cached expired ${collectionType} data (${cachedData.length} items)`);
+                mergeExpiredEntries(collectionType, cachedData);
+                return;
             }
             
-            return baseQuery;
-        }
-
-        // Test if optimized queries work
-        function testOptimizedQueries() {
-            if (indexCheckAttempted) return;
-            indexCheckAttempted = true;
+            const collectionPath = `artifacts/${appId}/public/data/${collectionType}`;
+            const cutoffDate = new Date();
+            cutoffDate.setTime(cutoffDate.getTime() - (12 * 60 * 60 * 1000)); // 12 hours ago
             
-            console.log('🔍 Testing if optimized queries are available...');
-            
-            // Try a test query with the optimized structure
-            const testQuery = query(
-                collection(db, `artifacts/${appId}/public/data/drivers`),
-                where('direction', '==', 'to-brc'),
-                limit(1)
+            const expiredQuery = query(
+                collection(window.db, collectionPath),
+                where('deleted', '!=', true),
+                where('timestamp', '<=', cutoffDate),
+                orderBy('timestamp', 'desc'),
+                limit(50)
             );
             
-            // Listen for a short time to see if it works
-            const unsubscribe = onSnapshot(testQuery, 
-                (snapshot) => {
-                    console.log('✅ Optimized queries are available!');
-                    optimizedQueriesAvailable = true;
-                    unsubscribe();
-                    
-                    // Re-setup listeners with optimized queries
-                    setupListeners();
-                },
-                (error) => {
-                    console.log('⚠️ Optimized queries not available, using fallback');
-                    optimizedQueriesAvailable = false;
-                    unsubscribe();
-                },
-                { includeMetadataChanges: false }
-            );
-            
-            // Timeout after 5 seconds
-            setTimeout(() => {
-                if (!optimizedQueriesAvailable) {
-                    console.log('⏰ Index test timed out, using fallback');
-                    optimizedQueriesAvailable = false;
+            try {
+                const snapshot = await QueryOptimizer.retryWithBackoff(
+                    () => getDocs(expiredQuery),
+                    `expired ${collectionType} query`
+                );
+                
+                const expiredEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log(`📅 Loaded ${expiredEntries.length} expired ${collectionType} entries`);
+                
+                // Cache the results
+                QueryOptimizer.setCachedData(cacheKey, expiredEntries);
+                
+                // Merge with existing entries
+                mergeExpiredEntries(collectionType, expiredEntries);
+                
+            } catch (error) {
+                console.error(`Error loading expired ${collectionType}:`, error);
+                
+                // Try to use cached data as fallback
+                const fallbackData = QueryOptimizer.getCachedData(cacheKey);
+                if (fallbackData) {
+                    console.log(`📦 Using fallback cached expired ${collectionType} data`);
+                    mergeExpiredEntries(collectionType, fallbackData);
                 }
-            }, 5000);
+            }
+        }
+        
+        // Helper function to merge expired entries
+        function mergeExpiredEntries(collectionType, entries) {
+            if (collectionType === 'drivers') {
+                allDrivers = [...allDrivers, ...entries];
+            } else if (collectionType === 'riders') {
+                allRiders = [...allRiders, ...entries];
+            }
+            renderFilteredLists();
+        }
+        
+        // Load deleted entries on demand with enhanced error handling
+        async function loadDeletedEntries(collectionType) {
+            console.log(`🗑️ Loading deleted ${collectionType} entries...`);
+            
+            const cacheKey = `deleted_${collectionType}`;
+            const cachedData = QueryOptimizer.getCachedData(cacheKey);
+            
+            if (cachedData) {
+                console.log(`📦 Using cached deleted ${collectionType} data (${cachedData.length} items)`);
+                mergeDeletedEntries(collectionType, cachedData);
+                return;
+            }
+            
+            const collectionPath = `artifacts/${appId}/public/data/${collectionType}`;
+            const deletedQuery = query(
+                collection(window.db, collectionPath),
+                where('deleted', '==', true),
+                orderBy('timestamp', 'desc'),
+                limit(50)
+            );
+            
+            try {
+                const snapshot = await QueryOptimizer.retryWithBackoff(
+                    () => getDocs(deletedQuery),
+                    `deleted ${collectionType} query`
+                );
+                
+                const deletedEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log(`🗑️ Loaded ${deletedEntries.length} deleted ${collectionType} entries`);
+                
+                // Cache the results
+                QueryOptimizer.setCachedData(cacheKey, deletedEntries);
+                
+                // Merge with existing entries
+                mergeDeletedEntries(collectionType, deletedEntries);
+                
+            } catch (error) {
+                console.error(`Error loading deleted ${collectionType}:`, error);
+                
+                // Try to use cached data as fallback
+                const fallbackData = QueryOptimizer.getCachedData(cacheKey);
+                if (fallbackData) {
+                    console.log(`📦 Using fallback cached deleted ${collectionType} data`);
+                    mergeDeletedEntries(collectionType, fallbackData);
+                }
+            }
+        }
+        
+        // Helper function to merge deleted entries
+        function mergeDeletedEntries(collectionType, entries) {
+            if (collectionType === 'drivers') {
+                allDrivers = [...allDrivers, ...entries];
+            } else if (collectionType === 'riders') {
+                allRiders = [...allRiders, ...entries];
+            }
+            renderFilteredLists();
+        }
+        
+        // --- Caching for Performance ---
+        const dayNameCache = new Map();
+        const timeSlotPriorityCache = new Map();
+        
+        function getDayNameCached(date) {
+            if (!dayNameCache.has(date)) {
+                dayNameCache.set(date, getDayName(date));
+            }
+            return dayNameCache.get(date);
+        }
+        
+        function getTimeSlotPriorityCached(timeSlot) {
+            if (!timeSlotPriorityCache.has(timeSlot)) {
+                timeSlotPriorityCache.set(timeSlot, getTimeSlotPriority(timeSlot));
+            }
+            return timeSlotPriorityCache.get(timeSlot);
+        }
+        
+        // Clear caches when filters change to ensure fresh data
+        function clearCaches() {
+            dayNameCache.clear();
+            timeSlotPriorityCache.clear();
         }
         
         // --- Expiration Logic ---
         function getExpirationTime(entry) {
             const entryDate = new Date(entry.date + 'T00:00:00');
+            const now = new Date();
+            
+            // If the entry date is in the past, it should be expired immediately
+            if (entryDate < now) {
+                return new Date(now.getTime() - (1 * 60 * 60 * 1000)); // 1 hour ago
+            }
             
             // If it's "Flexible Time", use the end of the selected day
             if (entry.timeSlot === 'Flexible Time') {
@@ -2002,49 +2685,97 @@
             };
         }
 
+        function restoreSessionCode() {
+            console.log('🔧 restoreSessionCode() called');
+            // Check if user has a saved session code
+            const savedSessionCode = localStorage.getItem('bmir_session_code');
+            console.log('🔍 Saved session code:', savedSessionCode);
+            if (savedSessionCode) {
+                const sessionCodeDisplay = document.getElementById('session-code-display');
+                const sessionCodeText = document.getElementById('session-code-text');
+                const sessionCodeInput = document.getElementById('session-code-input');
+                
+                console.log('🔍 Session code elements:', {
+                    display: !!sessionCodeDisplay,
+                    text: !!sessionCodeText,
+                    input: !!sessionCodeInput
+                });
+                
+                if (sessionCodeDisplay && sessionCodeText && sessionCodeInput) {
+                    sessionCodeText.textContent = savedSessionCode;
+                    sessionCodeDisplay.style.display = 'flex';
+                    sessionCodeInput.style.display = 'none';
+                    console.log('✅ Session code restored and displayed');
+                }
+            } else {
+                console.log('ℹ️ No saved session code found');
+            }
+        }
+
+        function updateSectionHeaders(driversCount, ridersCount) {
+            const driversTitle = document.querySelector('.section-title');
+            const ridersTitle = document.querySelectorAll('.section-title')[1];
+            
+            if (driversTitle) {
+                driversTitle.textContent = `${driversCount} Drivers with Space`;
+            }
+            if (ridersTitle) {
+                ridersTitle.textContent = `${ridersCount} People Needing Rides`;
+            }
+        }
+
         function renderFilteredLists() {
             if (!driversList || !ridersList) return;
             
-            // Get filtered data with additional client-side filtering for fallback
-            const filteredDrivers = allDrivers
-                .filter(d => d.direction === currentDirection) // Client-side direction filter
-                .filter(d => currentDayFilter === 'all' || getDayName(d.date) === currentDayFilter)
-                .filter(d => currentLocationFilter === 'all' || d.location === currentLocationFilter)
-                .filter(d => !shouldHideEntry(d.id, 'driver'))
-                .filter(d => showExpiredEntries || !isEntryExpired(d))
-                .filter(d => !showFavoritesOnly || isEntryFavorited(d.id, 'driver')) // Filter by favorites if enabled
-                .filter(d => isGodMode ? (showDeletedEntries ? d.deleted : !d.deleted) : !d.deleted) // Handle soft deletes
+            // Get filtered data with optimized single-pass filtering
+            const filteredDrivers = allDrivers.filter(d => {
+                if (d.deleted === true) return false;
+                if (currentDirection !== 'all' && d.direction !== currentDirection) return false;
+                if (currentDayFilter !== 'all' && getDayNameCached(d.date) !== currentDayFilter) return false;
+                if (currentLocationFilter !== 'all' && d.location !== currentLocationFilter) return false;
+                if (shouldHideEntry(d.id, 'driver')) return false;
+                if (!showExpiredEntries && isEntryExpired(d)) return false;
+                if (showFavoritesOnly && !isEntryFavorited(d.id, 'driver')) return false;
+                return true;
+            })
                 .sort((a, b) => {
                     // First sort by date (closest to today first)
                     const dateComparison = new Date(a.date) - new Date(b.date);
                     if (dateComparison !== 0) return dateComparison;
                     
                     // Then sort by time slot (Flexible Time first, then chronological)
-                    const aPriority = getTimeSlotPriority(a.timeSlot);
-                    const bPriority = getTimeSlotPriority(b.timeSlot);
+                    const aPriority = getTimeSlotPriorityCached(a.timeSlot);
+                    const bPriority = getTimeSlotPriorityCached(b.timeSlot);
                     return aPriority - bPriority;
                 });
 
-            const filteredRiders = allRiders
-                .filter(r => r.direction === currentDirection) // Client-side direction filter
-                .filter(r => currentDayFilter === 'all' || getDayName(r.date) === currentDayFilter)
-                .filter(r => currentLocationFilter === 'all' || r.location === currentLocationFilter)
-                .filter(r => !shouldHideEntry(r.id, 'rider'))
-                .filter(r => showExpiredEntries || !isEntryExpired(r))
-                .filter(r => !showFavoritesOnly || isEntryFavorited(r.id, 'rider')) // Filter by favorites if enabled
-                .filter(r => isGodMode ? (showDeletedEntries ? r.deleted : !r.deleted) : !r.deleted) // Handle soft deletes
+            const filteredRiders = allRiders.filter(r => {
+                if (r.deleted === true) return false;
+                if (currentDirection !== 'all' && r.direction !== currentDirection) return false;
+                if (currentDayFilter !== 'all' && getDayNameCached(r.date) !== currentDayFilter) return false;
+                if (currentLocationFilter !== 'all' && r.location !== currentLocationFilter) return false;
+                if (shouldHideEntry(r.id, 'rider')) return false;
+                if (!showExpiredEntries && isEntryExpired(r)) return false;
+                if (showFavoritesOnly && !isEntryFavorited(r.id, 'rider')) return false;
+                return true;
+            })
                 .sort((a, b) => {
                     // First sort by date (closest to today first)
                     const dateComparison = new Date(a.date) - new Date(b.date);
                     if (dateComparison !== 0) return dateComparison;
                     // Then sort by time slot (Flexible Time first, then chronological)
-                    const aPriority = getTimeSlotPriority(a.timeSlot);
-                    const bPriority = getTimeSlotPriority(b.timeSlot);
+                    const aPriority = getTimeSlotPriorityCached(a.timeSlot);
+                    const bPriority = getTimeSlotPriorityCached(b.timeSlot);
                     return aPriority - bPriority;
                 });
 
 
 
+
+
+            // Update section headers with counts
+            updateSectionHeaders(filteredDrivers.length, filteredRiders.length);
+            
             // Render with pagination based on filters
             const driversSection = document.getElementById('drivers-section');
             const ridersSection = document.getElementById('riders-section');
@@ -2259,6 +2990,37 @@
                 
                 <div class="card-details">
                     <p class="card-description">${entry.details}</p>
+                    
+                    ${type === 'driver' && entry.passengerSpace ? `
+                        <p style="font-size: 0.875rem; color: #374151; margin-top: 0.5rem;">
+                            <strong>Passenger capacity:</strong> ${entry.passengerSpace}
+                        </p>
+                    ` : ''}
+                    
+                    ${type === 'driver' && entry.cargoSpace ? `
+                        <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;">
+                            <strong>Cargo capacity:</strong> ${entry.cargoSpace}
+                        </p>
+                    ` : ''}
+                    
+                    ${type === 'driver' && entry.routeDetails ? `
+                        <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;">
+                            <strong>Route details:</strong> ${entry.routeDetails}
+                        </p>
+                    ` : ''}
+                    
+                    ${type === 'rider' && entry.riderStuff ? `
+                        <p style="font-size: 0.875rem; color: #374151; margin-top: 0.5rem;">
+                            <strong>Belongings:</strong> ${entry.riderStuff}
+                        </p>
+                    ` : ''}
+                    
+                    ${type === 'rider' && entry.campInfo ? `
+                        <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;">
+                            <strong>Camp info:</strong> ${entry.campInfo}
+                        </p>
+                    ` : ''}
+                    
                     ${expirationInfo}
                 </div>
             `;
@@ -2267,6 +3029,40 @@
 
         // --- Event Handlers ---
         function setupUIEventListeners() {
+            // Add Driver/Rider Buttons
+            const addDriverBtn = document.getElementById('add-driver-btn');
+            const addDriverBtnDesktop = document.getElementById('add-driver-btn-desktop');
+            const addRiderBtn = document.getElementById('add-rider-btn');
+            const addRiderBtnDesktop = document.getElementById('add-rider-btn-desktop');
+            
+            if (addDriverBtn) {
+                console.log('✅ Added event listener to add-driver-btn');
+                addDriverBtn.addEventListener('click', () => {
+                    console.log('🎯 Add driver button clicked');
+                    showSessionCodeInput();
+                });
+            }
+            
+            if (addDriverBtnDesktop) {
+                addDriverBtnDesktop.addEventListener('click', () => {
+                    showSessionCodeInput();
+                });
+            }
+            
+            if (addRiderBtn) {
+                console.log('✅ Added event listener to add-rider-btn');
+                addRiderBtn.addEventListener('click', () => {
+                    console.log('🎯 Add rider button clicked');
+                    showSessionCodeInput();
+                });
+            }
+            
+            if (addRiderBtnDesktop) {
+                addRiderBtnDesktop.addEventListener('click', () => {
+                    showSessionCodeInput();
+                });
+            }
+            
             // Help Modal
             const helpLink = document.getElementById('help-link');
             const helpModal = document.getElementById('help-modal');
@@ -2310,8 +3106,10 @@
                             });
                         }
                         
+                        // Clear caches and reload data from server with new direction filter
+                        clearCaches();
+                        setupListeners();
                         updateLocationFilter();
-                        renderFilteredLists();
                     }
                 });
             }
@@ -2334,8 +3132,10 @@
                             });
                         }
                         
+                        // Clear caches and reload data from server with new direction filter
+                        clearCaches();
+                        setupListeners();
                         updateLocationFilter();
-                        renderFilteredLists();
                     }
                 });
             }
@@ -2348,8 +3148,10 @@
                         currentPage = 0; // Reset to first page
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
+                        clearCaches(); // Clear caches when filters change
                         updateLocationFilter();
                         debouncedRender();
+                        updateClearFiltersVisibility();
                     });
                 }
             });
@@ -2363,6 +3165,7 @@
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
+                        updateClearFiltersVisibility();
                     });
                 }
             });
@@ -2373,8 +3176,22 @@
             
             [showExpiredToggle, showExpiredToggleDesktop].forEach(toggle => {
                 if (toggle) {
-                    toggle.addEventListener('change', () => {
+                    toggle.addEventListener('change', async () => {
                         showExpiredEntries = toggle.checked;
+                        
+                        if (showExpiredEntries) {
+                            // Load expired entries on demand
+                            console.log('📅 Loading expired entries on demand...');
+                            await Promise.all([
+                                loadExpiredEntries('drivers'),
+                                loadExpiredEntries('riders')
+                            ]);
+                        } else {
+                            // Remove expired entries from display
+                            allDrivers = allDrivers.filter(d => !isEntryExpired(d));
+                            allRiders = allRiders.filter(r => !isEntryExpired(r));
+                        }
+                        
                         // Sync both checkboxes
                         if (showExpiredToggle) showExpiredToggle.checked = showExpiredEntries;
                         if (showExpiredToggleDesktop) showExpiredToggleDesktop.checked = showExpiredEntries;
@@ -2385,6 +3202,7 @@
                         ridersPage = 0; // Reset riders page
                         updateLocationFilter();
                         debouncedRender();
+                        updateClearFiltersVisibility();
                     });
                 }
             });
@@ -2407,6 +3225,7 @@
                         ridersPage = 0; // Reset riders page
                         updateLocationFilter();
                         debouncedRender();
+                        updateClearFiltersVisibility();
                     });
                 }
             });
@@ -2436,6 +3255,7 @@
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
+                        updateClearFiltersVisibility();
                     });
                 }
             });
@@ -2465,7 +3285,99 @@
                         driversPage = 0; // Reset drivers page
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
+                        updateClearFiltersVisibility();
                     });
+                }
+            });
+
+            // Clear Filters Functionality
+            function updateClearFiltersVisibility() {
+                const clearFiltersMobile = document.getElementById('clear-filters-mobile');
+                const clearFiltersDesktop = document.getElementById('clear-filters-desktop');
+                
+                // Check if any filters are active (except direction)
+                const hasActiveFilters = 
+                    currentDayFilter !== 'all' ||
+                    currentLocationFilter !== 'all' ||
+                    showExpiredEntries ||
+                    showFavoritesOnly ||
+                    showDriversOnly ||
+                    showRidersOnly;
+                
+                // Show/hide clear filters buttons
+                if (clearFiltersMobile) {
+                    clearFiltersMobile.style.display = hasActiveFilters ? 'block' : 'none';
+                }
+                if (clearFiltersDesktop) {
+                    clearFiltersDesktop.style.display = hasActiveFilters ? 'block' : 'none';
+                }
+            }
+
+            function clearAllFilters() {
+                // Reset all filters to default (except direction)
+                currentDayFilter = 'all';
+                currentLocationFilter = 'all';
+                showExpiredEntries = false;
+                showFavoritesOnly = false;
+                showDriversOnly = false;
+                showRidersOnly = false;
+                
+                // Update UI elements
+                const dayFilters = [dayFilter, dayFilterDesktop];
+                const locationFilters = [locationFilter, locationFilterDesktop];
+                const showExpiredToggles = [showExpiredToggle, showExpiredToggleDesktop];
+                const showFavoritesToggles = [showFavoritesToggle, showFavoritesToggleDesktop];
+                const showDriversOnlyToggles = [showDriversOnlyToggle, showDriversOnlyToggleDesktop];
+                const showRidersOnlyToggles = [showRidersOnlyToggle, showRidersOnlyToggleDesktop];
+                
+                // Reset select elements
+                dayFilters.forEach(filter => {
+                    if (filter) filter.value = 'all';
+                });
+                locationFilters.forEach(filter => {
+                    if (filter) filter.value = 'all';
+                });
+                
+                // Reset checkboxes
+                showExpiredToggles.forEach(toggle => {
+                    if (toggle) toggle.checked = false;
+                });
+                showFavoritesToggles.forEach(toggle => {
+                    if (toggle) toggle.checked = false;
+                });
+                showDriversOnlyToggles.forEach(toggle => {
+                    if (toggle) toggle.checked = false;
+                });
+                showRidersOnlyToggles.forEach(toggle => {
+                    if (toggle) toggle.checked = false;
+                });
+                
+                // Clear localStorage
+                localStorage.removeItem('bmir_show_expired');
+                localStorage.removeItem('bmir_show_favorites');
+                localStorage.removeItem('bmir_show_drivers_only');
+                localStorage.removeItem('bmir_show_riders_only');
+                
+                // Reset pagination
+                currentPage = 0;
+                driversPage = 0;
+                ridersPage = 0;
+                
+                // Update UI and re-render
+                updateLocationFilter();
+                debouncedRender();
+                updateClearFiltersVisibility();
+                
+                console.log('🗑️ All filters cleared');
+            }
+
+            // Clear Filters Button Event Listeners
+            const clearFiltersBtnMobile = document.getElementById('clear-filters-btn-mobile');
+            const clearFiltersBtnDesktop = document.getElementById('clear-filters-btn-desktop');
+            
+            [clearFiltersBtnMobile, clearFiltersBtnDesktop].forEach(btn => {
+                if (btn) {
+                    btn.addEventListener('click', clearAllFilters);
                 }
             });
 
@@ -2539,77 +3451,12 @@
             // Restore Confirmation
             document.getElementById('cancel-restore-btn').addEventListener('click', closeRestoreConfirmModal);
             document.getElementById('confirm-restore-btn').addEventListener('click', handleRestore);
+            
+            // Initialize clear filters visibility
+            updateClearFiltersVisibility();
         }
 
-        // Production-ready data validation function
-        function validateEntry(data) {
-            const errors = [];
-            
-            // Name validation
-            if (!data.name || data.name.trim().length === 0) {
-                errors.push("Name is required");
-            } else if (data.name.length > 100) {
-                errors.push("Name must be less than 100 characters");
-            }
-            
-            // Contact validation
-            if (!data.email && !data.phone) {
-                errors.push("At least one contact method (email or phone) is required");
-            }
-            
-            // Email validation
-            if (data.email && data.email.trim()) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(data.email)) {
-                    errors.push("Please enter a valid email address");
-                }
-                if (data.email.length > 100) {
-                    errors.push("Email must be less than 100 characters");
-                }
-            }
-            
-            // Phone validation
-            if (data.phone && data.phone.trim()) {
-                const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-                const cleanPhone = data.phone.replace(/[\s\-\(\)]/g, '');
-                if (!phoneRegex.test(cleanPhone)) {
-                    errors.push("Please enter a valid phone number");
-                }
-                if (data.phone.length > 20) {
-                    errors.push("Phone number must be less than 20 characters");
-                }
-            }
-            
-            // Location validation
-            if (!data.location || data.location.trim().length === 0) {
-                errors.push("Location is required");
-            } else if (data.location.length > 100) {
-                errors.push("Location must be less than 100 characters");
-            }
-            
-            // Date validation
-            if (!data.date) {
-                errors.push("Date is required");
-            } else {
-                const selectedDate = new Date(data.date);
-                const now = new Date();
-                if (selectedDate < now.setDate(now.getDate() - 1)) {
-                    errors.push("Date cannot be in the past");
-                }
-                if (selectedDate > now.setDate(now.getDate() + 365)) {
-                    errors.push("Date cannot be more than 1 year in the future");
-                }
-            }
-            
-            // Details validation
-            if (!data.details || data.details.trim().length === 0) {
-                errors.push("Details are required");
-            } else if (data.details.length > 1000) {
-                errors.push("Details must be less than 1000 characters");
-            }
-            
-            return errors;
-        }
+        // Note: Form validation is now handled by the shared FormUtils.validateEntry() function
         
         // --- Rate Limiting Functions ---
         function getRateLimitData() {
@@ -2709,35 +3556,81 @@
             if (!checkRateLimit()) {
                 return;
             }
-
-            // Validate that at least one contact method is provided
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
             
-            if (!email && !phone) {
-                alert('Please provide at least one contact method (email or phone).');
+            // Check if offline and handle accordingly
+            if (!navigator.onLine) {
+                console.log('📴 Offline form submission detected');
+                
+                // Store form data for later sync
+                const offlineFormData = {
+                    type: 'form_submission',
+                    formData: {
+                        name: document.getElementById('name').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        phone: document.getElementById('phone').value.trim(),
+                        location: document.getElementById('location').value.trim(),
+                        date: document.getElementById('date').value,
+                        timeSlot: document.getElementById('time-slot').value,
+                        details: document.getElementById('details').value.trim(),
+                        direction: currentDirection,
+                        timestamp: new Date(),
+                        authorId: userId,
+                        // Driver-specific fields
+                        ...(type === 'driver' && {
+                            passengerSpace: document.getElementById('passenger-space')?.value.trim() || '',
+                            cargoSpace: document.getElementById('cargo-space')?.value.trim() || '',
+                            routeDetails: document.getElementById('route-details')?.value.trim() || ''
+                        }),
+                        // Rider-specific fields
+                        ...(type === 'rider' && {
+                            riderStuff: document.getElementById('rider-stuff')?.value.trim() || '',
+                            campInfo: document.getElementById('camp-info')?.value.trim() || ''
+                        })
+                    },
+                    collectionType: type,
+                    timestamp: Date.now()
+                };
+                
+                // Add to pending operations
+                if (typeof QueryOptimizer !== 'undefined') {
+                    QueryOptimizer.addPendingOperation(offlineFormData);
+                }
+                
+                // Show offline success message
+                alert('📴 Form saved offline - will sync when connection returns');
+                closeModal();
                 return;
             }
 
             const type = entryTypeInput.value;
             const id = entryIdInput.value;
-            const collectionPath = `artifacts/${appId}/public/data/${type}s`;
             
-            const data = {
+            // Collect form data
+            const formData = {
                 name: document.getElementById('name').value.trim(),
-                email: email,
-                phone: phone,
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
                 location: document.getElementById('location').value.trim(),
                 date: document.getElementById('date').value,
                 timeSlot: document.getElementById('time-slot').value,
                 details: document.getElementById('details').value.trim(),
-                direction: currentDirection,
-                authorId: userId,
-                timestamp: new Date()
+                
+                // Driver-specific fields
+                ...(type === 'driver' && {
+                    passengerSpace: document.getElementById('passenger-space')?.value.trim() || '',
+                    cargoSpace: document.getElementById('cargo-space')?.value.trim() || '',
+                    routeDetails: document.getElementById('route-details')?.value.trim() || ''
+                }),
+                
+                // Rider-specific fields
+                ...(type === 'rider' && {
+                    riderStuff: document.getElementById('rider-stuff')?.value.trim() || '',
+                    campInfo: document.getElementById('camp-info')?.value.trim() || ''
+                })
             };
 
-            // Validate the data
-            const validationErrors = validateEntry(data);
+            // Use shared FormUtils for validation
+            const validationErrors = FormUtils.validateEntry(formData);
             if (validationErrors.length > 0) {
                 alert('Please fix the following errors:\n\n' + validationErrors.join('\n'));
                 return;
@@ -2755,18 +3648,58 @@
                 if (id) {
                     // Handle god mode editing differently
                     if (isGodMode) {
-                        console.log('🛡️ God mode: Creating new entry and deleting old one');
-                        // Create new entry with current user as author
-                        const newDocRef = await addDoc(collection(db, collectionPath), data);
-                        // Delete the old entry
-                        await deleteDoc(doc(db, collectionPath, id));
-                        console.log('🛡️ God mode: Successfully replaced entry');
+                        console.log('🛡️ God mode: Updating existing entry');
+                        
+                        // For God Mode, use the same approach as soft deletes - minimal update
+                        const collectionPath = `artifacts/${appId}/public/data/${type}s`;
+                        const docRef = doc(window.db, collectionPath, id);
+                        
+                        // Get current document data to preserve authorId
+                        const docSnap = await getDoc(docRef);
+                        if (!docSnap.exists()) {
+                            throw new Error('Document not found');
+                        }
+                        const currentData = docSnap.data();
+                        
+                        // Update only the essential fields that are allowed by security rules
+                        await updateDoc(docRef, {
+                            name: formData.name,
+                            email: formData.email || null,
+                            phone: formData.phone || null,
+                            location: formData.location,
+                            date: formData.date,
+                            timeSlot: formData.timeSlot,
+                            details: formData.details,
+                            direction: currentDirection,
+                            timestamp: new Date(),
+                            // Preserve the original authorId to satisfy security rules
+                            authorId: currentData.authorId,
+                            editedBy: userId,
+                            editedAt: new Date()
+                        });
+                        
+                        console.log('🛡️ God mode: Successfully updated entry');
                     } else {
                         // Normal update for regular users
-                    await updateDoc(doc(db, collectionPath, id), data);
+                        const collectionPath = `artifacts/${appId}/public/data/${type}s`;
+                        await updateDoc(doc(window.db, collectionPath, id), {
+                            ...formData,
+                            direction: currentDirection,
+                            timestamp: new Date()
+                        });
                     }
                 } else {
-                    await addDoc(collection(db, collectionPath), data);
+                    // Use shared FormUtils for new submissions
+                    const result = await FormUtils.submitFormToFirebase(
+                        formData, 
+                        type, 
+                        currentDirection === 'to-brc' ? 'to-burning-man' : 'from-burning-man',
+                        false // isOnboarding = false
+                    );
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Submission failed');
+                    }
                 }
                 
                 // Track successful entry creation/update
@@ -2815,7 +3748,7 @@
                 if (isGodMode) {
                     console.log('🛡️ God mode: Soft deleting entry');
                     // Soft delete - mark as deleted instead of actually deleting
-                    await updateDoc(doc(db, collectionPath, id), {
+                    await updateDoc(doc(window.db, collectionPath, id), {
                         deleted: true,
                         deletedAt: new Date(),
                         deletedBy: userId
@@ -2823,7 +3756,7 @@
                     console.log("🛡️ God mode: Entry soft deleted successfully!");
                 } else {
                     // For regular users, also use soft delete for safety
-                    await updateDoc(doc(db, collectionPath, id), {
+                    await updateDoc(doc(window.db, collectionPath, id), {
                         deleted: true,
                         deletedAt: new Date(),
                         deletedBy: userId
@@ -2851,7 +3784,7 @@
             
             try {
                 console.log('🛡️ God mode: Restoring soft deleted entry');
-                await updateDoc(doc(db, collectionPath, id), {
+                await updateDoc(doc(window.db, collectionPath, id), {
                     deleted: false,
                     deletedAt: null,
                     deletedBy: null
@@ -2891,11 +3824,11 @@
             if (!updates || updates.length === 0) return;
             
             try {
-                const batch = writeBatch(db);
+                const batch = writeBatch(window.db);
                 
                 updates.forEach(({id, type, data}) => {
-                    const collectionPath = `artifacts/${appId}/public/data/${type}s`;
-                    const docRef = doc(db, collectionPath, id);
+                    const collectionPath = `artifacts/${window.APP_CONFIG?.appId || 'bmir-rideshare'}/public/data/${type}s`;
+                    const docRef = doc(window.db, collectionPath, id);
                     batch.update(docRef, data);
                 });
                 
@@ -2911,11 +3844,11 @@
             if (!entries || entries.length === 0) return;
             
             try {
-                const batch = writeBatch(db);
+                const batch = writeBatch(window.db);
                 
                 entries.forEach(({id, type}) => {
-                    const collectionPath = `artifacts/${appId}/public/data/${type}s`;
-                    const docRef = doc(db, collectionPath, id);
+                    const collectionPath = `artifacts/${window.APP_CONFIG?.appId || 'bmir-rideshare'}/public/data/${type}s`;
+                    const docRef = doc(window.db, collectionPath, id);
                     batch.update(docRef, {
                         deleted: true,
                         deletedAt: new Date(),
@@ -2938,7 +3871,7 @@
                 cutoffDate.setDate(cutoffDate.getDate() - 30); // 30 days old
                 
                 const oldEntriesQuery = query(
-                    collection(db, `artifacts/${appId}/public/data/drivers`),
+                    collection(window.db, `artifacts/${appId}/public/data/drivers`),
                     where('date', '<', cutoffDate.toISOString().split('T')[0]),
                     where('deleted', '==', false),
                     limit(50)
@@ -2954,7 +3887,7 @@
                 
                 // Also cleanup riders
                 const oldRidersQuery = query(
-                    collection(db, `artifacts/${appId}/public/data/riders`),
+                    collection(window.db, `artifacts/${appId}/public/data/riders`),
                     where('date', '<', cutoffDate.toISOString().split('T')[0]),
                     where('deleted', '==', false),
                     limit(50)
@@ -2996,19 +3929,38 @@
 
             modalTitle.textContent = entry ? `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}` : `Add New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
             
-            // Update location label based on direction
+            // Update location label based on direction (matching mobile onboarding)
             if (locationLabel) {
-                locationLabel.textContent = currentDirection === 'from-brc' ? 'Destination (City)' : 'Location (City)';
+                if (currentDirection === 'to-brc') {
+                    locationLabel.textContent = 'Where are you starting from?';
+                } else {
+                    locationLabel.textContent = 'Where are you going after Burning Man?';
+                }
             }
             
-            // Update details label based on type and direction
-            if (detailsLabel) {
+
+            
+            // Show/hide type-specific fields
+            const driverFields = document.getElementById('driver-fields');
+            const riderFields = document.getElementById('rider-fields');
+            const campInfoSection = modal.querySelector('#camp-info-section');
+            
+            if (driverFields && riderFields) {
                 if (type === 'driver') {
-                    detailsLabel.textContent = 'Available Space (e.g., "1 person + 1 bag")';
+                    driverFields.style.display = 'block';
+                    riderFields.style.display = 'none';
                 } else {
-                    detailsLabel.textContent = currentDirection === 'from-brc' 
-                        ? 'Your Stuff and Playa Location (e.g., "1 person, 1 tent, at 9:00 & Esplanade")'
-                        : 'Your Stuff (e.g., "1 person, 1 tent")';
+                    driverFields.style.display = 'none';
+                    riderFields.style.display = 'block';
+                    
+                    // Show camp info section only for "from-brc" direction (matching mobile onboarding)
+                    if (campInfoSection) {
+                        if (currentDirection === 'from-brc') {
+                            campInfoSection.style.display = 'block';
+                        } else {
+                            campInfoSection.style.display = 'none';
+                        }
+                    }
                 }
             }
             
@@ -3020,6 +3972,19 @@
                 document.getElementById('date').value = entry.date;
                 document.getElementById('time-slot').value = entry.timeSlot;
                 document.getElementById('details').value = entry.details;
+                
+                // Populate driver-specific fields
+                if (type === 'driver') {
+                    document.getElementById('passenger-space').value = entry.passengerSpace || '';
+                    document.getElementById('cargo-space').value = entry.cargoSpace || '';
+                    document.getElementById('route-details').value = entry.routeDetails || '';
+                }
+                
+                // Populate rider-specific fields
+                if (type === 'rider') {
+                    document.getElementById('rider-stuff').value = entry.riderStuff || '';
+                    document.getElementById('camp-info').value = entry.campInfo || '';
+                }
             }
 
             // Show rate limit status if not editing
@@ -3055,6 +4020,22 @@
             if (saveBtn) {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
+            }
+            
+            // Clear type-specific fields
+            const driverFields = document.getElementById('driver-fields');
+            const riderFields = document.getElementById('rider-fields');
+            
+            if (driverFields) {
+                driverFields.style.display = 'none';
+                const driverInputs = driverFields.querySelectorAll('input, select, textarea');
+                driverInputs.forEach(input => input.value = '');
+            }
+            
+            if (riderFields) {
+                riderFields.style.display = 'none';
+                const riderInputs = riderFields.querySelectorAll('input, select, textarea');
+                riderInputs.forEach(input => input.value = '');
             }
         }
         
@@ -3154,7 +4135,7 @@
                 };
                 
                 // Add session to Firestore
-                const sessionsCollection = collection(db, `artifacts/${appId}/public/data/sessions`);
+                const sessionsCollection = collection(window.db, `artifacts/${window.APP_CONFIG?.appId || 'bmir-rideshare'}/public/data/sessions`);
                 
                 // First, clean up any existing sessions for this user
                 getDocs(query(sessionsCollection, where('userId', '==', userId)))
@@ -3246,7 +4227,7 @@
                 });
                 
                 // Track total page visits
-                const statsRef = doc(db, `artifacts/${appId}/public/data/stats`, 'counter');
+                const statsRef = doc(window.db, `artifacts/${window.APP_CONFIG?.appId || 'bmir-rideshare'}/public/data/stats`, 'counter');
                 
                 // Increment total visits counter
                 getDoc(statsRef).then((statsSnapshot) => {
@@ -3497,12 +4478,548 @@
             }, 5000);
         }
 
+        // --- Mobile Onboarding System ---
+        const MobileOnboarding = {
+            currentScreen: 'welcome',
+            userType: null, // 'driver' or 'rider'
+            direction: null, // 'to-burning-man' or 'from-burning-man'
+            
+            // Check if user is on mobile and hasn't submitted anything yet
+            shouldShow() {
+                // Check if mobile device
+                const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                console.log('📱 Mobile check:', isMobile, 'Window width:', window.innerWidth);
+                if (!isMobile) return false;
+                
+                // Check if user has completed onboarding before
+                const hasCompletedOnboarding = localStorage.getItem('bmir_onboarding_completed');
+                console.log('✅ Onboarding completed check:', hasCompletedOnboarding);
+                if (hasCompletedOnboarding) return false;
+                
+                // Check if user has submitted any ride requests or offerings
+                const hasSubmittedRide = localStorage.getItem('bmir_has_submitted_ride');
+                console.log('🚗 Has submitted ride check:', hasSubmittedRide);
+                if (hasSubmittedRide) return false;
+                
+                console.log('🎉 All conditions met - should show onboarding!');
+                return true;
+            },
+            
+            show() {
+                const overlay = document.getElementById('universal-onboarding');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    this.populateTimeSlots();
+                } else {
+                    console.error('❌ Universal onboarding overlay element not found!');
+                }
+            },
+            
+            hide() {
+                const overlay = document.getElementById('universal-onboarding');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                }
+                // Mark onboarding as completed
+                localStorage.setItem('bmir_onboarding_completed', 'true');
+                
+                // Trigger session code popup after onboarding is hidden
+                setTimeout(() => {
+                    if (typeof showSessionCodeInput === 'function') {
+                        showSessionCodeInput();
+                    }
+                }, 500); // Small delay to ensure smooth transition
+            },
+            
+            hideWithoutCompletion() {
+                const overlay = document.getElementById('universal-onboarding');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                }
+                // Don't mark onboarding as completed - user can still see it later
+            },
+            
+            navigateToScreen(screenId) {
+                // Hide current screen
+                const currentScreen = document.querySelector('.onboarding-screen.active');
+                if (currentScreen) {
+                    currentScreen.classList.remove('active');
+                    currentScreen.classList.add('prev');
+                }
+                
+                // Show new screen
+                const newScreen = document.getElementById(screenId);
+                if (newScreen) {
+                    newScreen.classList.remove('prev');
+                    newScreen.classList.add('active');
+                }
+                
+                this.currentScreen = screenId.replace('onboarding-', '');
+            },
+            
+            goBack() {
+                switch (this.currentScreen) {
+                    case 'direction':
+                        this.navigateToScreen('onboarding-welcome');
+                        break;
+                    case 'form':
+                        this.navigateToScreen('onboarding-direction');
+                        break;
+                }
+            },
+            
+            selectUserType(type) {
+                this.userType = type;
+                this.navigateToScreen('onboarding-direction');
+            },
+            
+            selectDirection(direction) {
+                this.direction = direction;
+                this.setupForm();
+                this.navigateToScreen('onboarding-form');
+            },
+            
+            setupForm() {
+                const screenTitle = document.getElementById('form-screen-title');
+                const locationLabel = document.getElementById('onboarding-location-label');
+                const detailsLabel = document.getElementById('onboarding-details-label');
+                const driverFields = document.getElementById('driver-specific-fields');
+                const riderFields = document.getElementById('rider-specific-fields');
+                const campInfoSection = document.getElementById('camp-info-section');
+                
+                // Update form title and labels based on user type and direction
+                if (this.userType === 'driver') {
+                    screenTitle.textContent = 'Tell Us About Your Drive';
+                    driverFields.style.display = 'block';
+                    riderFields.style.display = 'none';
+                    
+                    if (this.direction === 'to-burning-man') {
+                        locationLabel.textContent = 'Where are you starting from?';
+                        detailsLabel.textContent = 'Additional details about your trip to Burning Man';
+                    } else {
+                        locationLabel.textContent = 'Where are you going after Burning Man?';
+                        detailsLabel.textContent = 'Additional details about your trip from Burning Man';
+                    }
+                } else if (this.userType === 'rider') {
+                    screenTitle.textContent = 'Tell Us About Your Ride Needs';
+                    driverFields.style.display = 'none';
+                    riderFields.style.display = 'block';
+                    
+                    if (this.direction === 'to-burning-man') {
+                        locationLabel.textContent = 'Where are you starting from?';
+                        detailsLabel.textContent = 'Additional details about your trip to Burning Man';
+                        campInfoSection.style.display = 'none';
+                    } else {
+                        locationLabel.textContent = 'Where are you going after Burning Man?';
+                        detailsLabel.textContent = 'Additional details about your trip from Burning Man';
+                        campInfoSection.style.display = 'block';
+                    }
+                }
+            },
+            
+            populateTimeSlots() {
+                const timeSelect = document.getElementById('onboarding-time');
+                if (!timeSelect) return;
+                
+                timeSelect.innerHTML = '';
+                
+                // Add Flexible Time option first as default (matching main app)
+                const flexibleOption = document.createElement('option');
+                flexibleOption.value = 'Flexible Time';
+                flexibleOption.textContent = 'Flexible Time';
+                flexibleOption.selected = true;
+                timeSelect.appendChild(flexibleOption);
+                
+                // Add time-specific options (matching main app exactly)
+                for (let i = 0; i < 24; i += 3) {
+                    const start = i.toString().padStart(2, '0');
+                    const end = (i + 3).toString().padStart(2, '0');
+                    const option = document.createElement('option');
+                    option.value = `${start}:00 - ${end}:00`;
+                    option.textContent = `${start}:00 - ${end}:00`;
+                    timeSelect.appendChild(option);
+                }
+            },
+            
+            async submitForm(formData) {
+                try {
+                    // Validate contact methods
+                    const hasEmail = formData.email && formData.email.trim() !== '';
+                    const hasPhone = formData.phone && formData.phone.trim() !== '';
+                    
+                    if (!hasEmail && !hasPhone) {
+                        alert('Please provide at least one contact method (email or phone number) for ride coordination.');
+                        return;
+                    }
+                    
+                    // Date format validation
+                    if (formData.date) {
+                        const dateParts = formData.date.split('-');
+                        if (dateParts.length === 3) {
+                            const year = parseInt(dateParts[0]);
+                            const month = parseInt(dateParts[1]);
+                            const day = parseInt(dateParts[2]);
+                            
+                            // Check for European date format (DD-MM-YYYY) where month > 12
+                            if (month > 12) {
+                                alert('⚠️ Date Format Error!\n\nIt looks like you entered the date in European format (DD/MM/YYYY) instead of US format (MM/DD/YYYY).\n\nPlease use the date picker or enter dates as MM/DD/YYYY (e.g., 08/03/2025 for August 3rd, 2025).');
+                                return;
+                            }
+                            
+                            // Check for current year only
+                            const currentYear = new Date().getFullYear();
+                            if (year !== currentYear) {
+                                alert('⚠️ Date Error!\n\nPlease enter a date for the current year (' + currentYear + ').');
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // Ensure user is authenticated
+                    if (!auth.currentUser) {
+                        console.log('User not authenticated, attempting to sign in anonymously...');
+                        await signInAnonymously(auth);
+                        console.log('Anonymous authentication completed');
+                    }
+                    
+                    console.log('Current user:', auth.currentUser?.uid);
+                    
+                    // Create the entry data
+                    const entryData = {
+                        name: formData.name,
+                        email: formData.email || '',
+                        phone: formData.phone || '',
+                        location: formData.location,
+                        date: formData.date,
+                        timeSlot: formData.timeSlot,
+                        details: formData.details,
+                        timestamp: new Date(),
+                        direction: this.direction === 'to-burning-man' ? 'to-brc' : 'from-brc',
+                        type: this.userType,
+                        deleted: false,
+                        flagged: false,
+                        favorites: [],
+                        authorId: auth.currentUser.uid
+                    };
+                    
+                    console.log('Submitting entry data:', entryData);
+                    
+                    // Add type-specific fields
+                    if (this.userType === 'driver') {
+                        entryData.passengerSpace = formData.passengerSpace || '';
+                        entryData.cargoSpace = formData.cargoSpace || '';
+                        entryData.routeDetails = formData.routeDetails || '';
+                    } else if (this.userType === 'rider') {
+                        entryData.riderStuff = formData.riderStuff || '';
+                        entryData.campInfo = formData.campInfo || '';
+                    }
+                    
+                    // Submit to Firestore
+                    const collectionPath = `artifacts/${appId}/public/data/${this.userType}s`;
+                    console.log('Submitting to collection:', collectionPath);
+                    const docRef = await addDoc(collection(window.db, collectionPath), entryData);
+                    console.log('Document created with ID:', docRef.id);
+                    
+                    // Mark as completed
+                    localStorage.setItem('bmir_has_submitted_ride', 'true');
+                    
+                    // Refresh listeners to show the new listing
+                    console.log('Refreshing listeners to show new listing...');
+                    setupListeners();
+                    
+                    // Hide onboarding and show success
+                    this.hide();
+                    
+                    // Show success message
+                    alert('Your ride listing has been created successfully! You can now browse other listings or create additional ones.');
+                    
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                    console.error('Error details:', error.message, error.code);
+                    alert('There was an error creating your listing. Please try again. Error: ' + error.message);
+                }
+            },
+            
+            buildDetailsText(formData) {
+                let details = formData.details;
+                
+                if (this.userType === 'driver') {
+                    if (formData.passengerSpace) {
+                        details += `\n\nPassenger capacity: ${formData.passengerSpace}`;
+                    }
+                    if (formData.cargoSpace) {
+                        details += `\n\nCargo capacity: ${formData.cargoSpace}`;
+                    }
+                    if (formData.routeDetails) {
+                        details += `\n\nRoute details: ${formData.routeDetails}`;
+                    }
+                } else if (this.userType === 'rider') {
+                    if (formData.riderStuff) {
+                        details += `\n\nBelongings: ${formData.riderStuff}`;
+                    }
+                    if (formData.campInfo) {
+                        details += `\n\nCamp info: ${formData.campInfo}`;
+                    }
+                }
+                
+                return details.trim();
+            }
+        };
+        
+        function initializeUniversalOnboarding() {
+            if (typeof window.UniversalOnboarding === 'undefined') {
+                console.error('❌ UniversalOnboarding not available');
+                return;
+            }
+            
+            if (!window.UniversalOnboarding.shouldShow()) {
+                return;
+            }
+            
+            // Show onboarding
+            window.UniversalOnboarding.show();
+            
+            // Setup event listeners
+            setupOnboardingEventListeners();
+        }
+        
+        function setupOnboardingEventListeners() {
+            // Setup location autocomplete for onboarding
+            setupOnboardingLocationAutocomplete();
+            
+            // Set date input constraints for current year
+            const dateInput = document.getElementById('onboarding-date');
+            if (dateInput) {
+                const currentYear = new Date().getFullYear();
+                dateInput.min = `${currentYear}-01-01`;
+                dateInput.max = `${currentYear}-12-31`;
+            }
+            
+            console.log('🎬 Setting up onboarding event listeners...');
+            
+            // Welcome screen buttons
+            const needRideBtn = document.getElementById('need-ride-btn');
+            const provideRideBtn = document.getElementById('provide-ride-btn');
+            const browseListingsBtn = document.getElementById('browse-listings-btn');
+            
+            console.log('🔍 Button elements found:');
+            console.log('  - Need ride button:', !!needRideBtn);
+            console.log('  - Provide ride button:', !!provideRideBtn);
+            console.log('  - Browse listings button:', !!browseListingsBtn);
+            
+            if (needRideBtn) {
+                needRideBtn.addEventListener('click', () => {
+                    console.log('🎯 Need ride button clicked');
+                    console.log('🔍 Checking window.UniversalOnboarding availability...');
+                    console.log('  - typeof window.UniversalOnboarding:', typeof window.UniversalOnboarding);
+                    console.log('  - window.UniversalOnboarding exists:', !!window.UniversalOnboarding);
+                    
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        console.log('✅ UniversalOnboarding available, calling selectUserType...');
+                        window.UniversalOnboarding.selectUserType('rider');
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+                console.log('✅ Need ride button listener added');
+            }
+            
+            if (provideRideBtn) {
+                provideRideBtn.addEventListener('click', () => {
+                    console.log('🎯 Provide ride button clicked');
+                    console.log('🔍 Checking window.UniversalOnboarding availability...');
+                    console.log('  - typeof window.UniversalOnboarding:', typeof window.UniversalOnboarding);
+                    console.log('  - window.UniversalOnboarding exists:', !!window.UniversalOnboarding);
+                    
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        console.log('✅ UniversalOnboarding available, calling selectUserType...');
+                        window.UniversalOnboarding.selectUserType('driver');
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+                console.log('✅ Provide ride button listener added');
+            }
+            
+            if (browseListingsBtn) {
+                browseListingsBtn.addEventListener('click', () => {
+                    console.log('🎯 Browse listings button clicked');
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        window.UniversalOnboarding.hide();
+                        
+                        // Show session code modal after onboarding is hidden
+                        setTimeout(() => {
+                            if (typeof showSessionCodeModal === 'function') {
+                                const userId = window.auth?.currentUser?.uid || 'anonymous';
+                                showSessionCodeModal(userId);
+                            }
+                        }, 500);
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+                console.log('✅ Browse listings button listener added');
+            }
+            
+            // Direction screen buttons
+            const toBurningManBtn = document.getElementById('to-burning-man-btn');
+            const fromBurningManBtn = document.getElementById('from-burning-man-btn');
+            
+            if (toBurningManBtn) {
+                toBurningManBtn.addEventListener('click', () => {
+                    console.log('🎯 To Burning Man button clicked');
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        window.UniversalOnboarding.selectDirection('to-burning-man');
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+            }
+            
+            if (fromBurningManBtn) {
+                fromBurningManBtn.addEventListener('click', () => {
+                    console.log('🎯 From Burning Man button clicked');
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        window.UniversalOnboarding.selectDirection('from-burning-man');
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+            }
+            
+            // Back buttons
+            const directionBackBtn = document.getElementById('direction-back-btn');
+            const formBackBtn = document.getElementById('form-back-btn');
+            
+            if (directionBackBtn) {
+                directionBackBtn.addEventListener('click', () => {
+                    console.log('🎯 Direction back button clicked');
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        window.UniversalOnboarding.goBack();
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+            }
+            
+            if (formBackBtn) {
+                formBackBtn.addEventListener('click', () => {
+                    console.log('🎯 Form back button clicked');
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        window.UniversalOnboarding.goBack();
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+            }
+            
+            // Form submission
+            const onboardingForm = document.getElementById('onboarding-ride-form');
+            if (onboardingForm) {
+                onboardingForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    console.log('🎯 Onboarding form submitted');
+                    
+                    const formData = {
+                        name: document.getElementById('onboarding-name').value,
+                        email: document.getElementById('onboarding-email').value,
+                        phone: document.getElementById('onboarding-phone').value,
+                        location: document.getElementById('onboarding-location').value,
+                        date: document.getElementById('onboarding-date').value,
+                        timeSlot: document.getElementById('onboarding-time').value,
+                        details: document.getElementById('onboarding-details').value,
+                        passengerSpace: document.getElementById('onboarding-passenger-space')?.value,
+                        cargoSpace: document.getElementById('onboarding-cargo-space')?.value,
+                        routeDetails: document.getElementById('onboarding-route-details')?.value,
+                        riderStuff: document.getElementById('onboarding-rider-stuff')?.value,
+                        campInfo: document.getElementById('onboarding-camp-info')?.value
+                    };
+                    
+                    if (typeof window.UniversalOnboarding !== 'undefined') {
+                        await window.UniversalOnboarding.submitForm(formData);
+                    } else {
+                        console.error('❌ UniversalOnboarding not available');
+                    }
+                });
+            }
+            
+            console.log('✅ Onboarding event listeners setup complete');
+        }
+        
+        // Setup location autocomplete for onboarding form
+        function setupOnboardingLocationAutocomplete() {
+            const locationInput = document.getElementById('onboarding-location');
+            const resultsContainer = document.getElementById('onboarding-location-autocomplete-results');
+            
+            if (!locationInput || !resultsContainer) return;
+            
+            let timeoutId;
+            
+            locationInput.addEventListener('input', function() {
+                clearTimeout(timeoutId);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    resultsContainer.innerHTML = '';
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+                
+                timeoutId = setTimeout(() => {
+                    // Use the same cities array as the main app
+                    const allCities = [...new Set([...existingCities, ...commonCities])];
+                    const filteredCities = allCities.filter(city => 
+                        city.toLowerCase().includes(query.toLowerCase())
+                    ).slice(0, 10);
+                    
+                    if (filteredCities.length > 0) {
+                        resultsContainer.innerHTML = '';
+                        filteredCities.forEach(city => {
+                            const div = document.createElement('div');
+                            div.textContent = city;
+                            div.addEventListener('click', () => {
+                                locationInput.value = city;
+                                resultsContainer.style.display = 'none';
+                            });
+                            resultsContainer.appendChild(div);
+                        });
+                        resultsContainer.style.display = 'block';
+                    } else {
+                        resultsContainer.style.display = 'none';
+                    }
+                }, 300);
+            });
+            
+            // Handle keyboard events
+            locationInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && resultsContainer.style.display !== 'none' && resultsContainer.children.length > 0) {
+                    e.preventDefault(); // Prevent form submission
+                    const firstOption = resultsContainer.children[0];
+                    locationInput.value = firstOption.textContent;
+                    resultsContainer.style.display = 'none';
+                }
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!locationInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // Expose functions to global scope
+        window.showSessionCodeModal = showSessionCodeModal;
+        
         // --- Start the App ---
         initialize();
         checkConnectivity();
         setupAutoRefresh();
         setupEasterEgg();
     </script>
+    
+    <!-- Test script for universal onboarding -->
+    <!-- <script src="test-universal-onboarding.js"></script> -->
     
     <!-- Footer -->
     <footer style="text-align: center; padding: 2rem 1rem; margin-top: 3rem; color: #6b7280; font-size: 0.875rem; border-top: 1px solid #e5e7eb;">

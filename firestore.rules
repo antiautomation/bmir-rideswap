@@ -17,8 +17,8 @@ service cloud.firestore {
         request.auth != null &&
         // Must include required fields
         request.resource.data.keys().hasAll(['authorId', 'timestamp', 'name', 'direction']) &&
-        // Author ID must match authenticated user
-        request.resource.data.authorId == request.auth.uid &&
+        // Author ID must match authenticated user OR user has god mode (updated for god mode editing)
+        (request.resource.data.authorId == request.auth.uid || isGodMode()) &&
         // Timestamp must be recent (within last hour)
         request.resource.data.timestamp is timestamp &&
         request.resource.data.timestamp < timestamp.date(2025, 12, 31) &&

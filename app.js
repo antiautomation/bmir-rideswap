@@ -1,3 +1,344 @@
+// Global offline debugging utility
+const OfflineDebugger = {
+    isDevelopment: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
+    isOffline: false,
+    debugMode: false,
+    
+    // Initialize offline debugging
+    init() {
+        this.isOffline = !navigator.onLine;
+        this.updateOfflineStatus();
+        
+        window.addEventListener('online', () => {
+            this.isOffline = false;
+            this.updateOfflineStatus();
+        });
+        
+        window.addEventListener('offline', () => {
+            this.isOffline = true;
+            this.updateOfflineStatus();
+        });
+    },
+    
+    // Update offline status - safe version that doesn't depend on FirebaseUtils
+    updateOfflineStatus() {
+        // Only update if FirebaseUtils exists
+        if (typeof FirebaseUtils !== 'undefined') {
+            FirebaseUtils.isOffline = this.isOffline;
+        }
+    },
+    
+    // Silent console logging for offline scenarios
+    log(message, error = null, level = 'info') {
+        if (this.isOffline && !this.isDevelopment) {
+            // Suppress most logs in production when offline
+            return;
+        }
+        
+        if (this.isOffline && this.isDevelopment) {
+            console.log(`[Offline] ${message}`, error || '');
+            return;
+        }
+        
+        switch (level) {
+            case 'error':
+                console.error(message, error);
+                break;
+            case 'warn':
+                console.warn(message, error);
+                break;
+            default:
+                console.log(message, error);
+        }
+    },
+    
+    // Enable debug mode for more verbose logging
+    enableDebugMode() {
+        this.debugMode = true;
+        console.log('🔍 Offline debug mode enabled');
+    },
+    
+    // Disable debug mode
+    disableDebugMode() {
+        this.debugMode = false;
+        console.log('🔍 Offline debug mode disabled');
+    }
+};
+
+// Shared Form Utilities for both onboarding and main application
+const FormUtils = {
+    // Production-ready data validation function
+    validateEntry(data) {
+        const errors = [];
+        
+        // Name validation
+        if (!data.name || data.name.trim().length === 0) {
+            errors.push("Name is required");
+        } else if (data.name.length > 100) {
+            errors.push("Name must be less than 100 characters");
+        }
+        
+        // Contact validation
+        if (!data.email && !data.phone) {
+            errors.push("At least one contact method (email or phone) is required");
+        }
+        
+        // Email validation
+        if (data.email && data.email.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+                errors.push("Please enter a valid email address");
+            }
+            if (data.email.length > 100) {
+                errors.push("Email must be less than 100 characters");
+            }
+        }
+        
+        // Phone validation
+        if (data.phone && data.phone.trim()) {
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            const cleanPhone = data.phone.replace(/[\s\-\(\)]/g, '');
+            if (!phoneRegex.test(cleanPhone)) {
+                errors.push("Please enter a valid phone number");
+            }
+            if (data.phone.length > 20) {
+                errors.push("Phone number must be less than 20 characters");
+            }
+        }
+        
+        // Location validation
+        if (!data.location || data.location.trim().length === 0) {
+            errors.push("Location is required");
+        } else if (data.location.length > 100) {
+            errors.push("Location must be less than 100 characters");
+        }
+        
+        // Date validation
+        if (!data.date) {
+            errors.push("Date is required");
+        } else {
+            const selectedDate = new Date(data.date);
+            const now = new Date();
+            if (selectedDate < now.setDate(now.getDate() - 1)) {
+                errors.push("Date cannot be in the past");
+            }
+            if (selectedDate > now.setDate(now.getDate() + 365)) {
+                errors.push("Date cannot be more than 1 year in the future");
+            }
+        }
+        
+        // Details validation
+        if (!data.details || data.details.trim().length === 0) {
+            errors.push("Details are required");
+        } else if (data.details.length > 1000) {
+            errors.push("Details must be less than 1000 characters");
+        }
+        
+        return errors;
+    },
+    
+    // Date format validation
+    validateDateFormat(dateString) {
+        if (!dateString) return { valid: false, error: 'Date is required' };
+        
+        const dateParts = dateString.split('-');
+        if (dateParts.length === 3) {
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]);
+            const day = parseInt(dateParts[2]);
+            
+            // Check for European date format (DD-MM-YYYY) where month > 12
+            if (month > 12) {
+                return { 
+                    valid: false, 
+                    error: '⚠️ Date Format Error!\n\nIt looks like you entered the date in European format (DD/MM/YYYY) instead of US format (MM/DD/YYYY).\n\nPlease use the date picker or enter dates as MM/DD/YYYY (e.g., 08/03/2025 for August 3rd, 2025).'
+                };
+            }
+            
+            // Check for current year only
+            const currentYear = new Date().getFullYear();
+            if (year !== currentYear) {
+                return { 
+                    valid: false, 
+                    error: `⚠️ Date Error!\n\nPlease enter a date for the current year (${currentYear}).`
+                };
+            }
+        }
+        
+        return { valid: true };
+    },
+    
+    // Standardize form data structure
+    standardizeFormData(formData, userType, direction) {
+        return {
+            name: formData.name?.trim() || '',
+            email: formData.email?.trim() || '',
+            phone: formData.phone?.trim() || '',
+            location: formData.location?.trim() || '',
+            date: formData.date || '',
+            timeSlot: formData.timeSlot || '',
+            details: formData.details?.trim() || '',
+            direction: direction === 'to-burning-man' ? 'to-brc' : 'from-brc',
+            type: userType,
+            timestamp: new Date(),
+            deleted: false,
+            flagged: false,
+            favorites: [],
+            
+            // Driver-specific fields
+            ...(userType === 'driver' && {
+                passengerSpace: formData.passengerSpace?.trim() || '',
+                cargoSpace: formData.cargoSpace?.trim() || '',
+                routeDetails: formData.routeDetails?.trim() || ''
+            }),
+            
+            // Rider-specific fields
+            ...(userType === 'rider' && {
+                riderStuff: formData.riderStuff?.trim() || '',
+                campInfo: formData.campInfo?.trim() || ''
+            })
+        };
+    },
+    
+    // Submit form to Firebase with consistent logic
+    async submitFormToFirebase(formData, userType, direction, isOnboarding = false) {
+        try {
+            // Validate form data
+            const validationErrors = this.validateEntry(formData);
+            if (validationErrors.length > 0) {
+                alert('Please fix the following errors:\n\n' + validationErrors.join('\n'));
+                return { success: false, error: 'Validation failed' };
+            }
+            
+            // Validate date format
+            const dateValidation = this.validateDateFormat(formData.date);
+            if (!dateValidation.valid) {
+                alert(dateValidation.error);
+                return { success: false, error: 'Date validation failed' };
+            }
+            
+            // Safely access AppState
+            if (typeof AppState === 'undefined') {
+                console.error('AppState not available');
+                return { success: false, error: 'Application state not initialized' };
+            }
+            
+            // Ensure user is authenticated
+            if (!AppState.auth?.currentUser) {
+                console.log('User not authenticated, attempting to sign in anonymously...');
+                
+                // Check if Firebase auth is available
+                if (!AppState.auth) {
+                    console.log('⚠️ Firebase auth not initialized, using fallback...');
+                    // For onboarding, we can proceed without authentication
+                    // The form will be submitted with 'anonymous' authorId
+                } else {
+                    await window.firebase.signInAnonymously(AppState.auth);
+                    console.log('Anonymous authentication completed');
+                }
+            }
+            
+            // Standardize the data structure
+            const entryData = this.standardizeFormData(formData, userType, direction);
+            entryData.authorId = AppState.auth?.currentUser?.uid || 'anonymous';
+            
+            // Use the same collection path for both onboarding and main app
+            // Use external config if available, otherwise fall back to AppState
+            const appId = window.APP_CONFIG?.appId || AppState.appId;
+            const collectionPath = `artifacts/${appId}/public/data/${userType}s`;
+            
+            console.log('Submitting to collection:', collectionPath);
+            
+            // Submit to Firebase
+            console.log('🔍 Checking Firebase readiness...');
+            console.log('  - AppState.db:', !!AppState.db);
+            console.log('  - window.db:', !!window.db);
+            console.log('  - window.auth:', !!window.auth);
+            console.log('  - navigator.onLine:', navigator.onLine);
+            
+            if (!window.db || !window.auth) {
+                console.log('⚠️ Firebase not initialized, attempting to wait for initialization...');
+                
+                // Try to wait for Firebase to be ready (max 10 seconds)
+                let attempts = 0;
+                const maxAttempts = 100; // 100 * 100ms = 10 seconds
+                
+                while (!window.db || !window.auth) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                    
+                    if (attempts >= maxAttempts) {
+                        console.log('⚠️ Firebase still not ready after 10 seconds, checking network status...');
+                        
+                        // Check if we're actually offline or just Firebase is slow
+                        if (!navigator.onLine) {
+                            console.log('⚠️ Network is offline, storing locally...');
+                            // Store form data locally for later submission
+                            const pendingSubmissions = JSON.parse(localStorage.getItem('bmir_pending_submissions') || '[]');
+                            pendingSubmissions.push({
+                                data: entryData,
+                                timestamp: Date.now(),
+                                collectionPath
+                            });
+                            localStorage.setItem('bmir_pending_submissions', JSON.stringify(pendingSubmissions));
+                            
+                            return { success: true, offline: true, message: 'Form saved locally - will sync when online' };
+                        } else {
+                            console.log('⚠️ Network is online but Firebase is slow, retrying...');
+                            // Try one more time with a longer wait
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            if (!window.db || !window.auth) {
+                                console.log('⚠️ Firebase still not ready, storing locally as fallback...');
+                                const pendingSubmissions = JSON.parse(localStorage.getItem('bmir_pending_submissions') || '[]');
+                                pendingSubmissions.push({
+                                    data: entryData,
+                                    timestamp: Date.now(),
+                                    collectionPath
+                                });
+                                localStorage.setItem('bmir_pending_submissions', JSON.stringify(pendingSubmissions));
+                                
+                                return { success: true, offline: true, message: 'Form saved locally - will sync when online' };
+                            }
+                        }
+                    }
+                }
+                
+                console.log('✅ Firebase became ready after waiting');
+            }
+            
+            // Debug: Check if Firebase functions are available
+            console.log('🔍 Debugging Firebase functions:');
+            console.log('  - window.addDoc:', typeof window.addDoc);
+            console.log('  - window.collection:', typeof window.collection);
+            console.log('  - window.db:', typeof window.db);
+            console.log('  - collectionPath:', collectionPath);
+            console.log('  - entryData:', entryData);
+            
+            const docRef = await FirebaseUtils.writeWithRetry(
+                () => window.addDoc(window.collection(window.db, collectionPath), entryData),
+                'form submission'
+            );
+            
+            console.log('✅ Form submitted successfully:', docRef.id);
+            
+            // Update local state
+            localStorage.setItem('bmir_has_submitted_ride', 'true');
+            AppState.hasSubmittedRide = true;
+            
+            return { success: true, docId: docRef.id };
+            
+        } catch (error) {
+            // Don't log expected offline errors
+            if (!FirebaseUtils.isExpectedOfflineError(error)) {
+                FirebaseUtils.logOffline('Error submitting form:', error);
+                return { success: false, error: error.message };
+            } else {
+                return { success: false, error: 'Offline submission failed' };
+            }
+        }
+    }
+};
+
 // Performance optimizations
 const performanceUtils = {
     // Memoization for expensive computations
@@ -46,12 +387,38 @@ const performanceUtils = {
     }
 };
 
-// Enhanced Firebase operations with retry logic
+// Enhanced Firebase operations with retry logic and offline handling
 const FirebaseUtils = {
     // Retry configuration
     maxRetries: 3,
     baseDelay: 1000, // 1 second
     maxDelay: 10000, // 10 seconds
+    isOffline: false,
+    
+    // Check if error is expected in offline mode
+    isExpectedOfflineError(error) {
+        const offlineErrors = [
+            'network-error',
+            'unavailable',
+            'deadline-exceeded',
+            'resource-exhausted',
+            'failed-precondition',
+            'aborted',
+            'out-of-range',
+            'unimplemented',
+            'internal',
+            'unavailable',
+            'data-loss'
+        ];
+        
+        return !navigator.onLine || 
+               offlineErrors.some(code => error.code === code || error.message?.includes(code));
+    },
+    
+    // Silent console logging for offline scenarios
+    logOffline(message, error = null) {
+        OfflineDebugger.log(message, error, 'warn');
+    },
     
     // Exponential backoff with jitter
     async retry(operation, context = '') {
@@ -62,7 +429,21 @@ const FirebaseUtils = {
                 return await operation();
             } catch (error) {
                 lastError = error;
-                console.warn(`❌ Firebase operation failed (attempt ${attempt + 1}/${this.maxRetries}) - ${context}:`, error);
+                
+                // Don't log expected offline errors
+                if (this.isExpectedOfflineError(error)) {
+                    this.logOffline(`Firebase operation skipped (offline) - ${context}`);
+                    throw error;
+                }
+                
+                console.log(`❌ Firebase operation failed (attempt ${attempt + 1}/${this.maxRetries}) - ${context}:`, error);
+                console.log(`❌ Error details:`, {
+                    message: error.message,
+                    code: error.code,
+                    stack: error.stack,
+                    name: error.name
+                });
+                this.logOffline(`❌ Firebase operation failed (attempt ${attempt + 1}/${this.maxRetries}) - ${context}:`, error);
                 
                 // Don't retry on certain errors
                 if (error.code === 'permission-denied' || error.code === 'invalid-argument') {
@@ -108,64 +489,81 @@ const FirebaseUtils = {
         }, context);
     },
     
-    // Enhanced write operations with retry
+    // Enhanced write with retry
     async writeWithRetry(writeFn, context = 'write') {
-        return this.retry(writeFn, context);
+        return this.retry(async () => {
+            return await writeFn();
+        }, context);
     }
 };
 
-// Add to the global window object for access
+// Initialize OfflineDebugger after FirebaseUtils is defined
+OfflineDebugger.init();
+
+// Global offline debug functions for testing
+window.enableOfflineDebug = () => {
+    OfflineDebugger.enableDebugMode();
+    console.log('🔧 Offline debug mode enabled. Use window.disableOfflineDebug() to disable.');
+};
+
+window.disableOfflineDebug = () => {
+    OfflineDebugger.disableDebugMode();
+    console.log('🔧 Offline debug mode disabled.');
+};
+
+// Add to window for global access
 window.FirebaseUtils = FirebaseUtils;
 
-// Optimized Firebase query patterns for poor connectivity
+// AppState configuration is handled by index.html
+
+// Optimized query system with offline support
 const OptimizedQueries = {
-    // Limit data transfer with efficient queries
     QUERY_LIMITS: {
-        INITIAL_LOAD: 10,  // Reduced initial load
-        PAGE_SIZE: 5,      // Smaller pages for better performance
-        MAX_CACHE_SIZE: 50 // Limit memory usage
+        PAGE_SIZE: 20,
+        MAX_RETRIES: 3,
+        TIMEOUT: 10000
     },
     
-    // Connection-aware query strategy
+    // Enhanced query creation with offline handling
     async getOptimizedQuery(collection, filters = {}) {
-        const isOnline = navigator.onLine;
-        const limit = isOnline ? this.QUERY_LIMITS.INITIAL_LOAD : this.QUERY_LIMITS.PAGE_SIZE;
-        
         try {
-            let baseQuery = window.firebase.collection(AppState.db, collection);
-            
-            // Apply filters efficiently
-            if (filters.direction) {
-                baseQuery = window.firebase.query(baseQuery, 
-                    window.firebase.where('direction', '==', filters.direction));
+            // Safely access AppState
+            if (typeof AppState === 'undefined' || !AppState.db) {
+                throw new Error('AppState or database not initialized');
             }
             
-            if (filters.date) {
-                baseQuery = window.firebase.query(baseQuery, 
-                    window.firebase.where('date', '>=', filters.date));
+            let query = window.firebase.collection(AppState.db, collection);
+            
+            // Apply filters
+            if (filters.direction && filters.direction !== 'all') {
+                query = window.firebase.query(query, window.firebase.where('direction', '==', filters.direction));
+            }
+            if (filters.date && filters.date !== 'all') {
+                query = window.firebase.query(query, window.firebase.where('date', '==', filters.date));
+            }
+            if (filters.location && filters.location !== 'all') {
+                query = window.firebase.query(query, window.firebase.where('location', '==', filters.location));
             }
             
-            // Optimize ordering for better performance
-            baseQuery = window.firebase.query(baseQuery, 
+            query = window.firebase.query(query, 
                 window.firebase.orderBy('timestamp', 'desc'),
-                window.firebase.limit(limit));
+                window.firebase.limit(this.QUERY_LIMITS.PAGE_SIZE));
             
-            return baseQuery;
+            return query;
         } catch (error) {
-            console.warn('Failed to create optimized query, falling back to basic query:', error);
-            return window.firebase.collection(AppState.db, collection);
+            FirebaseUtils.logOffline('Failed to create optimized query, falling back to basic query:', error);
+            throw error;
         }
     },
     
-    // Debounced subscription management
+    // Enhanced subscription with offline handling
     createDebouncedSubscription(queryFn, callback, delay = 500) {
-        let timeoutId;
-        let unsubscribe;
+        let unsubscribe = null;
+        let timeoutId = null;
         
         const debouncedCallback = performanceUtils.debounce(callback, delay);
         
-        return (filters) => {
-            // Cancel previous subscription
+        return (filters = {}) => {
             if (unsubscribe) {
                 unsubscribe();
             }
@@ -175,23 +573,31 @@ const OptimizedQueries = {
                 try {
                     const query = await this.getOptimizedQuery(queryFn, filters);
                     unsubscribe = window.firebase.onSnapshot(query, debouncedCallback, (error) => {
-                        console.error('Query subscription error:', error);
-                        // Implement exponential backoff for retries
-                        setTimeout(() => {
-                            if (navigator.onLine) {
-                                // Retry subscription
-                                unsubscribe = window.firebase.onSnapshot(query, debouncedCallback);
-                            }
-                        }, Math.min(1000 * Math.pow(2, Math.random()), 10000));
+                        // Only log unexpected errors
+                        if (!FirebaseUtils.isExpectedOfflineError(error)) {
+                            FirebaseUtils.logOffline('Query subscription error:', error);
+                        }
+                        
+                        // Implement exponential backoff for retries only when online
+                        if (navigator.onLine) {
+                            setTimeout(() => {
+                                if (navigator.onLine) {
+                                    // Retry subscription
+                                    unsubscribe = window.firebase.onSnapshot(query, debouncedCallback);
+                                }
+                            }, Math.min(1000 * Math.pow(2, Math.random()), 10000));
+                        }
                     });
                 } catch (error) {
-                    console.error('Failed to create subscription:', error);
+                    if (!FirebaseUtils.isExpectedOfflineError(error)) {
+                        FirebaseUtils.logOffline('Failed to create subscription:', error);
+                    }
                 }
             }, 100); // Small delay to batch multiple filter changes
         };
     },
     
-    // Efficient data loading with progressive enhancement
+    // Efficient data loading with progressive enhancement and offline handling
     async loadDataProgressive(collection, onData) {
         const isSlowConnection = this.isSlowConnection();
         const batchSize = isSlowConnection ? 3 : this.QUERY_LIMITS.PAGE_SIZE;
@@ -201,6 +607,11 @@ const OptimizedQueries = {
         
         const loadBatch = async () => {
             try {
+                // Safely access AppState
+                if (typeof AppState === 'undefined' || !AppState.db) {
+                    throw new Error('AppState or database not initialized');
+                }
+                
                 let query = window.firebase.collection(AppState.db, collection);
                 query = window.firebase.query(query, 
                     window.firebase.orderBy('timestamp', 'desc'),
@@ -226,7 +637,9 @@ const OptimizedQueries = {
                     }
                 }
             } catch (error) {
-                console.error('Failed to load data batch:', error);
+                if (!FirebaseUtils.isExpectedOfflineError(error)) {
+                    FirebaseUtils.logOffline('Failed to load data batch:', error);
+                }
                 throw error;
             }
         };
@@ -248,7 +661,7 @@ const OptimizedQueries = {
 // Add to window for global access
 window.OptimizedQueries = OptimizedQueries;
 
-// Code splitting and lazy loading utilities
+// Code splitting and lazy loading utilities with offline handling
 const LazyLoader = {
     cache: new Map(),
     
@@ -263,75 +676,60 @@ const LazyLoader = {
             this.cache.set(identifier, module);
             return module;
         } catch (error) {
-            console.error(`Failed to load module ${identifier}:`, error);
+            // Don't log expected offline errors for module loading
+            if (!FirebaseUtils.isExpectedOfflineError(error)) {
+                FirebaseUtils.logOffline(`Failed to load module ${identifier}:`, error);
+            }
             throw error;
         }
     },
     
-    // Load Firebase modules progressively
+    // Load Firebase modules with offline handling
     async loadFirebaseModules() {
-        const coreModules = await Promise.all([
-            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js', 'app'),
-            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js', 'firestore'),
-            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js', 'auth')
-        ]);
+        const modules = [
+            { url: 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js', name: 'firebase-app' },
+            { url: 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js', name: 'firebase-firestore' },
+            { url: 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js', name: 'firebase-auth' },
+            { url: 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js', name: 'firebase-app-check' }
+        ];
         
-        // Load optional modules later
-        setTimeout(() => {
-            this.loadModule('https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js', 'app-check')
-                .catch(err => console.warn('Optional module failed to load:', err));
-        }, 2000);
+        const loadPromises = modules.map(module => 
+            this.loadModule(module.url, module.name)
+                .catch(err => FirebaseUtils.logOffline('Optional module failed to load:', err))
+        );
         
-        return {
-            app: coreModules[0],
-            firestore: coreModules[1],
-            auth: coreModules[2]
-        };
+        return Promise.allSettled(loadPromises);
     },
     
-    // Preload critical resources based on user interaction
+    // Preload critical resources on user interaction
     preloadOnInteraction() {
-        let interactionHandled = false;
-        
         const handleInteraction = () => {
-            if (interactionHandled) return;
-            interactionHandled = true;
-            
-            // Preload form submission dependencies
-            window.loadRecaptcha();
+            // Preload non-critical resources
+            this.loadFirebaseModules();
             
             // Remove listeners after first interaction
-            document.removeEventListener('mousedown', handleInteraction);
             document.removeEventListener('touchstart', handleInteraction);
+            document.removeEventListener('mousedown', handleInteraction);
             document.removeEventListener('keydown', handleInteraction);
         };
         
-        document.addEventListener('mousedown', handleInteraction, { passive: true });
-        document.addEventListener('touchstart', handleInteraction, { passive: true });
-        document.addEventListener('keydown', handleInteraction, { passive: true });
+        document.addEventListener('touchstart', handleInteraction, { once: true });
+        document.addEventListener('mousedown', handleInteraction, { once: true });
+        document.addEventListener('keydown', handleInteraction, { once: true });
     }
 };
 
 // Add to window for access
 window.LazyLoader = LazyLoader;
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyAG2DaZhdjCYAyIGQ7k5ZKcBWGkLBFUBzE",
-    authDomain: "bmir-rideshare.firebaseapp.com",
-    projectId: "bmir-rideshare",
-    storageBucket: "bmir-rideshare.appspot.com",
-    messagingSenderId: "247473862880",
-    appId: "1:247473862880:web:1b4a5c6d7e8f9a2b3c4d5e",
-    measurementId: "G-NXHN9M6GQX"
-};
+// Firebase configuration is handled by index.html
 
 // Global variables with better organization
 const AppState = {
     db: null,
     auth: null,
     userId: null,
-    appId: 'web-rideshare-app-2024-bmir',
+    appId: '1:739664619765:web:118b5b518d0a9e73383dbc',
     currentDirection: 'to-brc',
     currentDayFilter: 'all',
     currentLocationFilter: 'all',
@@ -374,23 +772,7 @@ const DOMCache = {
     }
 };
 
-// Common cities for autocomplete
-const commonCities = [
-    "San Francisco", "Oakland", "Berkeley", "San Jose", "Palo Alto", "Mountain View",
-    "Santa Clara", "Fremont", "Richmond", "Walnut Creek", "Concord", "Antioch",
-    "Sacramento", "Davis", "Woodland", "Fairfield", "Vallejo", "Napa", "Santa Rosa",
-    "Petaluma", "Los Angeles", "Long Beach", "Santa Monica", "Beverly Hills", "Pasadena",
-    "Glendale", "Burbank", "Torrance", "Inglewood", "Culver City", "San Diego", "La Jolla",
-    "Coronado", "Chula Vista", "Oceanside", "Carlsbad", "Encinitas", "Portland", "Eugene",
-    "Salem", "Bend", "Medford", "Corvallis", "Seattle", "Tacoma", "Spokane", "Bellevue",
-    "Everett", "Kent", "Renton", "Redmond", "Denver", "Boulder", "Aurora", "Lakewood",
-    "Thornton", "Arvada", "Westminster", "Pueblo", "Fort Collins", "Colorado Springs",
-    "Phoenix", "Tucson", "Mesa", "Chandler", "Glendale", "Scottsdale", "Gilbert", "Tempe",
-    "Peoria", "Surprise", "Salt Lake City", "West Valley City", "Provo", "West Jordan",
-    "Orem", "Sandy", "Ogden", "St. George", "Layton", "Taylorsville", "Las Vegas", "Henderson",
-    "North Las Vegas", "Reno", "Carson City", "Sparks", "Elko", "Austin", "Houston", "San Antonio",
-    "Dallas", "Fort Worth", "El Paso", "Arlington", "Corpus Christi", "Plano", "Laredo", "Lubbock"
-];
+// Common cities are handled by index.html
 
 // Memoized utility functions for better performance
 const memoizedUtils = {
@@ -499,13 +881,13 @@ const RenderingEngine = {
         paginationDiv.className = 'pagination';
         paginationDiv.innerHTML = `
             <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
-                <button class="btn btn-gray" ${currentPage === 0 ? 'disabled' : ''} onclick="changePage(-1, '${type}')">
+                <button class="btn btn-gray" ${currentPage === 0 ? 'disabled' : ''} onclick="window.changePage(-1, '${type}')">
                     ← Previous
                 </button>
                 <span style="color: #6b7280; font-size: 0.875rem;">
                     Page ${currentPage + 1} of ${totalPages} (${totalItems} total)
                 </span>
-                <button class="btn btn-gray" ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changePage(1, '${type}')">
+                <button class="btn btn-gray" ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="window.changePage(1, '${type}')">
                     Next →
                 </button>
             </div>
@@ -612,454 +994,305 @@ const RenderingEngine = {
 
 // Optimized debounced rendering
 const debouncedRender = performanceUtils.debounce(() => {
-    renderFilteredLists();
+    if (typeof window.renderFilteredLists === 'function') {
+        window.renderFilteredLists();
+    }
 }, 150); // Reduced debounce time for better responsiveness
 
-// Main rendering function with performance optimizations
-function renderFilteredLists() {
-    const driversList = DOMCache.get('drivers-list');
-    const ridersList = DOMCache.get('riders-list');
-    
-    if (!driversList || !ridersList) return;
-    
-    // Use Web Workers for heavy filtering if available
-    if (typeof Worker !== 'undefined' && AppState.allDrivers.length > 100) {
-        renderWithWebWorker();
-    } else {
-        renderSynchronously();
-    }
-}
+// Rendering functions are handled by index.html
 
-function renderSynchronously() {
-    const filteredDrivers = filterAndSortEntries(AppState.allDrivers, 'driver');
-    const filteredRiders = filterAndSortEntries(AppState.allRiders, 'rider');
-    
-    const driversSection = DOMCache.get('drivers-section');
-    const ridersSection = DOMCache.get('riders-section');
-    const driversList = DOMCache.get('drivers-list');
-    const ridersList = DOMCache.get('riders-list');
-    
-    if (!AppState.showRidersOnly) {
-        RenderingEngine.renderPaginatedList(driversList, filteredDrivers, 'driver', AppState.driversPage);
-        if (driversSection) driversSection.style.display = 'block';
-    } else {
-        if (driversSection) driversSection.style.display = 'none';
-    }
-    
-    if (!AppState.showDriversOnly) {
-        RenderingEngine.renderPaginatedList(ridersList, filteredRiders, 'rider', AppState.ridersPage);
-        if (ridersSection) ridersSection.style.display = 'block';
-    } else {
-        if (ridersSection) ridersSection.style.display = 'none';
-    }
-}
+// Session code functions are handled by index.html
 
-// Optimized filtering and sorting
-function filterAndSortEntries(entries, type) {
-    return entries
-        .filter(entry => entry.direction === AppState.currentDirection)
-        .filter(entry => AppState.currentDayFilter === 'all' || memoizedUtils.getDayName(entry.date) === AppState.currentDayFilter)
-        .filter(entry => AppState.currentLocationFilter === 'all' || entry.location === AppState.currentLocationFilter)
-        .filter(entry => !shouldHideEntry(entry.id, type))
-        .filter(entry => AppState.showExpiredEntries || !RenderingEngine.isEntryExpired(entry))
-        .filter(entry => !AppState.showFavoritesOnly || AppState.userFavorites.has(`${entry.id}-${type}`))
-        .sort((a, b) => {
-            const dateComparison = new Date(a.date) - new Date(b.date);
-            if (dateComparison !== 0) return dateComparison;
-            
-            const aPriority = getTimeSlotPriority(a.timeSlot);
-            const bPriority = getTimeSlotPriority(b.timeSlot);
-            return aPriority - bPriority;
-        });
-}
+// Loading states are handled by index.html
 
-function getTimeSlotPriority(timeSlot) {
-    if (timeSlot === 'Flexible Time') return 0;
-    const timeMatch = timeSlot.match(/(\d{1,2}):(\d{2})/);
-    if (timeMatch) {
-        const hour = parseInt(timeMatch[1]);
-        const minute = parseInt(timeMatch[2]);
-        return hour + minute / 60;
-    }
-    return 999;
-}
+// App initialization is handled by index.html
 
-function shouldHideEntry(entryId, type) {
-    const flagKey = `${type}-${entryId}`;
-    const flagCount = AppState.globalFlags.get(flagKey) || 0;
-    
-    if (flagCount >= 2) return true;
-    if (flagCount >= 1 && AppState.userFlags.has(`${entryId}-${type}`)) return true;
-    return false;
-}
-
-// Page navigation functions
-function changePage(delta, type) {
-    if (type === 'driver') {
-        AppState.driversPage = Math.max(0, AppState.driversPage + delta);
-    } else if (type === 'rider') {
-        AppState.ridersPage = Math.max(0, AppState.ridersPage + delta);
-    }
-    renderFilteredLists();
-}
-
-// Make functions globally accessible
-window.changePage = changePage;
-window.showSessionCodeInput = showSessionCodeInput;
-window.hideSessionCodeInput = hideSessionCodeInput;
-window.enterSessionCode = enterSessionCode;
-
-// Loading states
-function showLoading(container) {
-    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6b7280;"><div style="display: inline-block; width: 2rem; height: 2rem; border: 2px solid #e5e7eb; border-top: 2px solid #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 1rem;">Loading...</p></div>';
-}
-
-function showError(container, message) {
-    container.innerHTML = `<div style="text-align: center; padding: 2rem; color: #dc2626;"><p>${message}</p><button onclick="retryLoad()" class="btn btn-primary" style="margin-top: 1rem;">Retry</button></div>`;
-}
-
-// Initialize the application
-async function initialize() {
-    try {
-        console.log('🚀 Initializing optimized app...');
-        
-        // Import Firebase modules dynamically for better loading - Updated to v11.6.1
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
-        const { getFirestore, collection, query, where, orderBy, limit, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, enableNetwork, disableNetwork, connectFirestoreEmulator } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
-        const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
-        const { initializeAppCheck, ReCaptchaV3Provider } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js');
-        
-        // Store Firebase imports globally
-        window.firebase = {
-            initializeApp, getFirestore, collection, query, where, orderBy, limit, onSnapshot,
-            addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, getAuth, signInAnonymously,
-            signInWithCustomToken, onAuthStateChanged, initializeAppCheck, ReCaptchaV3Provider,
-            enableNetwork, disableNetwork
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        AppState.db = getFirestore(app);
-        AppState.auth = getAuth(app);
-        
-        // Enable offline persistence for poor connectivity
-        try {
-            await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js').then(module => {
-                if (module.enablePersistence) {
-                    return module.enablePersistence(AppState.db, {
-                        synchronizeTabs: true
-                    });
-                }
-            });
-            console.log('✅ Offline persistence enabled');
-        } catch (err) {
-            if (err.code === 'failed-precondition') {
-                console.warn('⚠️ Multiple tabs open, persistence can only be enabled in one tab at a time.');
-            } else if (err.code === 'unimplemented') {
-                console.warn('⚠️ The current browser does not support persistence.');
-            }
-        }
-        
-        // Monitor connection state
-        setupConnectionMonitoring();
-        
-        // Setup with performance monitoring
-        performance.mark('app-init-start');
-        
-        setupApp();
-        
-        performance.mark('app-init-end');
-        performance.measure('app-initialization', 'app-init-start', 'app-init-end');
-        
-        console.log('✅ App initialized successfully');
-        
-    } catch (error) {
-        console.error('❌ App initialization failed:', error);
-        showError(document.body, 'Failed to load the application. Please refresh the page.');
-    }
-}
-
-// Add connection monitoring
-function setupConnectionMonitoring() {
-    let isOnline = navigator.onLine;
-    
-    const updateConnectionStatus = (online) => {
-        isOnline = online;
-        const statusBar = document.querySelector('.status-bar');
-        if (statusBar) {
-            if (online) {
-                statusBar.classList.remove('offline');
-                statusBar.textContent = '🔥 BMIR RideSwap - Connect with the Playa Community';
-                if (AppState.db && window.firebase.enableNetwork) {
-                    window.firebase.enableNetwork(AppState.db);
-                }
-            } else {
-                statusBar.classList.add('offline');
-                statusBar.textContent = '📴 Offline Mode - Your data will sync when connection returns';
-                if (AppState.db && window.firebase.disableNetwork) {
-                    window.firebase.disableNetwork(AppState.db);
-                }
-            }
-        }
-    };
-    
-    window.addEventListener('online', () => updateConnectionStatus(true));
-    window.addEventListener('offline', () => updateConnectionStatus(false));
-    
-    // Initial status
-    updateConnectionStatus(isOnline);
-}
+// Add connection monitoring with improved offline handling
+// Connection monitoring is handled by index.html
 
 function setupApp() {
-    checkGodMode();
-    setupLocationAutocomplete();
-    setupFlagging();
-    loadSavedStates();
-    setDefaultDirection();
-    setupAuthentication();
-    populateTimeSlots();
-    setupUIEventListeners();
+    console.log('🔧 setupApp() called');
     
-    // Initialize mobile onboarding
-    initializeMobileOnboarding();
+    // Initialize universal onboarding for all users
+    console.log('🎯 About to initialize universal onboarding...');
+    if (typeof window.initializeUniversalOnboarding === 'function') {
+        window.initializeUniversalOnboarding();
+    }
+    console.log('🎯 Universal onboarding initialization complete');
 }
 
-// Session code functions (simplified for brevity)
-function showSessionCodeInput() {
-    const sessionCodeInput = DOMCache.get('session-code-input');
-    const sessionCodeDisplay = DOMCache.get('session-code-display');
-    if (sessionCodeInput) {
-        sessionCodeInput.style.display = 'flex';
-        if (sessionCodeDisplay) sessionCodeDisplay.style.display = 'none';
-    }
-}
+// Session code functions are implemented in index.html
 
-function hideSessionCodeInput() {
-    const sessionCodeInput = DOMCache.get('session-code-input');
-    const sessionCodeDisplay = DOMCache.get('session-code-display');
-    if (sessionCodeInput) {
-        sessionCodeInput.style.display = 'none';
-        if (sessionCodeDisplay && AppState.sessionCode) {
-            sessionCodeDisplay.style.display = 'flex';
-        }
-    }
-}
-
-function enterSessionCode() {
-    const sessionCodeField = DOMCache.get('session-code-field');
-    const code = sessionCodeField.value.trim().toUpperCase();
-    
-    if (!code) {
-        alert('Please enter a session code');
-        return;
-    }
-    
-    AppState.sessionCode = code;
-    AppState.hasShownSessionCode = true;
-    
-    const sessionCodeDisplay = DOMCache.get('session-code-display');
-    const sessionCodeText = DOMCache.get('session-code-text');
-    const sessionCodeInput = DOMCache.get('session-code-input');
-    
-    if (sessionCodeDisplay && sessionCodeText && sessionCodeInput) {
-        sessionCodeDisplay.style.display = 'flex';
-        sessionCodeText.textContent = AppState.sessionCode;
-        sessionCodeInput.style.display = 'none';
-    }
-    
-    alert('Session code entered! You can now edit your listings.');
-}
-
-// Mobile Onboarding System
-const MobileOnboarding = {
+// Universal Onboarding System (available to all users, not just mobile)
+const UniversalOnboarding = {
+    // Add debugging to see if object is created
+    _debug: true,
     currentScreen: 'welcome',
     userType: null, // 'driver' or 'rider'
     direction: null, // 'to-burning-man' or 'from-burning-man'
     
-    // Check if user is on mobile and hasn't submitted anything yet
+    // Check if user should see onboarding (now for all users)
     shouldShow() {
-        // Check if mobile device
-        const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (!isMobile) return false;
-        
         // Check if user has completed onboarding before
         const hasCompletedOnboarding = localStorage.getItem('bmir_onboarding_completed');
+        console.log('✅ Onboarding completed check:', hasCompletedOnboarding);
         if (hasCompletedOnboarding) return false;
         
         // Check if user has submitted any ride requests or offerings
         const hasSubmittedRide = localStorage.getItem('bmir_has_submitted_ride');
+        console.log('🚗 Has submitted ride check:', hasSubmittedRide);
         if (hasSubmittedRide) return false;
         
+        console.log('🎉 All conditions met - should show onboarding!');
         return true;
     },
     
     show() {
-        const overlay = document.getElementById('mobile-onboarding');
-        if (overlay) {
+        console.log('🎬 Attempting to show universal onboarding...');
+        console.log('🔍 Document ready state:', document.readyState);
+        
+        // Try to find the overlay element with retry
+        const findOverlay = () => {
+            console.log('🔍 All elements with "universal" in ID:');
+            document.querySelectorAll('[id*="universal"]').forEach(el => {
+                console.log('  -', el.id, el.className);
+            });
+            
+            const overlay = document.getElementById('universal-onboarding');
+            console.log('🔍 Found overlay element:', !!overlay);
+            return overlay;
+        };
+        
+        let overlay = findOverlay();
+        
+        // If not found, retry a few times
+        if (!overlay) {
+            console.log('⏳ Overlay not found, retrying...');
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const retry = () => {
+                attempts++;
+                console.log(`⏳ Retry attempt ${attempts}/${maxAttempts}`);
+                overlay = findOverlay();
+                
+                if (overlay) {
+                    console.log('✅ Overlay found on retry!');
+                    showOverlay();
+                } else if (attempts < maxAttempts) {
+                    setTimeout(retry, 100);
+                } else {
+                    console.error('❌ Universal onboarding overlay element not found after retries!');
+                }
+            };
+            
+            setTimeout(retry, 100);
+            return;
+        }
+        
+        showOverlay();
+        
+        function showOverlay() {
+            console.log('📋 Current overlay classes:', overlay.className);
             overlay.classList.remove('hidden');
-            this.populateTimeSlots();
+            console.log('📋 After removing hidden class:', overlay.className);
+            console.log('✅ Universal onboarding should now be visible');
         }
     },
     
     hide() {
-        const overlay = document.getElementById('mobile-onboarding');
+        const overlay = document.getElementById('universal-onboarding');
         if (overlay) {
             overlay.classList.add('hidden');
         }
         // Mark onboarding as completed
         localStorage.setItem('bmir_onboarding_completed', 'true');
+        
+        // Show session code display after onboarding is completed
+        const sessionCodeDisplay = document.getElementById('session-code-display');
+        const sessionCodeText = document.getElementById('session-code-text');
+        if (sessionCodeDisplay && sessionCodeText && AppState.sessionCode) {
+            sessionCodeDisplay.style.display = 'flex';
+            sessionCodeText.textContent = AppState.sessionCode;
+            console.log('🎬 Onboarding completed, showing session code display');
+        }
     },
     
     navigateToScreen(screenId) {
+        console.log('🎯 UniversalOnboarding.navigateToScreen called with:', screenId);
+        console.log('  - Current screen:', this.currentScreen);
+        
+        // Map screen IDs to actual element IDs
+        const screenIdMap = {
+            'welcome': 'onboarding-welcome',
+            'direction': 'onboarding-direction',
+            'form': 'onboarding-form'
+        };
+        
+        const currentElementId = screenIdMap[this.currentScreen];
+        const newElementId = screenIdMap[screenId];
+        
+        console.log('  - Current element ID:', currentElementId);
+        console.log('  - New element ID:', newElementId);
+        
         // Hide current screen
-        const currentScreen = document.querySelector('.onboarding-screen.active');
+        const currentScreen = document.getElementById(currentElementId);
+        console.log('  - Current screen element found:', !!currentScreen);
         if (currentScreen) {
             currentScreen.classList.remove('active');
-            currentScreen.classList.add('prev');
+            console.log('  - Current screen deactivated');
         }
         
         // Show new screen
-        const newScreen = document.getElementById(screenId);
+        const newScreen = document.getElementById(newElementId);
+        console.log('  - New screen element found:', !!newScreen);
         if (newScreen) {
-            newScreen.classList.remove('prev');
             newScreen.classList.add('active');
+            this.currentScreen = screenId;
+            console.log('  - New screen activated, current screen updated to:', this.currentScreen);
+        } else {
+            console.error('❌ New screen element not found for:', screenId, 'with element ID:', newElementId);
         }
-        
-        this.currentScreen = screenId.replace('onboarding-', '');
     },
     
     goBack() {
-        switch (this.currentScreen) {
-            case 'direction':
-                this.navigateToScreen('onboarding-welcome');
-                break;
-            case 'form':
-                this.navigateToScreen('onboarding-direction');
-                break;
+        const screens = ['welcome', 'direction', 'form'];
+        const currentIndex = screens.indexOf(this.currentScreen);
+        if (currentIndex > 0) {
+            this.navigateToScreen(screens[currentIndex - 1]);
         }
     },
     
     selectUserType(type) {
+        console.log('🎯 UniversalOnboarding.selectUserType called with:', type);
+        console.log('  - Current screen before:', this.currentScreen);
         this.userType = type;
-        this.navigateToScreen('onboarding-direction');
+        console.log('  - User type set to:', this.userType);
+        this.navigateToScreen('direction');
+        console.log('  - Navigation to direction screen completed');
     },
     
     selectDirection(direction) {
         this.direction = direction;
-        this.setupForm();
-        this.navigateToScreen('onboarding-form');
+        this.navigateToScreen('form');
+        // Setup form and populate time slots when form screen becomes active
+        setTimeout(() => {
+            this.setupForm();
+            this.populateTimeSlots();
+        }, 100);
     },
     
     setupForm() {
-        const screenTitle = document.getElementById('form-screen-title');
-        const locationLabel = document.getElementById('onboarding-location-label');
-        const detailsLabel = document.getElementById('onboarding-details-label');
+        // Show/hide fields based on user type
         const driverFields = document.getElementById('driver-specific-fields');
         const riderFields = document.getElementById('rider-specific-fields');
         const campInfoSection = document.getElementById('camp-info-section');
         
-        // Update form title and labels based on user type and direction
         if (this.userType === 'driver') {
-            screenTitle.textContent = 'Tell Us About Your Drive';
-            driverFields.style.display = 'block';
-            riderFields.style.display = 'none';
-            
-            if (this.direction === 'to-burning-man') {
-                locationLabel.textContent = 'Where are you starting from?';
-                detailsLabel.textContent = 'Additional details about your trip to Burning Man';
-            } else {
-                locationLabel.textContent = 'Where are you going after Burning Man?';
-                detailsLabel.textContent = 'Additional details about your trip from Burning Man';
-            }
+            if (driverFields) driverFields.style.display = 'block';
+            if (riderFields) riderFields.style.display = 'none';
         } else if (this.userType === 'rider') {
-            screenTitle.textContent = 'Tell Us About Your Ride Needs';
-            driverFields.style.display = 'none';
-            riderFields.style.display = 'block';
+            if (driverFields) driverFields.style.display = 'none';
+            if (riderFields) riderFields.style.display = 'block';
             
-            // Show camp info section only for "from burning man" riders
-            if (this.direction === 'from-burning-man') {
-                campInfoSection.style.display = 'block';
-            } else {
-                campInfoSection.style.display = 'none';
+            // Show/hide camp info section based on direction
+            if (campInfoSection) {
+                if (this.direction === 'from-burning-man') {
+                    campInfoSection.style.display = 'block';
+                } else {
+                    campInfoSection.style.display = 'none';
+                }
             }
-            
-            if (this.direction === 'to-burning-man') {
-                locationLabel.textContent = 'Where are you starting from?';
-                detailsLabel.textContent = 'Additional details about your trip to Burning Man';
-            } else {
-                locationLabel.textContent = 'Where do you need to go after Burning Man?';
-                detailsLabel.textContent = 'Additional details about your trip from Burning Man';
-            }
+        }
+        
+        // Set default direction if not already set
+        if (!this.direction) {
+            this.direction = 'to-burning-man';
+        }
+        
+        // Update form labels based on direction
+        const directionLabel = this.direction === 'to-burning-man' ? 'to Burning Man' : 'from Burning Man';
+        const userTypeLabel = this.userType === 'driver' ? 'Driver' : 'Rider';
+        
+        const formTitle = document.querySelector('.onboarding-form-title');
+        if (formTitle) {
+            formTitle.textContent = `${userTypeLabel} ${directionLabel}`;
         }
     },
     
     populateTimeSlots() {
         const timeSelect = document.getElementById('onboarding-time');
-        if (!timeSelect) return;
+        if (!timeSelect) {
+            console.log('⚠️ onboarding-time element not found');
+            return;
+        }
         
+        console.log('✅ Populating time slots for onboarding form');
         timeSelect.innerHTML = '';
         
-        const timeSlots = [
-            'Early Morning (6:00 AM - 9:00 AM)',
-            'Morning (9:00 AM - 12:00 PM)',
-            'Afternoon (12:00 PM - 3:00 PM)',
-            'Late Afternoon (3:00 PM - 6:00 PM)',
-            'Evening (6:00 PM - 9:00 PM)',
-            'Night (9:00 PM - 12:00 AM)',
-            'Late Night (12:00 AM - 6:00 AM)',
-            'Flexible'
-        ];
+        // Add Flexible Time option first as default
+        const flexibleOption = document.createElement('option');
+        flexibleOption.value = 'Flexible Time';
+        flexibleOption.textContent = 'Flexible Time';
+        flexibleOption.selected = true;
+        timeSelect.appendChild(flexibleOption);
         
-        timeSlots.forEach(slot => {
+        // Add time-specific options (matching main app exactly)
+        for (let i = 0; i < 24; i += 3) {
+            const start = i.toString().padStart(2, '0');
+            const end = (i + 3).toString().padStart(2, '0');
             const option = document.createElement('option');
-            option.value = slot;
-            option.textContent = slot;
+            option.value = `${start}:00 - ${end}:00`;
+            option.textContent = `${start}:00 - ${end}:00`;
             timeSelect.appendChild(option);
-        });
+        }
+        
+        console.log('✅ Time slots populated:', timeSelect.options.length, 'options');
     },
     
     async submitForm(formData) {
         try {
-            // Set the direction in the form data based on user selection
-            const entryType = this.direction === 'to-burning-man' ? 'to-brc' : 'from-brc';
+            // Use shared FormUtils for validation and submission
+            const result = await FormUtils.submitFormToFirebase(
+                formData, 
+                this.userType, 
+                this.direction, 
+                true // isOnboarding = true
+            );
             
-            // Create the entry data
-            const entryData = {
-                type: this.userType,
-                direction: entryType,
-                name: formData.name,
-                email: formData.email,
-                phone: formData.phone,
-                location: formData.location,
-                date: formData.date,
-                timeSlot: formData.timeSlot,
-                details: this.buildDetailsText(formData),
-                timestamp: new Date(),
-                sessionCode: AppState.sessionCode || generateSessionCode(),
-                flaggedBy: [],
-                visible: true
-            };
-            
-            // Add to Firestore
-            await window.firebase.addDoc(window.firebase.collection(AppState.db, 'rides'), entryData);
-            
-            // Mark as having submitted a ride
-            localStorage.setItem('bmir_has_submitted_ride', 'true');
-            localStorage.setItem('bmir_onboarding_completed', 'true');
-            
-            // Hide onboarding and show success
-            this.hide();
-            
-            // Show success message
-            alert('🎉 Your listing has been created successfully! Welcome to BMIR RideSwap!');
-            
-            // Refresh the main app to show the new listing
-            if (typeof loadRides === 'function') {
-                loadRides();
+            if (result.success) {
+                if (result.offline) {
+                    alert('Your submission has been saved locally and will sync when you reconnect.');
+                } else {
+                    alert('Your ride has been posted successfully!');
+                }
+                
+                // Hide onboarding completely
+                this.hide();
+                
+                // Mark onboarding as completed
+                localStorage.setItem('bmir_onboarding_completed', 'true');
+                localStorage.setItem('bmir_has_submitted_ride', 'true');
+                
+                // Refresh the main app to show the new listing
+                if (typeof setupListeners === 'function') {
+                    setupListeners();
+                }
+                
+                // Show session code modal after a short delay to ensure onboarding is hidden
+                setTimeout(() => {
+                    if (typeof showSessionCodeModal === 'function') {
+                        const userId = AppState.auth?.currentUser?.uid || 'anonymous';
+                        showSessionCodeModal(userId);
+                    }
+                }, 500);
+            } else {
+                alert('Failed to submit form. Please try again.');
             }
             
         } catch (error) {
-            console.error('Error submitting onboarding form:', error);
-            alert('There was an error creating your listing. Please try again.');
+            FirebaseUtils.logOffline('Error submitting onboarding form:', error);
+            alert('Failed to submit form. Please try again.');
         }
     },
     
@@ -1093,120 +1326,21 @@ const MobileOnboarding = {
     }
 };
 
-function initializeMobileOnboarding() {
-    if (!MobileOnboarding.shouldShow()) {
-        return;
-    }
-    
-    // Show onboarding
-    MobileOnboarding.show();
-    
-    // Setup event listeners
-    setupOnboardingEventListeners();
-}
+// Universal onboarding initialization is handled by index.html
 
-function setupOnboardingEventListeners() {
-    // Welcome screen buttons
-    const needRideBtn = document.getElementById('need-ride-btn');
-    const provideRideBtn = document.getElementById('provide-ride-btn');
-    const browseListingsBtn = document.getElementById('browse-listings-btn');
-    
-    if (needRideBtn) {
-        needRideBtn.addEventListener('click', () => {
-            MobileOnboarding.selectUserType('rider');
-        });
-    }
-    
-    if (provideRideBtn) {
-        provideRideBtn.addEventListener('click', () => {
-            MobileOnboarding.selectUserType('driver');
-        });
-    }
-    
-    if (browseListingsBtn) {
-        browseListingsBtn.addEventListener('click', () => {
-            MobileOnboarding.hide();
-        });
-    }
-    
-    // Direction screen buttons
-    const toBurningManBtn = document.getElementById('to-burning-man-btn');
-    const fromBurningManBtn = document.getElementById('from-burning-man-btn');
-    
-    if (toBurningManBtn) {
-        toBurningManBtn.addEventListener('click', () => {
-            MobileOnboarding.selectDirection('to-burning-man');
-        });
-    }
-    
-    if (fromBurningManBtn) {
-        fromBurningManBtn.addEventListener('click', () => {
-            MobileOnboarding.selectDirection('from-burning-man');
-        });
-    }
-    
-    // Back buttons
-    const directionBackBtn = document.getElementById('direction-back-btn');
-    const formBackBtn = document.getElementById('form-back-btn');
-    
-    if (directionBackBtn) {
-        directionBackBtn.addEventListener('click', () => {
-            MobileOnboarding.goBack();
-        });
-    }
-    
-    if (formBackBtn) {
-        formBackBtn.addEventListener('click', () => {
-            MobileOnboarding.goBack();
-        });
-    }
-    
-    // Form submission
-    const onboardingForm = document.getElementById('onboarding-ride-form');
-    if (onboardingForm) {
-        onboardingForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                name: document.getElementById('onboarding-name').value,
-                email: document.getElementById('onboarding-email').value,
-                phone: document.getElementById('onboarding-phone').value,
-                location: document.getElementById('onboarding-location').value,
-                date: document.getElementById('onboarding-date').value,
-                timeSlot: document.getElementById('onboarding-time').value,
-                details: document.getElementById('onboarding-details').value,
-                passengerSpace: document.getElementById('onboarding-passenger-space')?.value,
-                cargoSpace: document.getElementById('onboarding-cargo-space')?.value,
-                routeDetails: document.getElementById('onboarding-route-details')?.value,
-                riderStuff: document.getElementById('onboarding-rider-stuff')?.value,
-                campInfo: document.getElementById('onboarding-camp-info')?.value
-            };
-            
-            await MobileOnboarding.submitForm(formData);
-        });
-    }
-}
+// Session code generation is handled by index.html
 
-// Helper function to generate session code (if not already exists in the app)
-function generateSessionCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
+// Add remaining components to window after all are defined
+window.FormUtils = FormUtils;
+window.UniversalOnboarding = UniversalOnboarding;
+window.LazyLoader = LazyLoader;
 
-// Stub functions for features not included in this optimization
-function checkGodMode() { /* Implementation */ }
-function setupLocationAutocomplete() { /* Implementation */ }
-function setupFlagging() { /* Implementation */ }
-function loadSavedStates() { /* Implementation */ }
-function setDefaultDirection() { /* Implementation */ }
-function setupAuthentication() { /* Implementation */ }
-function populateTimeSlots() { /* Implementation */ }
-function setupUIEventListeners() { /* Implementation */ }
-function retryLoad() { initialize(); }
+console.log('🔧 Exposing components to window...');
+console.log('  - FormUtils available:', typeof window.FormUtils);
+console.log('  - UniversalOnboarding available:', typeof window.UniversalOnboarding);
+console.log('  - LazyLoader available:', typeof window.LazyLoader);
 
-// Start the application
-document.addEventListener('DOMContentLoaded', initialize);
+// Debug: Check if DOMContentLoaded has already fired
+console.log('🔧 app.js: DOM ready state:', document.readyState);
+
+// App initialization is handled by index.html

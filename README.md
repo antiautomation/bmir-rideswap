@@ -244,6 +244,104 @@ bmir-rideswap/
    ./deploy-indexes.sh
    ```
 
+6. **Configure Firebase Settings**
+   ```bash
+   # Copy the sample configuration file
+   cp config.js.example config.js
+   
+   # Edit config.js with your Firebase project settings
+   # See Configuration section below for details
+   ```
+
+### Configuration
+
+#### 🔐 Firebase Configuration
+
+The application uses a secure configuration system to protect sensitive API keys and Firebase settings.
+
+1. **Create Configuration File**
+   ```bash
+   # Copy the sample configuration file
+   cp config.js.example config.js
+   ```
+
+2. **Configure Firebase Settings**
+   
+   Edit `config.js` with your Firebase project settings:
+   
+   ```javascript
+   // Firebase Configuration
+   const FIREBASE_CONFIG = {
+       apiKey: "your-api-key-here",
+       authDomain: "your-project.firebaseapp.com",
+       projectId: "your-project-id",
+       storageBucket: "your-project.appspot.com",
+       messagingSenderId: "your-sender-id",
+       appId: "your-app-id",
+       measurementId: "your-measurement-id"
+   };
+   
+   // App Configuration
+   const APP_CONFIG = {
+       appId: "your-app-id",
+       projectId: "your-project-id",
+       collectionPath: "artifacts/your-app-id/public/data"
+   };
+   ```
+
+3. **Get Firebase Configuration**
+   
+   To get your Firebase configuration:
+   
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Select your project
+   - Click the gear icon ⚙️ → Project Settings
+   - Scroll down to "Your apps" section
+   - Click the web app (</>) icon
+   - Copy the configuration object
+
+4. **Get Google Analytics Tracking ID**
+   
+   To get your Google Analytics tracking ID:
+   
+   - Go to [Google Analytics](https://analytics.google.com/)
+   - Select your property
+   - Go to Admin → Data Streams → Web
+   - Copy the Measurement ID (starts with "G-")
+
+5. **Get reCAPTCHA Site Key**
+   
+   To get your reCAPTCHA site key:
+   
+   - Go to [reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
+   - Create a new site or select existing
+   - Choose reCAPTCHA v3
+   - Add your domain (e.g., `rideswap.auerbach.io`)
+   - Copy the Site Key
+
+6. **Security Notes**
+   
+   - **Never commit `config.js` to version control**
+   - The file is already in `.gitignore`
+   - Use environment variables in production
+   - Rotate API keys regularly
+   - Monitor Firebase usage in console
+
+#### 🔧 Environment Variables (Optional)
+
+For production deployments, you can use environment variables:
+
+```bash
+# Set environment variables
+export FIREBASE_API_KEY="your-api-key"
+export FIREBASE_PROJECT_ID="your-project-id"
+export FIREBASE_APP_ID="your-app-id"
+export ANALYTICS_TRACKING_ID="your-google-analytics-id"
+export RECAPTCHA_SITE_KEY="your-recaptcha-site-key"
+
+# The app will automatically use these if available
+```
+
 ### Development
 
 #### 🔧 Local Development

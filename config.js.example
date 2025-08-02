@@ -1,0 +1,48 @@
+// Secure Configuration File - SAMPLE
+// Copy this file to config.js and update with your project settings
+// DO NOT commit config.js to version control
+
+// Firebase Configuration
+const FIREBASE_CONFIG = {
+    apiKey: "your-api-key-here",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "your-sender-id",
+    appId: "your-app-id",
+    measurementId: "your-measurement-id"
+};
+
+// App Configuration
+const APP_CONFIG = {
+    appId: "your-project-id", // Use project ID like the live site
+    projectId: "your-project-id",
+    collectionPath: "artifacts/your-project-id/public/data"
+};
+
+// Google Analytics Configuration
+const ANALYTICS_CONFIG = {
+    trackingId: "your-google-analytics-tracking-id",
+    gtagUrl: "https://www.googletagmanager.com/gtag/js"
+};
+
+// reCAPTCHA Configuration
+const RECAPTCHA_CONFIG = {
+    siteKey: "your-recaptcha-site-key",
+    apiUrl: "https://www.google.com/recaptcha/api.js"
+};
+
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { 
+        FIREBASE_CONFIG, 
+        APP_CONFIG, 
+        ANALYTICS_CONFIG, 
+        RECAPTCHA_CONFIG 
+    };
+} else {
+    window.FIREBASE_CONFIG = FIREBASE_CONFIG;
+    window.APP_CONFIG = APP_CONFIG;
+    window.ANALYTICS_CONFIG = ANALYTICS_CONFIG;
+    window.RECAPTCHA_CONFIG = RECAPTCHA_CONFIG;
+} 

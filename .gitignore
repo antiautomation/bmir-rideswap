@@ -1,1 +1,4 @@
 .DS_Store
+
+# Configuration files with sensitive data
+config.js
