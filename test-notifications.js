@@ -79,7 +79,15 @@ function checkNotificationPreferences() {
 function testInAppNotification() {
     console.log('🔔 Testing in-app notification...');
     
-    if (typeof window.showInAppNotification === 'function') {
+    if (typeof window.testInAppNotification === 'function') {
+        window.testInAppNotification({
+            notification: {
+                title: 'Test In-App Notification',
+                body: 'This is a test of the in-app notification system'
+            }
+        });
+        console.log('✅ In-app notification sent');
+    } else if (typeof window.showInAppNotification === 'function') {
         window.showInAppNotification({
             notification: {
                 title: 'Test In-App Notification',

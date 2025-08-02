@@ -2441,6 +2441,11 @@
         
         // Expose function globally for testing
         window.showInAppNotification = showInAppNotification;
+        
+        // Also expose it outside module scope for immediate access
+        if (typeof window !== 'undefined') {
+            window.showInAppNotification = showInAppNotification;
+        }
 
         function startNotificationChecking() {
             // Check for new rides every 30 seconds
@@ -3723,6 +3728,15 @@
         checkConnectivity();
         setupAutoRefresh();
         setupEasterEgg();
+        
+        // Global wrapper for notification testing
+        window.testInAppNotification = function(payload) {
+            if (typeof window.showInAppNotification === 'function') {
+                window.showInAppNotification(payload);
+            } else {
+                console.error('❌ showInAppNotification function not available');
+            }
+        };
     </script>
     
     <!-- Footer -->
