@@ -835,6 +835,12 @@
     testScript.src = './test-poor-connectivity.js';
     testScript.defer = true;
     document.head.appendChild(testScript);
+    
+    // Load notification test script
+    const notificationTestScript = document.createElement('script');
+    notificationTestScript.src = './test-notifications.js';
+    notificationTestScript.defer = true;
+    document.head.appendChild(notificationTestScript);
   }
 </script>
     
