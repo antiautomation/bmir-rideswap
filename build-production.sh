@@ -16,7 +16,7 @@ cp app.js dist/
 cp styles.css dist/
 cp manifest.json dist/
 cp sw.js dist/
-cp top200_us_cities.csv dist/
+# cp top200_us_cities.csv dist/  # Not needed - cities are hardcoded in index.html
 cp firestore.rules dist/
 cp firestore.indexes.json dist/
 cp .htaccess dist/

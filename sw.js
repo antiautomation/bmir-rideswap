@@ -6,7 +6,7 @@ const urlsToCache = [
   './manifest.json',
   './styles.css',
   './app.js',
-  './top200_us_cities.csv',
+  # './top200_us_cities.csv',  // Not needed - cities are hardcoded in index.html
   // Updated Firebase version to match app.js
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
