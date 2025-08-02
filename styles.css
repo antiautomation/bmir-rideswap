@@ -117,7 +117,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 
 /* Content sections */
 .content-section{background-color:white;padding:1rem;border-radius:.5rem;box-shadow:0 4px 6px rgba(0,0,0,.1)}
-.section-title{font-size:1.5rem;font-weight:700;margin-bottom:1rem}
+.section-title{font-size:1.5rem;font-weight:700;margin-bottom:1rem;color:#1f2937;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 
 /* Cards */
 .card{background-color:white;padding:.75rem;border-radius:.5rem;box-shadow:0 4px 6px rgba(0,0,0,.1);margin-bottom:1rem;border-left:4px solid}
@@ -217,6 +217,31 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 
 /* Desktop: Keep filters always visible */
 @media (min-width:641px){.filters-collapsible{border:none;margin-bottom:0}.filters-summary{display:none}.filters-content{padding:0;border-top:none}}
+
+/* Safari-specific fixes for better contrast */
+@supports (-webkit-appearance: none) {
+    .section-title {
+        color: #111827 !important;
+        font-weight: 800;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .content-section {
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
+    }
+}
+
+/* Additional Safari WebKit fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .section-title {
+        color: #000000 !important;
+        font-weight: 900;
+        text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+}
 
 /* Mobile Onboarding Styles */
 .mobile-onboarding-overlay {
