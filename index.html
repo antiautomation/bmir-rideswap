@@ -3226,6 +3226,23 @@
             }
         });
         
+        // --- Visibility Change Handler ---
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                // Tab became visible - refresh data to ensure we have the latest information
+                console.log('🔄 Tab became visible - refreshing data...');
+                renderFilteredLists();
+                
+                // Update status bar to indicate refresh
+                if (statusBar) {
+                    statusBar.innerHTML = '🔄 Refreshing data...';
+                    setTimeout(() => {
+                        statusBar.innerHTML = '🟢 Live Updating App, No Refresh Required 🟢';
+                    }, 1000);
+                }
+            }
+        });
+        
         // --- Performance Optimizations ---
         let renderTimeout = null;
         
