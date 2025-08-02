@@ -818,6 +818,9 @@ function setupApp() {
     setupAuthentication();
     populateTimeSlots();
     setupUIEventListeners();
+    
+    // Initialize mobile onboarding
+    initializeMobileOnboarding();
 }
 
 // Session code functions (simplified for brevity)
@@ -864,6 +867,334 @@ function enterSessionCode() {
     }
     
     alert('Session code entered! You can now edit your listings.');
+}
+
+// Mobile Onboarding System
+const MobileOnboarding = {
+    currentScreen: 'welcome',
+    userType: null, // 'driver' or 'rider'
+    direction: null, // 'to-burning-man' or 'from-burning-man'
+    
+    // Check if user is on mobile and hasn't submitted anything yet
+    shouldShow() {
+        // Check if mobile device
+        const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) return false;
+        
+        // Check if user has completed onboarding before
+        const hasCompletedOnboarding = localStorage.getItem('bmir_onboarding_completed');
+        if (hasCompletedOnboarding) return false;
+        
+        // Check if user has submitted any ride requests or offerings
+        const hasSubmittedRide = localStorage.getItem('bmir_has_submitted_ride');
+        if (hasSubmittedRide) return false;
+        
+        return true;
+    },
+    
+    show() {
+        const overlay = document.getElementById('mobile-onboarding');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            this.populateTimeSlots();
+        }
+    },
+    
+    hide() {
+        const overlay = document.getElementById('mobile-onboarding');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+        // Mark onboarding as completed
+        localStorage.setItem('bmir_onboarding_completed', 'true');
+    },
+    
+    navigateToScreen(screenId) {
+        // Hide current screen
+        const currentScreen = document.querySelector('.onboarding-screen.active');
+        if (currentScreen) {
+            currentScreen.classList.remove('active');
+            currentScreen.classList.add('prev');
+        }
+        
+        // Show new screen
+        const newScreen = document.getElementById(screenId);
+        if (newScreen) {
+            newScreen.classList.remove('prev');
+            newScreen.classList.add('active');
+        }
+        
+        this.currentScreen = screenId.replace('onboarding-', '');
+    },
+    
+    goBack() {
+        switch (this.currentScreen) {
+            case 'direction':
+                this.navigateToScreen('onboarding-welcome');
+                break;
+            case 'form':
+                this.navigateToScreen('onboarding-direction');
+                break;
+        }
+    },
+    
+    selectUserType(type) {
+        this.userType = type;
+        this.navigateToScreen('onboarding-direction');
+    },
+    
+    selectDirection(direction) {
+        this.direction = direction;
+        this.setupForm();
+        this.navigateToScreen('onboarding-form');
+    },
+    
+    setupForm() {
+        const screenTitle = document.getElementById('form-screen-title');
+        const locationLabel = document.getElementById('onboarding-location-label');
+        const detailsLabel = document.getElementById('onboarding-details-label');
+        const driverFields = document.getElementById('driver-specific-fields');
+        const riderFields = document.getElementById('rider-specific-fields');
+        const campInfoSection = document.getElementById('camp-info-section');
+        
+        // Update form title and labels based on user type and direction
+        if (this.userType === 'driver') {
+            screenTitle.textContent = 'Tell Us About Your Drive';
+            driverFields.style.display = 'block';
+            riderFields.style.display = 'none';
+            
+            if (this.direction === 'to-burning-man') {
+                locationLabel.textContent = 'Where are you starting from?';
+                detailsLabel.textContent = 'Additional details about your trip to Burning Man';
+            } else {
+                locationLabel.textContent = 'Where are you going after Burning Man?';
+                detailsLabel.textContent = 'Additional details about your trip from Burning Man';
+            }
+        } else if (this.userType === 'rider') {
+            screenTitle.textContent = 'Tell Us About Your Ride Needs';
+            driverFields.style.display = 'none';
+            riderFields.style.display = 'block';
+            
+            // Show camp info section only for "from burning man" riders
+            if (this.direction === 'from-burning-man') {
+                campInfoSection.style.display = 'block';
+            } else {
+                campInfoSection.style.display = 'none';
+            }
+            
+            if (this.direction === 'to-burning-man') {
+                locationLabel.textContent = 'Where are you starting from?';
+                detailsLabel.textContent = 'Additional details about your trip to Burning Man';
+            } else {
+                locationLabel.textContent = 'Where do you need to go after Burning Man?';
+                detailsLabel.textContent = 'Additional details about your trip from Burning Man';
+            }
+        }
+    },
+    
+    populateTimeSlots() {
+        const timeSelect = document.getElementById('onboarding-time');
+        if (!timeSelect) return;
+        
+        timeSelect.innerHTML = '';
+        
+        const timeSlots = [
+            'Early Morning (6:00 AM - 9:00 AM)',
+            'Morning (9:00 AM - 12:00 PM)',
+            'Afternoon (12:00 PM - 3:00 PM)',
+            'Late Afternoon (3:00 PM - 6:00 PM)',
+            'Evening (6:00 PM - 9:00 PM)',
+            'Night (9:00 PM - 12:00 AM)',
+            'Late Night (12:00 AM - 6:00 AM)',
+            'Flexible'
+        ];
+        
+        timeSlots.forEach(slot => {
+            const option = document.createElement('option');
+            option.value = slot;
+            option.textContent = slot;
+            timeSelect.appendChild(option);
+        });
+    },
+    
+    async submitForm(formData) {
+        try {
+            // Set the direction in the form data based on user selection
+            const entryType = this.direction === 'to-burning-man' ? 'to-brc' : 'from-brc';
+            
+            // Create the entry data
+            const entryData = {
+                type: this.userType,
+                direction: entryType,
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                location: formData.location,
+                date: formData.date,
+                timeSlot: formData.timeSlot,
+                details: this.buildDetailsText(formData),
+                timestamp: new Date(),
+                sessionCode: AppState.sessionCode || generateSessionCode(),
+                flaggedBy: [],
+                visible: true
+            };
+            
+            // Add to Firestore
+            await window.firebase.addDoc(window.firebase.collection(AppState.db, 'rides'), entryData);
+            
+            // Mark as having submitted a ride
+            localStorage.setItem('bmir_has_submitted_ride', 'true');
+            localStorage.setItem('bmir_onboarding_completed', 'true');
+            
+            // Hide onboarding and show success
+            this.hide();
+            
+            // Show success message
+            alert('🎉 Your listing has been created successfully! Welcome to BMIR RideSwap!');
+            
+            // Refresh the main app to show the new listing
+            if (typeof loadRides === 'function') {
+                loadRides();
+            }
+            
+        } catch (error) {
+            console.error('Error submitting onboarding form:', error);
+            alert('There was an error creating your listing. Please try again.');
+        }
+    },
+    
+    buildDetailsText(formData) {
+        let details = formData.details || '';
+        
+        // Add driver-specific details
+        if (this.userType === 'driver') {
+            if (formData.passengerSpace) {
+                details += `\n\nPassenger capacity: ${formData.passengerSpace}`;
+            }
+            if (formData.cargoSpace) {
+                details += `\nCargo capacity: ${formData.cargoSpace}`;
+            }
+            if (formData.routeDetails) {
+                details += `\nRoute details: ${formData.routeDetails}`;
+            }
+        }
+        
+        // Add rider-specific details
+        if (this.userType === 'rider') {
+            if (formData.riderStuff) {
+                details += `\n\nBelongings: ${formData.riderStuff}`;
+            }
+            if (formData.campInfo && this.direction === 'from-burning-man') {
+                details += `\nCamp info: ${formData.campInfo}`;
+            }
+        }
+        
+        return details.trim();
+    }
+};
+
+function initializeMobileOnboarding() {
+    if (!MobileOnboarding.shouldShow()) {
+        return;
+    }
+    
+    // Show onboarding
+    MobileOnboarding.show();
+    
+    // Setup event listeners
+    setupOnboardingEventListeners();
+}
+
+function setupOnboardingEventListeners() {
+    // Welcome screen buttons
+    const needRideBtn = document.getElementById('need-ride-btn');
+    const provideRideBtn = document.getElementById('provide-ride-btn');
+    const browseListingsBtn = document.getElementById('browse-listings-btn');
+    
+    if (needRideBtn) {
+        needRideBtn.addEventListener('click', () => {
+            MobileOnboarding.selectUserType('rider');
+        });
+    }
+    
+    if (provideRideBtn) {
+        provideRideBtn.addEventListener('click', () => {
+            MobileOnboarding.selectUserType('driver');
+        });
+    }
+    
+    if (browseListingsBtn) {
+        browseListingsBtn.addEventListener('click', () => {
+            MobileOnboarding.hide();
+        });
+    }
+    
+    // Direction screen buttons
+    const toBurningManBtn = document.getElementById('to-burning-man-btn');
+    const fromBurningManBtn = document.getElementById('from-burning-man-btn');
+    
+    if (toBurningManBtn) {
+        toBurningManBtn.addEventListener('click', () => {
+            MobileOnboarding.selectDirection('to-burning-man');
+        });
+    }
+    
+    if (fromBurningManBtn) {
+        fromBurningManBtn.addEventListener('click', () => {
+            MobileOnboarding.selectDirection('from-burning-man');
+        });
+    }
+    
+    // Back buttons
+    const directionBackBtn = document.getElementById('direction-back-btn');
+    const formBackBtn = document.getElementById('form-back-btn');
+    
+    if (directionBackBtn) {
+        directionBackBtn.addEventListener('click', () => {
+            MobileOnboarding.goBack();
+        });
+    }
+    
+    if (formBackBtn) {
+        formBackBtn.addEventListener('click', () => {
+            MobileOnboarding.goBack();
+        });
+    }
+    
+    // Form submission
+    const onboardingForm = document.getElementById('onboarding-ride-form');
+    if (onboardingForm) {
+        onboardingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('onboarding-name').value,
+                email: document.getElementById('onboarding-email').value,
+                phone: document.getElementById('onboarding-phone').value,
+                location: document.getElementById('onboarding-location').value,
+                date: document.getElementById('onboarding-date').value,
+                timeSlot: document.getElementById('onboarding-time').value,
+                details: document.getElementById('onboarding-details').value,
+                passengerSpace: document.getElementById('onboarding-passenger-space')?.value,
+                cargoSpace: document.getElementById('onboarding-cargo-space')?.value,
+                routeDetails: document.getElementById('onboarding-route-details')?.value,
+                riderStuff: document.getElementById('onboarding-rider-stuff')?.value,
+                campInfo: document.getElementById('onboarding-camp-info')?.value
+            };
+            
+            await MobileOnboarding.submitForm(formData);
+        });
+    }
+}
+
+// Helper function to generate session code (if not already exists in the app)
+function generateSessionCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
 }
 
 // Stub functions for features not included in this optimization

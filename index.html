@@ -497,6 +497,189 @@
         </div>
     </div>
     
+    <!-- Mobile Onboarding Overlay -->
+    <div id="mobile-onboarding" class="mobile-onboarding-overlay hidden">
+        <!-- Welcome Screen -->
+        <div id="onboarding-welcome" class="onboarding-screen active">
+            <div class="onboarding-content">
+                <div class="onboarding-logo">
+                    <img src="https://bmir.org/Org.png" alt="BMIR Logo" class="onboarding-logo-img">
+                </div>
+                <h1 class="onboarding-title">Welcome to BMIR RideSwap</h1>
+                <p class="onboarding-subtitle">Connect with fellow Burners for rides to and from Black Rock City</p>
+                
+                <div class="onboarding-options">
+                    <button id="need-ride-btn" class="onboarding-btn primary">
+                        <span class="btn-icon">🚗</span>
+                        <span class="btn-text">I need a ride</span>
+                    </button>
+                    
+                    <button id="provide-ride-btn" class="onboarding-btn primary">
+                        <span class="btn-icon">🚙</span>
+                        <span class="btn-text">I can provide a ride</span>
+                    </button>
+                    
+                    <button id="browse-listings-btn" class="onboarding-btn secondary">
+                        <span class="btn-icon">📋</span>
+                        <span class="btn-text">Show me the listings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Direction Selection Screen -->
+        <div id="onboarding-direction" class="onboarding-screen">
+            <div class="onboarding-content">
+                <div class="onboarding-header">
+                    <button id="direction-back-btn" class="onboarding-back">←</button>
+                    <h2 class="onboarding-screen-title">Choose Your Direction</h2>
+                </div>
+                
+                <p class="onboarding-question">Are you going to Burning Man, or coming from Burning Man?</p>
+                
+                <div class="onboarding-options">
+                    <button id="to-burning-man-btn" class="onboarding-btn primary">
+                        <span class="btn-icon">🏜️</span>
+                        <span class="btn-text">Going to Burning Man</span>
+                        <span class="btn-subtext">I need to get to Black Rock City</span>
+                    </button>
+                    
+                    <button id="from-burning-man-btn" class="onboarding-btn primary">
+                        <span class="btn-icon">🏠</span>
+                        <span class="btn-text">Coming from Burning Man</span>
+                        <span class="btn-subtext">I need to get home from the playa</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Form Screen -->
+        <div id="onboarding-form" class="onboarding-screen">
+            <div class="onboarding-content">
+                <div class="onboarding-header">
+                    <button id="form-back-btn" class="onboarding-back">←</button>
+                    <h2 id="form-screen-title" class="onboarding-screen-title">Tell Us About Your Trip</h2>
+                </div>
+                
+                <form id="onboarding-ride-form" class="onboarding-form">
+                    <!-- Basic Info -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="onboarding-name" class="form-label">Your Name</label>
+                            <input type="text" id="onboarding-name" class="form-input" required placeholder="Enter your name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-email" class="form-label">Email Address</label>
+                            <input type="email" id="onboarding-email" class="form-input" placeholder="your@email.com">
+                            <small class="form-hint">For ride coordination (optional but recommended)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-phone" class="form-label">Phone Number</label>
+                            <input type="tel" id="onboarding-phone" class="form-input" placeholder="(555) 123-4567">
+                            <small class="form-hint">For ride coordination (optional but recommended)</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Location -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="onboarding-location" class="form-label" id="onboarding-location-label">Your Location</label>
+                            <input type="text" id="onboarding-location" class="form-input" required placeholder="City, ST (e.g., Reno, NV)">
+                            <small class="form-hint">Please enter your city and state in "City, ST" format</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Date and Time -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="onboarding-date" class="form-label">Date</label>
+                            <input type="date" id="onboarding-date" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-time" class="form-label">Preferred Time</label>
+                            <select id="onboarding-time" class="form-select" required>
+                                <!-- Time slots will be populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Driver-specific fields -->
+                    <div id="driver-specific-fields" class="form-section" style="display: none;">
+                        <h3 class="section-title">Driver Details</h3>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-passenger-space" class="form-label">How many passengers can you take?</label>
+                            <select id="onboarding-passenger-space" class="form-select">
+                                <option value="">Select number of passengers</option>
+                                <option value="1">1 passenger</option>
+                                <option value="2">2 passengers</option>
+                                <option value="3">3 passengers</option>
+                                <option value="4">4 passengers</option>
+                                <option value="5">5+ passengers</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-cargo-space" class="form-label">How much stuff can you take?</label>
+                            <select id="onboarding-cargo-space" class="form-select">
+                                <option value="">Select cargo capacity</option>
+                                <option value="personal-only">Personal items only (backpack, small bag)</option>
+                                <option value="some-gear">Some gear (sleeping bag, cooler, etc.)</option>
+                                <option value="moderate-gear">Moderate gear (bike, camping equipment)</option>
+                                <option value="lots-of-gear">Lots of gear (multiple bikes, large items)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-route-details" class="form-label">Specific route or stops?</label>
+                            <textarea id="onboarding-route-details" class="form-input" rows="3" placeholder="If you're taking a specific route or making stops that aren't the most direct path via Google Maps, please describe them here..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Rider-specific fields -->
+                    <div id="rider-specific-fields" class="form-section" style="display: none;">
+                        <h3 class="section-title">Rider Details</h3>
+                        
+                        <div class="form-group">
+                            <label for="onboarding-rider-stuff" class="form-label">How much stuff do you have?</label>
+                            <select id="onboarding-rider-stuff" class="form-select">
+                                <option value="">Select amount of belongings</option>
+                                <option value="minimal">Minimal (backpack, small bag)</option>
+                                <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
+                                <option value="substantial">Substantial (bike, camping gear, multiple bags)</option>
+                                <option value="extensive">Extensive (multiple bikes, large camp items)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Camp info for "From Burning Man" riders -->
+                        <div id="camp-info-section" class="form-group" style="display: none;">
+                            <label for="onboarding-camp-info" class="form-label">Camp name and location</label>
+                            <textarea id="onboarding-camp-info" class="form-input" rows="3" placeholder="If you need to be found or reached, please provide your camp name, location (street address), and any landmarks..."></textarea>
+                            <small class="form-hint">This helps drivers find you on the playa</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Details -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="onboarding-details" class="form-label" id="onboarding-details-label">Additional Details</label>
+                            <textarea id="onboarding-details" class="form-input" rows="4" required placeholder="Share any additional information about your trip, preferences, or special requirements..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="onboarding-form-buttons">
+                        <button type="submit" class="onboarding-btn primary large">
+                            <span class="btn-text">Create My Listing</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <!-- Help Modal -->
     <div id="help-modal" class="modal-overlay hidden">
         <div class="modal">
