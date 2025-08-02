@@ -946,6 +946,11 @@
         const NOTIFICATION_CHECK_INTERVAL = 30000; // 30 seconds
         const NOTIFICATION_STORAGE_KEY = 'bmir_notification_preferences';
         const NOTIFICATION_TOKEN_KEY = 'bmir_notification_token';
+        
+        // Expose notification variables globally for testing
+        window.messaging = messaging;
+        window.notificationToken = notificationToken;
+        window.notificationPreferences = notificationPreferences;
 
         // Comprehensive list of continental USA cities for autocomplete
         const commonCities = [
@@ -2317,6 +2322,9 @@
                 // Initialize Firebase Messaging
                 messaging = getMessaging();
                 
+                // Update global variables
+                window.messaging = messaging;
+                
                 // Request notification permission
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
@@ -2335,6 +2343,9 @@
                     if (notificationToken) {
                         console.log('🔔 FCM Token obtained:', notificationToken.substring(0, 20) + '...');
                         localStorage.setItem(NOTIFICATION_TOKEN_KEY, notificationToken);
+                        
+                        // Update global variable
+                        window.notificationToken = notificationToken;
                         
                         // Save token to Firestore for server-side notifications
                         await saveNotificationToken(notificationToken);
@@ -2384,6 +2395,9 @@
                 if (saved) {
                     notificationPreferences = { ...notificationPreferences, ...JSON.parse(saved) };
                 }
+                
+                // Update global variable
+                window.notificationPreferences = notificationPreferences;
             } catch (error) {
                 console.error('❌ Failed to load notification preferences:', error);
             }
@@ -2424,6 +2438,9 @@
                 notification.parentNode.removeChild(notification);
             });
         }
+        
+        // Expose function globally for testing
+        window.showInAppNotification = showInAppNotification;
 
         function startNotificationChecking() {
             // Check for new rides every 30 seconds
