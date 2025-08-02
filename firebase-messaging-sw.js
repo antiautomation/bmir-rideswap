@@ -4,12 +4,13 @@ importScripts('https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging-comp
 
 // Firebase configuration (same as in index.html)
 const firebaseConfig = {
-    apiKey: "AIzaSyBqXqXqXqXqXqXqXqXqXqXqXqXqXqXqXq",
+    apiKey: "AIzaSyCSuS3HjgXbO_II0VXRvho9J84qidSoTw8",
     authDomain: "bmir-rideshare.firebaseapp.com",
     projectId: "bmir-rideshare",
     storageBucket: "bmir-rideshare.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdefghijklmnop"
+    messagingSenderId: "739664619765",
+    appId: "1:739664619765:web:118b5b518d0a9e73383dbc",
+    measurementId: "G-NXHN9M6GQX"
 };
 
 // Initialize Firebase

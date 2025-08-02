@@ -2323,7 +2323,7 @@
                 // Get FCM token
                 try {
                     notificationToken = await getToken(messaging, {
-                        vapidKey: 'YOUR_VAPID_KEY_HERE' // We'll need to add this
+                        vapidKey: window.FCM_CONFIG?.vapidKey || 'YOUR_VAPID_KEY_HERE'
                     });
                     
                     if (notificationToken) {

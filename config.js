@@ -32,17 +32,24 @@ const RECAPTCHA_CONFIG = {
     apiUrl: "https://www.google.com/recaptcha/api.js"
 };
 
+// Firebase Cloud Messaging Configuration
+const FCM_CONFIG = {
+    vapidKey: "YOUR_VAPID_KEY_HERE" // TODO: Add actual VAPID key from Firebase Console
+};
+
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { 
         FIREBASE_CONFIG, 
         APP_CONFIG, 
         ANALYTICS_CONFIG, 
-        RECAPTCHA_CONFIG 
+        RECAPTCHA_CONFIG,
+        FCM_CONFIG
     };
 } else {
     window.FIREBASE_CONFIG = FIREBASE_CONFIG;
     window.APP_CONFIG = APP_CONFIG;
     window.ANALYTICS_CONFIG = ANALYTICS_CONFIG;
     window.RECAPTCHA_CONFIG = RECAPTCHA_CONFIG;
+    window.FCM_CONFIG = FCM_CONFIG;
 } 
