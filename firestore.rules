@@ -13,12 +13,12 @@ service cloud.firestore {
       
       // Allow create with strict validation
       allow create: if 
-        // Must be authenticated
-        request.auth != null &&
         // Must include required fields
         request.resource.data.keys().hasAll(['authorId', 'timestamp', 'name', 'direction']) &&
-        // Author ID must match authenticated user OR user has god mode (updated for god mode editing)
-        (request.resource.data.authorId == request.auth.uid || isGodMode()) &&
+        // Author ID must match authenticated user OR be 'anonymous' OR user has god mode
+        (request.resource.data.authorId == request.auth.uid || 
+         request.resource.data.authorId == 'anonymous' || 
+         isGodMode()) &&
         // Timestamp must be recent (within last hour)
         request.resource.data.timestamp is timestamp &&
         request.resource.data.timestamp < timestamp.date(2025, 12, 31) &&
