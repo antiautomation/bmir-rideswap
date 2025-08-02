@@ -12,5 +12,8 @@
   "type": "commonjs",
   "devDependencies": {
     "tailwindcss": "^4.1.11"
+  },
+  "dependencies": {
+    "puppeteer": "^24.15.0"
   }
 }
