@@ -55,13 +55,11 @@ const OfflineDebugger = {
     // Enable debug mode for more verbose logging
     enableDebugMode() {
         this.debugMode = true;
-        console.log('🔍 Offline debug mode enabled');
     },
     
     // Disable debug mode
     disableDebugMode() {
         this.debugMode = false;
-        console.log('🔍 Offline debug mode disabled');
     }
 };
 
@@ -320,10 +318,7 @@ const FormUtils = {
                           'anonymous';
             
             entryData.authorId = userId;
-            console.log('🔍 Setting authorId for submission:', userId);
-            console.log('🔍 Debug - AppState.userId:', AppState?.userId);
-            console.log('🔍 Debug - AppState.auth?.currentUser?.uid:', AppState?.auth?.currentUser?.uid);
-            console.log('🔍 Debug - window.auth?.currentUser?.uid:', window.auth?.currentUser?.uid);
+            
             
             // Use the same collection path for both onboarding and main app
             // Use external config if available, otherwise fall back to AppState
@@ -333,11 +328,7 @@ const FormUtils = {
             console.log('Submitting to collection:', collectionPath);
             
             // Submit to Firebase
-            console.log('🔍 Checking Firebase readiness...');
-            console.log('  - AppState.db:', !!AppState.db);
-            console.log('  - window.db:', !!window.db);
-            console.log('  - window.auth:', !!window.auth);
-            console.log('  - navigator.onLine:', navigator.onLine);
+            
             
             if (!window.db || !window.auth) {
                 console.log('⚠️ Firebase not initialized, attempting to wait for initialization...');
@@ -390,12 +381,7 @@ const FormUtils = {
             }
             
             // Debug: Check if Firebase functions are available
-            console.log('🔍 Debugging Firebase functions:');
-            console.log('  - window.addDoc:', typeof window.addDoc);
-            console.log('  - window.collection:', typeof window.collection);
-            console.log('  - window.db:', typeof window.db);
-            console.log('  - collectionPath:', collectionPath);
-            console.log('  - entryData:', entryData);
+            
             
             const docRef = await FirebaseUtils.writeWithRetry(
                 () => window.addDoc(window.collection(window.db, collectionPath), entryData),
@@ -586,12 +572,10 @@ OfflineDebugger.init();
 // Global offline debug functions for testing
 window.enableOfflineDebug = () => {
     OfflineDebugger.enableDebugMode();
-    console.log('🔧 Offline debug mode enabled. Use window.disableOfflineDebug() to disable.');
 };
 
 window.disableOfflineDebug = () => {
     OfflineDebugger.disableDebugMode();
-    console.log('🔧 Offline debug mode disabled.');
 };
 
 // Add to window for global access
@@ -1082,16 +1066,7 @@ const debouncedRender = performanceUtils.debounce(() => {
     }
 }, 150); // Reduced debounce time for better responsiveness
 
-// Rendering functions are handled by index.html
 
-// Session code functions are handled by index.html
-
-// Loading states are handled by index.html
-
-// App initialization is handled by index.html
-
-// Add connection monitoring with improved offline handling
-// Connection monitoring is handled by index.html
 
 function setupApp() {
     console.log('🔧 setupApp() called');
@@ -1104,7 +1079,7 @@ function setupApp() {
     console.log('🎯 Universal onboarding initialization complete');
 }
 
-// Session code functions are implemented in index.html
+
 
 // Universal Onboarding System (available to all users, not just mobile)
 const UniversalOnboarding = {
@@ -1118,49 +1093,32 @@ const UniversalOnboarding = {
     shouldShow() {
         // Check if user has completed onboarding before
         const hasCompletedOnboarding = localStorage.getItem('bmir_onboarding_completed');
-        console.log('✅ Onboarding completed check:', hasCompletedOnboarding);
         if (hasCompletedOnboarding) return false;
         
         // Check if user has submitted any ride requests or offerings
         const hasSubmittedRide = localStorage.getItem('bmir_has_submitted_ride');
-        console.log('🚗 Has submitted ride check:', hasSubmittedRide);
         if (hasSubmittedRide) return false;
-        
-        console.log('🎉 All conditions met - should show onboarding!');
         return true;
     },
     
     show() {
-        console.log('🎬 Attempting to show universal onboarding...');
-        console.log('🔍 Document ready state:', document.readyState);
-        
         // Try to find the overlay element with retry
         const findOverlay = () => {
-            console.log('🔍 All elements with "universal" in ID:');
-            document.querySelectorAll('[id*="universal"]').forEach(el => {
-                console.log('  -', el.id, el.className);
-            });
-            
-            const overlay = document.getElementById('universal-onboarding');
-            console.log('🔍 Found overlay element:', !!overlay);
-            return overlay;
+            return document.getElementById('universal-onboarding');
         };
         
         let overlay = findOverlay();
         
         // If not found, retry a few times
         if (!overlay) {
-            console.log('⏳ Overlay not found, retrying...');
             let attempts = 0;
             const maxAttempts = 10;
             
             const retry = () => {
                 attempts++;
-                console.log(`⏳ Retry attempt ${attempts}/${maxAttempts}`);
                 overlay = findOverlay();
                 
                 if (overlay) {
-                    console.log('✅ Overlay found on retry!');
                     showOverlay();
                 } else if (attempts < maxAttempts) {
                     setTimeout(retry, 100);
@@ -1176,10 +1134,7 @@ const UniversalOnboarding = {
         showOverlay();
         
         function showOverlay() {
-            console.log('📋 Current overlay classes:', overlay.className);
             overlay.classList.remove('hidden');
-            console.log('📋 After removing hidden class:', overlay.className);
-            console.log('✅ Universal onboarding should now be visible');
         }
     },
     
@@ -1197,13 +1152,11 @@ const UniversalOnboarding = {
         if (sessionCodeDisplay && sessionCodeText && AppState.sessionCode) {
             sessionCodeDisplay.style.display = 'flex';
             sessionCodeText.textContent = AppState.sessionCode;
-            console.log('🎬 Onboarding completed, showing session code display');
+
         }
     },
     
     navigateToScreen(screenId) {
-        console.log('🎯 UniversalOnboarding.navigateToScreen called with:', screenId);
-        console.log('  - Current screen:', this.currentScreen);
         
         // Map screen IDs to actual element IDs
         const screenIdMap = {
@@ -1232,7 +1185,7 @@ const UniversalOnboarding = {
         if (newScreen) {
             newScreen.classList.add('active');
             this.currentScreen = screenId;
-            console.log('  - New screen activated, current screen updated to:', this.currentScreen);
+
         } else {
             console.error('❌ New screen element not found for:', screenId, 'with element ID:', newElementId);
         }
@@ -1247,12 +1200,8 @@ const UniversalOnboarding = {
     },
     
     selectUserType(type) {
-        console.log('🎯 UniversalOnboarding.selectUserType called with:', type);
-        console.log('  - Current screen before:', this.currentScreen);
         this.userType = type;
-        console.log('  - User type set to:', this.userType);
         this.navigateToScreen('direction');
-        console.log('  - Navigation to direction screen completed');
     },
     
     selectDirection(direction) {
@@ -1342,11 +1291,11 @@ const UniversalOnboarding = {
     populateTimeSlots() {
         const timeSelect = document.getElementById('onboarding-time');
         if (!timeSelect) {
-            console.log('⚠️ onboarding-time element not found');
+
             return;
         }
         
-        console.log('✅ Populating time slots for onboarding form');
+
         timeSelect.innerHTML = '';
         
         // Add Flexible Time option first as default
@@ -1366,7 +1315,7 @@ const UniversalOnboarding = {
             timeSelect.appendChild(option);
         }
         
-        console.log('✅ Time slots populated:', timeSelect.options.length, 'options');
+
     },
     
     async submitForm(formData) {
@@ -1464,11 +1413,6 @@ window.AppState = AppState;
 
 console.log('🔧 Exposing components to window...');
 console.log('  - FormUtils available:', typeof window.FormUtils);
-console.log('  - UniversalOnboarding available:', typeof window.UniversalOnboarding);
-console.log('  - LazyLoader available:', typeof window.LazyLoader);
-console.log('  - AppState available:', typeof window.AppState);
 
-// Debug: Check if DOMContentLoaded has already fired
-console.log('🔧 app.js: DOM ready state:', document.readyState);
 
 // App initialization is handled by index.html
