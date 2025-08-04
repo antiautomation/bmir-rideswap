@@ -134,6 +134,46 @@ const FormUtils = {
             errors.push("Details must be less than 1000 characters");
         }
         
+        // Driver-specific required fields
+        if (data.userType === 'driver') {
+            // Passenger capacity validation
+            if (!data.passengerSpace || data.passengerSpace.trim().length === 0) {
+                errors.push("Passenger capacity is required for drivers");
+            }
+            
+            // Cargo capacity validation
+            if (!data.cargoSpace || data.cargoSpace.trim().length === 0) {
+                errors.push("Cargo capacity is required for drivers");
+            }
+            
+            // Route details validation
+            if (!data.routeDetails || data.routeDetails.trim().length === 0) {
+                errors.push("Route details are required for drivers");
+            }
+            
+            // Camp info validation for "from-burning-man" drivers
+            if (data.direction === 'from-burning-man') {
+                if (!data.campInfo || data.campInfo.trim().length === 0) {
+                    errors.push("Camp name and location is required for drivers coming from Burning Man");
+                }
+            }
+        }
+        
+        // Rider-specific required fields
+        if (data.userType === 'rider') {
+            // Rider belongings validation
+            if (!data.riderStuff || data.riderStuff.trim().length === 0) {
+                errors.push("Amount of belongings is required for riders");
+            }
+            
+            // Camp info validation for "from-burning-man" riders
+            if (data.direction === 'from-burning-man') {
+                if (!data.campInfo || data.campInfo.trim().length === 0) {
+                    errors.push("Camp name and location is required for riders coming from Burning Man");
+                }
+            }
+        }
+        
         return errors;
     },
     
@@ -189,7 +229,8 @@ const FormUtils = {
             ...(userType === 'driver' && {
                 passengerSpace: formData.passengerSpace?.trim() || '',
                 cargoSpace: formData.cargoSpace?.trim() || '',
-                routeDetails: formData.routeDetails?.trim() || ''
+                routeDetails: formData.routeDetails?.trim() || '',
+                campInfo: formData.campInfo?.trim() || ''
             }),
             
             // Rider-specific fields
@@ -198,6 +239,37 @@ const FormUtils = {
                 campInfo: formData.campInfo?.trim() || ''
             })
         };
+    },
+    
+    // Collect form data with consistent logic
+    collectFormData(formPrefix = '', userType = null) {
+        const baseData = {
+            name: document.getElementById(`${formPrefix}name`)?.value?.trim() || '',
+            email: document.getElementById(`${formPrefix}email`)?.value?.trim() || '',
+            phone: document.getElementById(`${formPrefix}phone`)?.value?.trim() || '',
+            location: document.getElementById(`${formPrefix}location`)?.value?.trim() || '',
+            date: document.getElementById(`${formPrefix}date`)?.value || '',
+            timeSlot: document.getElementById(`${formPrefix}time-slot` || `${formPrefix}time`)?.value || '',
+            details: document.getElementById(`${formPrefix}details`)?.value?.trim() || '',
+        };
+        
+        if (userType === 'driver') {
+            return {
+                ...baseData,
+                passengerSpace: document.getElementById(`${formPrefix}passenger-space`)?.value?.trim() || '',
+                cargoSpace: document.getElementById(`${formPrefix}cargo-space`)?.value?.trim() || '',
+                routeDetails: document.getElementById(`${formPrefix}route-details`)?.value?.trim() || '',
+                campInfo: document.getElementById(`${formPrefix}camp-info`)?.value?.trim() || ''
+            };
+        } else if (userType === 'rider') {
+            return {
+                ...baseData,
+                riderStuff: document.getElementById(`${formPrefix}rider-stuff`)?.value?.trim() || '',
+                campInfo: document.getElementById(`${formPrefix}camp-info`)?.value?.trim() || ''
+            };
+        }
+        
+        return baseData;
     },
     
     // Submit form to Firebase with consistent logic
@@ -240,7 +312,18 @@ const FormUtils = {
             
             // Standardize the data structure
             const entryData = this.standardizeFormData(formData, userType, direction);
-            entryData.authorId = AppState.auth?.currentUser?.uid || 'anonymous';
+            
+            // Use the correct user ID - prioritize AppState.userId since it's reliably set
+            const userId = AppState.userId || 
+                          AppState.auth?.currentUser?.uid || 
+                          window.auth?.currentUser?.uid || 
+                          'anonymous';
+            
+            entryData.authorId = userId;
+            console.log('🔍 Setting authorId for submission:', userId);
+            console.log('🔍 Debug - AppState.userId:', AppState?.userId);
+            console.log('🔍 Debug - AppState.auth?.currentUser?.uid:', AppState?.auth?.currentUser?.uid);
+            console.log('🔍 Debug - window.auth?.currentUser?.uid:', window.auth?.currentUser?.uid);
             
             // Use the same collection path for both onboarding and main app
             // Use external config if available, otherwise fall back to AppState
@@ -1188,20 +1271,56 @@ const UniversalOnboarding = {
         const riderFields = document.getElementById('rider-specific-fields');
         const campInfoSection = document.getElementById('camp-info-section');
         
-        if (this.userType === 'driver') {
-            if (driverFields) driverFields.style.display = 'block';
-            if (riderFields) riderFields.style.display = 'none';
-        } else if (this.userType === 'rider') {
-            if (driverFields) driverFields.style.display = 'none';
-            if (riderFields) riderFields.style.display = 'block';
+        // Helper function to manage required attributes for hidden fields
+        const manageRequiredAttributes = (container, isVisible) => {
+            if (!container) return;
             
-            // Show/hide camp info section based on direction
-            if (campInfoSection) {
-                if (this.direction === 'from-burning-man') {
-                    campInfoSection.style.display = 'block';
+            const requiredFields = container.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (isVisible) {
+                    // Restore required attribute if it was temporarily removed
+                    if (field.hasAttribute('data-was-required')) {
+                        field.setAttribute('required', '');
+                        field.removeAttribute('data-was-required');
+                    }
                 } else {
-                    campInfoSection.style.display = 'none';
+                    // Temporarily remove required attribute to prevent browser validation warnings
+                    if (field.hasAttribute('required')) {
+                        field.setAttribute('data-was-required', 'true');
+                        field.removeAttribute('required');
+                    }
                 }
+            });
+        };
+        
+        if (this.userType === 'driver') {
+            if (driverFields) {
+                driverFields.style.display = 'block';
+                manageRequiredAttributes(driverFields, true);
+            }
+            if (riderFields) {
+                riderFields.style.display = 'none';
+                manageRequiredAttributes(riderFields, false);
+            }
+        } else if (this.userType === 'rider') {
+            if (driverFields) {
+                driverFields.style.display = 'none';
+                manageRequiredAttributes(driverFields, false);
+            }
+            if (riderFields) {
+                riderFields.style.display = 'block';
+                manageRequiredAttributes(riderFields, true);
+            }
+        }
+        
+        // Show/hide camp info section for both drivers and riders based on direction
+        if (campInfoSection) {
+            if (this.direction === 'from-burning-man') {
+                campInfoSection.style.display = 'block';
+                manageRequiredAttributes(campInfoSection, true);
+            } else {
+                campInfoSection.style.display = 'none';
+                manageRequiredAttributes(campInfoSection, false);
             }
         }
         
@@ -1252,6 +1371,13 @@ const UniversalOnboarding = {
     
     async submitForm(formData) {
         try {
+            // Add validation before submission
+            const validationErrors = FormUtils.validateEntry(formData);
+            if (validationErrors.length > 0) {
+                alert('Please fix the following errors:\n\n' + validationErrors.join('\n'));
+                return;
+            }
+            
             // Use shared FormUtils for validation and submission
             const result = await FormUtils.submitFormToFirebase(
                 formData, 
@@ -1334,11 +1460,13 @@ const UniversalOnboarding = {
 window.FormUtils = FormUtils;
 window.UniversalOnboarding = UniversalOnboarding;
 window.LazyLoader = LazyLoader;
+window.AppState = AppState;
 
 console.log('🔧 Exposing components to window...');
 console.log('  - FormUtils available:', typeof window.FormUtils);
 console.log('  - UniversalOnboarding available:', typeof window.UniversalOnboarding);
 console.log('  - LazyLoader available:', typeof window.LazyLoader);
+console.log('  - AppState available:', typeof window.AppState);
 
 // Debug: Check if DOMContentLoaded has already fired
 console.log('🔧 app.js: DOM ready state:', document.readyState);

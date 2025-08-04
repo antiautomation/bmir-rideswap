@@ -375,6 +375,15 @@
                                             Show deleted entries
                                         </label>
                                     </div>
+                                    
+                                    <!-- Show Hidden Entries Toggle -->
+                                    <div class="form-group" style="margin-top: 0.5rem;">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="show-hidden-toggle">
+                                            <span class="checkmark"></span>
+                                            Show hidden entries
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -484,6 +493,15 @@
                                     <input type="checkbox" id="show-deleted-toggle-desktop">
                                     <span class="checkmark"></span>
                                     Show deleted entries
+                                </label>
+                            </div>
+                            
+                            <!-- Show Hidden Entries Toggle -->
+                            <div class="form-group desktop-checkbox-group" style="margin-top: 0.5rem;">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="show-hidden-toggle-desktop">
+                                    <span class="checkmark"></span>
+                                    Show hidden entries
                                 </label>
                             </div>
                         </div>
@@ -636,7 +654,7 @@
                         
                         <div class="form-group">
                             <label for="onboarding-passenger-space" class="form-label">How many passengers can you take?</label>
-                            <select id="onboarding-passenger-space" class="form-select">
+                            <select id="onboarding-passenger-space" name="passenger-space" class="form-select" required>
                                 <option value="">Select number of passengers</option>
                                 <option value="1">1 passenger</option>
                                 <option value="2">2 passengers</option>
@@ -648,7 +666,7 @@
                         
                         <div class="form-group">
                             <label for="onboarding-cargo-space" class="form-label">How much stuff can you take?</label>
-                            <select id="onboarding-cargo-space" class="form-select">
+                            <select id="onboarding-cargo-space" name="cargo-space" class="form-select" required>
                                 <option value="">Select cargo capacity</option>
                                 <option value="personal-only">Personal items only (backpack, small bag)</option>
                                 <option value="some-gear">Some gear (sleeping bag, cooler, etc.)</option>
@@ -659,7 +677,7 @@
                         
                         <div class="form-group">
                             <label for="onboarding-route-details" class="form-label">Specific route or stops?</label>
-                            <textarea id="onboarding-route-details" class="form-input" rows="3" placeholder="If you're taking a specific route or making stops that aren't the most direct path via Google Maps, please describe them here..."></textarea>
+                            <textarea id="onboarding-route-details" name="route-details" class="form-input" rows="3" required placeholder="If you're taking a specific route or making stops that aren't the most direct path via Google Maps, please describe them here..."></textarea>
                         </div>
                     </div>
                     
@@ -669,7 +687,7 @@
                         
                         <div class="form-group">
                             <label for="onboarding-rider-stuff" class="form-label">How much stuff do you have?</label>
-                            <select id="onboarding-rider-stuff" class="form-select">
+                            <select id="onboarding-rider-stuff" name="rider-stuff" class="form-select" required>
                                 <option value="">Select amount of belongings</option>
                                 <option value="minimal">Minimal (backpack, small bag)</option>
                                 <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
@@ -677,11 +695,14 @@
                                 <option value="extensive">Extensive (multiple bikes, large camp items)</option>
                             </select>
                         </div>
-                        
-                        <!-- Camp info for "From Burning Man" riders -->
-                        <div id="camp-info-section" class="form-group" style="display: none;">
+                    </div>
+                    
+                    <!-- Camp info for "From Burning Man" (both drivers and riders) -->
+                    <div id="camp-info-section" class="form-section" style="display: none;">
+                        <h3 class="section-title">Camp Information</h3>
+                        <div class="form-group">
                             <label for="onboarding-camp-info" class="form-label">Camp name and location</label>
-                            <textarea id="onboarding-camp-info" class="form-input" rows="3" placeholder="If you need to be found or reached, please provide your camp name, location (street address), and any landmarks..."></textarea>
+                            <textarea id="onboarding-camp-info" name="camp-info" class="form-input" rows="3" required placeholder="If you need to be found or reached, please provide your camp name, location (street address), and any landmarks..."></textarea>
                             <small class="form-hint">This helps drivers find you on the playa</small>
                         </div>
                     </div>
@@ -787,7 +808,7 @@
                     <div id="driver-fields" style="display: none;">
                         <div class="form-group">
                             <label for="passenger-space" class="form-label">How many passengers can you take?</label>
-                            <select id="passenger-space" class="form-select">
+                            <select id="passenger-space" name="passenger-space" class="form-select" required>
                                 <option value="">Select number of passengers</option>
                                 <option value="1">1 passenger</option>
                                 <option value="2">2 passengers</option>
@@ -799,7 +820,7 @@
                         
                         <div class="form-group">
                             <label for="cargo-space" class="form-label">How much stuff can you take?</label>
-                            <select id="cargo-space" class="form-select">
+                            <select id="cargo-space" name="cargo-space" class="form-select" required>
                                 <option value="">Select cargo capacity</option>
                                 <option value="personal-only">Personal items only (backpack, small bag)</option>
                                 <option value="some-gear">Some gear (sleeping bag, cooler, etc.)</option>
@@ -810,7 +831,7 @@
                         
                         <div class="form-group">
                             <label for="route-details" class="form-label">Specific route or stops?</label>
-                            <textarea id="route-details" class="form-input" rows="3" placeholder="If you're taking a specific route or making stops that aren't the most direct path via Google Maps, please describe them here..."></textarea>
+                            <textarea id="route-details" name="route-details" class="form-input" rows="3" required placeholder="If you're taking a specific route or making stops that aren't the most direct path via Google Maps, please describe them here..."></textarea>
                         </div>
                     </div>
                     
@@ -818,7 +839,7 @@
                     <div id="rider-fields" style="display: none;">
                         <div class="form-group">
                             <label for="rider-stuff" class="form-label">How much stuff do you have?</label>
-                            <select id="rider-stuff" class="form-select">
+                            <select id="rider-stuff" name="rider-stuff" class="form-select" required>
                                 <option value="">Select amount of belongings</option>
                                 <option value="minimal">Minimal (backpack, small bag)</option>
                                 <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
@@ -826,10 +847,13 @@
                                 <option value="extensive">Extensive (multiple bikes, large camp items)</option>
                             </select>
                         </div>
-                        
-                        <div class="form-group" id="camp-info-section" style="display: none;">
+                    </div>
+                    
+                    <!-- Camp info for "From Burning Man" (both drivers and riders) -->
+                    <div id="camp-info-section" style="display: none;">
+                        <div class="form-group">
                             <label for="camp-info" class="form-label">Camp name and location</label>
-                            <textarea id="camp-info" class="form-input" rows="3" placeholder="If you need to be found or reached, please provide your camp name, location (street address), and any landmarks..."></textarea>
+                            <textarea id="camp-info" name="camp-info" class="form-input" rows="3" required placeholder="If you need to be found or reached, please provide your camp name, location (street address), and any landmarks..."></textarea>
                             <small class="form-hint">This helps drivers find you on the playa</small>
                         </div>
                     </div>
@@ -1039,6 +1063,7 @@
         let entryToFlag = null;
         let entryToRestore = null;
         let showDeletedEntries = false; // God mode toggle for showing deleted entries
+        let showHiddenEntries = false; // God mode toggle for showing hidden entries
         let isSubmitting = false; // Prevent duplicate submissions
         let isGodMode = false;
         let userFlags = new Set(); // Store user's flagged entries
@@ -1334,6 +1359,8 @@
             
             // Reset show deleted entries
             showDeletedEntries = false;
+            // Reset show hidden entries
+            showHiddenEntries = false;
             
             // Clean up Firestore document
             cleanupGodMode();
@@ -1371,6 +1398,10 @@
             const mobileShowDeletedToggle = document.getElementById('show-deleted-toggle');
             const desktopShowDeletedToggle = document.getElementById('show-deleted-toggle-desktop');
             
+            // Set up event listeners for the show hidden toggles
+            const mobileShowHiddenToggle = document.getElementById('show-hidden-toggle');
+            const desktopShowHiddenToggle = document.getElementById('show-hidden-toggle-desktop');
+            
             if (mobileShowDeletedToggle) {
                 mobileShowDeletedToggle.checked = showDeletedEntries;
                 mobileShowDeletedToggle.addEventListener('change', function() {
@@ -1379,6 +1410,13 @@
                     if (desktopShowDeletedToggle) {
                         desktopShowDeletedToggle.checked = this.checked;
                     }
+                    
+                    // Load deleted entries if toggle is enabled
+                    if (showDeletedEntries) {
+                        loadDeletedEntries('drivers');
+                        loadDeletedEntries('riders');
+                    }
+                    
                     updateLocationFilter();
                     renderFilteredLists();
                 });
@@ -1391,6 +1429,40 @@
                     // Sync with mobile toggle
                     if (mobileShowDeletedToggle) {
                         mobileShowDeletedToggle.checked = this.checked;
+                    }
+                    
+                    // Load deleted entries if toggle is enabled
+                    if (showDeletedEntries) {
+                        loadDeletedEntries('drivers');
+                        loadDeletedEntries('riders');
+                    }
+                    
+                    updateLocationFilter();
+                    renderFilteredLists();
+                });
+            }
+            
+            // Set up event listeners for show hidden toggles
+            if (mobileShowHiddenToggle) {
+                mobileShowHiddenToggle.checked = showHiddenEntries;
+                mobileShowHiddenToggle.addEventListener('change', function() {
+                    showHiddenEntries = this.checked;
+                    // Sync with desktop toggle
+                    if (desktopShowHiddenToggle) {
+                        desktopShowHiddenToggle.checked = this.checked;
+                    }
+                    updateLocationFilter();
+                    renderFilteredLists();
+                });
+            }
+            
+            if (desktopShowHiddenToggle) {
+                desktopShowHiddenToggle.checked = showHiddenEntries;
+                desktopShowHiddenToggle.addEventListener('change', function() {
+                    showHiddenEntries = this.checked;
+                    // Sync with mobile toggle
+                    if (mobileShowHiddenToggle) {
+                        mobileShowHiddenToggle.checked = this.checked;
                     }
                     updateLocationFilter();
                     renderFilteredLists();
@@ -1915,6 +1987,23 @@
                         console.log('✅ User authenticated:', user.uid);
                         userId = user.uid;
                         
+                        // Update AppState.userId for edit/delete functionality
+                        if (typeof AppState !== 'undefined') {
+                            AppState.userId = user.uid;
+                            console.log('✅ AppState.userId updated:', AppState.userId);
+                        } else {
+                            // If AppState is not available yet, set it when it becomes available
+                            const checkAppState = () => {
+                                if (typeof AppState !== 'undefined') {
+                                    AppState.userId = user.uid;
+                                    console.log('✅ AppState.userId updated (delayed):', AppState.userId);
+                                } else {
+                                    setTimeout(checkAppState, 100);
+                                }
+                            };
+                            checkAppState();
+                        }
+                        
                         // Enable buttons after authentication
                         enableButtons();
                         
@@ -1949,6 +2038,24 @@
                     } else if (!authAttempted) {
                         // Only attempt authentication once to prevent creating new users on every refresh
                         authAttempted = true;
+                        
+                        // Update AppState.userId to 'anonymous' when no user is authenticated
+                        if (typeof AppState !== 'undefined') {
+                            AppState.userId = 'anonymous';
+                            console.log('✅ AppState.userId set to anonymous');
+                        } else {
+                            // If AppState is not available yet, set it when it becomes available
+                            const checkAppState = () => {
+                                if (typeof AppState !== 'undefined') {
+                                    AppState.userId = 'anonymous';
+                                    console.log('✅ AppState.userId set to anonymous (delayed)');
+                                } else {
+                                    setTimeout(checkAppState, 100);
+                                }
+                            };
+                            checkAppState();
+                        }
+                        
                         try {
                             console.log('🔐 No existing session found, creating new anonymous user');
                             await signInAnonymously(window.auth);
@@ -2243,7 +2350,7 @@
                     if (activeUsersElement) {
                         const activeCount = data.activeUsers || 0;
                         activeUsersElement.textContent = activeCount;
-                        console.log('✅ Updated active users:', activeCount);
+                        console.log('✅ Updated active users (stats):', activeCount);
                     }
                 } else {
                     console.log('📊 No stats document found, setting defaults');
@@ -2591,8 +2698,19 @@
         
         // --- Expiration Logic ---
         function getExpirationTime(entry) {
-            const entryDate = new Date(entry.date + 'T00:00:00');
+            // Parse the entry date properly, ensuring it's treated as local time
+            const [year, month, day] = entry.date.split('-').map(Number);
+            const entryDate = new Date(year, month - 1, day); // month is 0-indexed
             const now = new Date();
+            
+            // Debug logging for expiration issues (disabled)
+            // console.log('🔍 Expiration Debug:', {
+            //     entryDate: entryDate.toISOString(),
+            //     now: now.toISOString(),
+            //     entryDateLocal: entryDate.toLocaleDateString(),
+            //     nowLocal: now.toLocaleDateString(),
+            //     isPast: entryDate < now
+            // });
             
             // If the entry date is in the past, it should be expired immediately
             if (entryDate < now) {
@@ -2727,13 +2845,20 @@
         function renderFilteredLists() {
             if (!driversList || !ridersList) return;
             
+            console.log('🔍 Rendering filtered lists with direction:', currentDirection);
+            
             // Get filtered data with optimized single-pass filtering
             const filteredDrivers = allDrivers.filter(d => {
-                if (d.deleted === true) return false;
-                if (currentDirection !== 'all' && d.direction !== currentDirection) return false;
+                // Only filter out deleted entries if showDeletedEntries is false (God mode toggle)
+                if (d.deleted === true && !showDeletedEntries) return false;
+                if (currentDirection !== 'all' && d.direction !== currentDirection) {
+                    console.log('🚫 Filtering out driver with direction:', d.direction, 'expected:', currentDirection);
+                    return false;
+                }
                 if (currentDayFilter !== 'all' && getDayNameCached(d.date) !== currentDayFilter) return false;
                 if (currentLocationFilter !== 'all' && d.location !== currentLocationFilter) return false;
-                if (shouldHideEntry(d.id, 'driver')) return false;
+                // Only filter out hidden entries if showHiddenEntries is false (God mode toggle)
+                if (shouldHideEntry(d.id, 'driver') && !showHiddenEntries) return false;
                 if (!showExpiredEntries && isEntryExpired(d)) return false;
                 if (showFavoritesOnly && !isEntryFavorited(d.id, 'driver')) return false;
                 return true;
@@ -2750,11 +2875,16 @@
                 });
 
             const filteredRiders = allRiders.filter(r => {
-                if (r.deleted === true) return false;
-                if (currentDirection !== 'all' && r.direction !== currentDirection) return false;
+                // Only filter out deleted entries if showDeletedEntries is false (God mode toggle)
+                if (r.deleted === true && !showDeletedEntries) return false;
+                if (currentDirection !== 'all' && r.direction !== currentDirection) {
+                    console.log('🚫 Filtering out rider with direction:', r.direction, 'expected:', currentDirection);
+                    return false;
+                }
                 if (currentDayFilter !== 'all' && getDayNameCached(r.date) !== currentDayFilter) return false;
                 if (currentLocationFilter !== 'all' && r.location !== currentLocationFilter) return false;
-                if (shouldHideEntry(r.id, 'rider')) return false;
+                // Only filter out hidden entries if showHiddenEntries is false (God mode toggle)
+                if (shouldHideEntry(r.id, 'rider') && !showHiddenEntries) return false;
                 if (!showExpiredEntries && isEntryExpired(r)) return false;
                 if (showFavoritesOnly && !isEntryFavorited(r.id, 'rider')) return false;
                 return true;
@@ -3091,8 +3221,10 @@
             // Direction Toggle (Mobile)
             if (directionToggle) {
                 directionToggle.addEventListener('click', (e) => {
+                    console.log('🎯 Direction toggle clicked:', e.target.id, e.target.tagName);
                     if (e.target.tagName === 'BUTTON') {
                         const newDirection = e.target.id === 'to-brc-btn' ? 'to-brc' : 'from-brc';
+                        console.log('🔄 Direction changing from', currentDirection, 'to', newDirection);
                         currentDirection = newDirection;
                         toBrcBtn.classList.toggle('active', currentDirection === 'to-brc');
                         fromBrcBtn.classList.toggle('active', currentDirection === 'from-brc');
@@ -3110,6 +3242,7 @@
                         clearCaches();
                         setupListeners();
                         updateLocationFilter();
+                        debouncedRender();
                     }
                 });
             }
@@ -3117,8 +3250,10 @@
             // Direction Toggle (Desktop)
             if (directionToggleDesktop) {
                 directionToggleDesktop.addEventListener('click', (e) => {
+                    console.log('🎯 Direction toggle (desktop) clicked:', e.target.id, e.target.tagName);
                     if (e.target.tagName === 'BUTTON') {
                         const newDirection = e.target.id === 'to-brc-btn-desktop' ? 'to-brc' : 'from-brc';
+                        console.log('🔄 Direction changing from', currentDirection, 'to', newDirection);
                         currentDirection = newDirection;
                         toBrcBtnDesktop.classList.toggle('active', currentDirection === 'to-brc');
                         fromBrcBtnDesktop.classList.toggle('active', currentDirection === 'from-brc');
@@ -3136,6 +3271,7 @@
                         clearCaches();
                         setupListeners();
                         updateLocationFilter();
+                        debouncedRender();
                     }
                 });
             }
@@ -3614,12 +3750,15 @@
                 date: document.getElementById('date').value,
                 timeSlot: document.getElementById('time-slot').value,
                 details: document.getElementById('details').value.trim(),
+                userType: type,
+                direction: currentDirection,
                 
                 // Driver-specific fields
                 ...(type === 'driver' && {
                     passengerSpace: document.getElementById('passenger-space')?.value.trim() || '',
                     cargoSpace: document.getElementById('cargo-space')?.value.trim() || '',
-                    routeDetails: document.getElementById('route-details')?.value.trim() || ''
+                    routeDetails: document.getElementById('route-details')?.value.trim() || '',
+                    campInfo: document.getElementById('camp-info')?.value.trim() || ''
                 }),
                 
                 // Rider-specific fields
@@ -3929,7 +4068,7 @@
 
             modalTitle.textContent = entry ? `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}` : `Add New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
             
-            // Update location label based on direction (matching mobile onboarding)
+            // Update location label based on direction
             if (locationLabel) {
                 if (currentDirection === 'to-brc') {
                     locationLabel.textContent = 'Where are you starting from?';
@@ -3945,20 +4084,59 @@
             const riderFields = document.getElementById('rider-fields');
             const campInfoSection = modal.querySelector('#camp-info-section');
             
+            // Helper function to manage required attributes for hidden fields
+            const manageRequiredAttributes = (container, isVisible) => {
+                if (!container) return;
+                
+                const requiredFields = container.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (isVisible) {
+                        // Restore required attribute if it was temporarily removed
+                        if (field.hasAttribute('data-was-required')) {
+                            field.setAttribute('required', '');
+                            field.removeAttribute('data-was-required');
+                        }
+                    } else {
+                        // Temporarily remove required attribute to prevent browser validation warnings
+                        if (field.hasAttribute('required')) {
+                            field.setAttribute('data-was-required', 'true');
+                            field.removeAttribute('required');
+                        }
+                    }
+                });
+            };
+            
             if (driverFields && riderFields) {
                 if (type === 'driver') {
                     driverFields.style.display = 'block';
+                    manageRequiredAttributes(driverFields, true);
                     riderFields.style.display = 'none';
-                } else {
-                    driverFields.style.display = 'none';
-                    riderFields.style.display = 'block';
+                    manageRequiredAttributes(riderFields, false);
                     
-                    // Show camp info section only for "from-brc" direction (matching mobile onboarding)
+                    // Show camp info section for drivers coming from Burning Man
                     if (campInfoSection) {
                         if (currentDirection === 'from-brc') {
                             campInfoSection.style.display = 'block';
+                            manageRequiredAttributes(campInfoSection, true);
                         } else {
                             campInfoSection.style.display = 'none';
+                            manageRequiredAttributes(campInfoSection, false);
+                        }
+                    }
+                } else {
+                    driverFields.style.display = 'none';
+                    manageRequiredAttributes(driverFields, false);
+                    riderFields.style.display = 'block';
+                    manageRequiredAttributes(riderFields, true);
+                    
+                    // Show camp info section for riders coming from Burning Man
+                    if (campInfoSection) {
+                        if (currentDirection === 'from-brc') {
+                            campInfoSection.style.display = 'block';
+                            manageRequiredAttributes(campInfoSection, true);
+                        } else {
+                            campInfoSection.style.display = 'none';
+                            manageRequiredAttributes(campInfoSection, false);
                         }
                     }
                 }
@@ -3978,6 +4156,7 @@
                     document.getElementById('passenger-space').value = entry.passengerSpace || '';
                     document.getElementById('cargo-space').value = entry.cargoSpace || '';
                     document.getElementById('route-details').value = entry.routeDetails || '';
+                    document.getElementById('camp-info').value = entry.campInfo || '';
                 }
                 
                 // Populate rider-specific fields
@@ -4022,20 +4201,50 @@
                 saveBtn.textContent = 'Save';
             }
             
-            // Clear type-specific fields
+            // Helper function to manage required attributes for hidden fields
+            const manageRequiredAttributes = (container, isVisible) => {
+                if (!container) return;
+                
+                const requiredFields = container.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (isVisible) {
+                        // Restore required attribute if it was temporarily removed
+                        if (field.hasAttribute('data-was-required')) {
+                            field.setAttribute('required', '');
+                            field.removeAttribute('data-was-required');
+                        }
+                    } else {
+                        // Temporarily remove required attribute to prevent browser validation warnings
+                        if (field.hasAttribute('required')) {
+                            field.setAttribute('data-was-required', 'true');
+                            field.removeAttribute('required');
+                        }
+                    }
+                });
+            };
+            
+            // Clear type-specific fields and manage required attributes
             const driverFields = document.getElementById('driver-fields');
             const riderFields = document.getElementById('rider-fields');
+            const campInfoSection = document.getElementById('camp-info-section');
             
             if (driverFields) {
                 driverFields.style.display = 'none';
+                manageRequiredAttributes(driverFields, false);
                 const driverInputs = driverFields.querySelectorAll('input, select, textarea');
                 driverInputs.forEach(input => input.value = '');
             }
             
             if (riderFields) {
                 riderFields.style.display = 'none';
+                manageRequiredAttributes(riderFields, false);
                 const riderInputs = riderFields.querySelectorAll('input, select, textarea');
                 riderInputs.forEach(input => input.value = '');
+            }
+            
+            if (campInfoSection) {
+                campInfoSection.style.display = 'none';
+                manageRequiredAttributes(campInfoSection, false);
             }
         }
         
@@ -4169,6 +4378,7 @@
                     }).length;
                     
                     activeUsersElement.textContent = activeUsers;
+                    console.log('✅ Updated active users (Firestore):', activeUsers);
                 }, (error) => {
                     console.log("Firestore session listener failed, falling back to localStorage:", error);
                     setupLocalStorageTracking();
@@ -4295,6 +4505,7 @@
             // Update display
             totalVisitorsElement.textContent = totalVisitors.toLocaleString();
             activeUsersElement.textContent = activeSessions.length;
+            console.log('✅ Updated active users (localStorage):', activeSessions.length);
             
             // Update activity every 30 seconds
             setInterval(() => {
@@ -4308,6 +4519,7 @@
                     
                     localStorage.setItem('bmir_active_sessions', JSON.stringify(cleanedSessions));
                     activeUsersElement.textContent = cleanedSessions.length;
+                    console.log('✅ Updated active users (cleaned):', cleanedSessions.length);
                 }
             }, 30000);
             
@@ -4478,293 +4690,7 @@
             }, 5000);
         }
 
-        // --- Mobile Onboarding System ---
-        const MobileOnboarding = {
-            currentScreen: 'welcome',
-            userType: null, // 'driver' or 'rider'
-            direction: null, // 'to-burning-man' or 'from-burning-man'
-            
-            // Check if user is on mobile and hasn't submitted anything yet
-            shouldShow() {
-                // Check if mobile device
-                const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                console.log('📱 Mobile check:', isMobile, 'Window width:', window.innerWidth);
-                if (!isMobile) return false;
-                
-                // Check if user has completed onboarding before
-                const hasCompletedOnboarding = localStorage.getItem('bmir_onboarding_completed');
-                console.log('✅ Onboarding completed check:', hasCompletedOnboarding);
-                if (hasCompletedOnboarding) return false;
-                
-                // Check if user has submitted any ride requests or offerings
-                const hasSubmittedRide = localStorage.getItem('bmir_has_submitted_ride');
-                console.log('🚗 Has submitted ride check:', hasSubmittedRide);
-                if (hasSubmittedRide) return false;
-                
-                console.log('🎉 All conditions met - should show onboarding!');
-                return true;
-            },
-            
-            show() {
-                const overlay = document.getElementById('universal-onboarding');
-                if (overlay) {
-                    overlay.classList.remove('hidden');
-                    this.populateTimeSlots();
-                } else {
-                    console.error('❌ Universal onboarding overlay element not found!');
-                }
-            },
-            
-            hide() {
-                const overlay = document.getElementById('universal-onboarding');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                }
-                // Mark onboarding as completed
-                localStorage.setItem('bmir_onboarding_completed', 'true');
-                
-                // Trigger session code popup after onboarding is hidden
-                setTimeout(() => {
-                    if (typeof showSessionCodeInput === 'function') {
-                        showSessionCodeInput();
-                    }
-                }, 500); // Small delay to ensure smooth transition
-            },
-            
-            hideWithoutCompletion() {
-                const overlay = document.getElementById('universal-onboarding');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                }
-                // Don't mark onboarding as completed - user can still see it later
-            },
-            
-            navigateToScreen(screenId) {
-                // Hide current screen
-                const currentScreen = document.querySelector('.onboarding-screen.active');
-                if (currentScreen) {
-                    currentScreen.classList.remove('active');
-                    currentScreen.classList.add('prev');
-                }
-                
-                // Show new screen
-                const newScreen = document.getElementById(screenId);
-                if (newScreen) {
-                    newScreen.classList.remove('prev');
-                    newScreen.classList.add('active');
-                }
-                
-                this.currentScreen = screenId.replace('onboarding-', '');
-            },
-            
-            goBack() {
-                switch (this.currentScreen) {
-                    case 'direction':
-                        this.navigateToScreen('onboarding-welcome');
-                        break;
-                    case 'form':
-                        this.navigateToScreen('onboarding-direction');
-                        break;
-                }
-            },
-            
-            selectUserType(type) {
-                this.userType = type;
-                this.navigateToScreen('onboarding-direction');
-            },
-            
-            selectDirection(direction) {
-                this.direction = direction;
-                this.setupForm();
-                this.navigateToScreen('onboarding-form');
-            },
-            
-            setupForm() {
-                const screenTitle = document.getElementById('form-screen-title');
-                const locationLabel = document.getElementById('onboarding-location-label');
-                const detailsLabel = document.getElementById('onboarding-details-label');
-                const driverFields = document.getElementById('driver-specific-fields');
-                const riderFields = document.getElementById('rider-specific-fields');
-                const campInfoSection = document.getElementById('camp-info-section');
-                
-                // Update form title and labels based on user type and direction
-                if (this.userType === 'driver') {
-                    screenTitle.textContent = 'Tell Us About Your Drive';
-                    driverFields.style.display = 'block';
-                    riderFields.style.display = 'none';
-                    
-                    if (this.direction === 'to-burning-man') {
-                        locationLabel.textContent = 'Where are you starting from?';
-                        detailsLabel.textContent = 'Additional details about your trip to Burning Man';
-                    } else {
-                        locationLabel.textContent = 'Where are you going after Burning Man?';
-                        detailsLabel.textContent = 'Additional details about your trip from Burning Man';
-                    }
-                } else if (this.userType === 'rider') {
-                    screenTitle.textContent = 'Tell Us About Your Ride Needs';
-                    driverFields.style.display = 'none';
-                    riderFields.style.display = 'block';
-                    
-                    if (this.direction === 'to-burning-man') {
-                        locationLabel.textContent = 'Where are you starting from?';
-                        detailsLabel.textContent = 'Additional details about your trip to Burning Man';
-                        campInfoSection.style.display = 'none';
-                    } else {
-                        locationLabel.textContent = 'Where are you going after Burning Man?';
-                        detailsLabel.textContent = 'Additional details about your trip from Burning Man';
-                        campInfoSection.style.display = 'block';
-                    }
-                }
-            },
-            
-            populateTimeSlots() {
-                const timeSelect = document.getElementById('onboarding-time');
-                if (!timeSelect) return;
-                
-                timeSelect.innerHTML = '';
-                
-                // Add Flexible Time option first as default (matching main app)
-                const flexibleOption = document.createElement('option');
-                flexibleOption.value = 'Flexible Time';
-                flexibleOption.textContent = 'Flexible Time';
-                flexibleOption.selected = true;
-                timeSelect.appendChild(flexibleOption);
-                
-                // Add time-specific options (matching main app exactly)
-                for (let i = 0; i < 24; i += 3) {
-                    const start = i.toString().padStart(2, '0');
-                    const end = (i + 3).toString().padStart(2, '0');
-                    const option = document.createElement('option');
-                    option.value = `${start}:00 - ${end}:00`;
-                    option.textContent = `${start}:00 - ${end}:00`;
-                    timeSelect.appendChild(option);
-                }
-            },
-            
-            async submitForm(formData) {
-                try {
-                    // Validate contact methods
-                    const hasEmail = formData.email && formData.email.trim() !== '';
-                    const hasPhone = formData.phone && formData.phone.trim() !== '';
-                    
-                    if (!hasEmail && !hasPhone) {
-                        alert('Please provide at least one contact method (email or phone number) for ride coordination.');
-                        return;
-                    }
-                    
-                    // Date format validation
-                    if (formData.date) {
-                        const dateParts = formData.date.split('-');
-                        if (dateParts.length === 3) {
-                            const year = parseInt(dateParts[0]);
-                            const month = parseInt(dateParts[1]);
-                            const day = parseInt(dateParts[2]);
-                            
-                            // Check for European date format (DD-MM-YYYY) where month > 12
-                            if (month > 12) {
-                                alert('⚠️ Date Format Error!\n\nIt looks like you entered the date in European format (DD/MM/YYYY) instead of US format (MM/DD/YYYY).\n\nPlease use the date picker or enter dates as MM/DD/YYYY (e.g., 08/03/2025 for August 3rd, 2025).');
-                                return;
-                            }
-                            
-                            // Check for current year only
-                            const currentYear = new Date().getFullYear();
-                            if (year !== currentYear) {
-                                alert('⚠️ Date Error!\n\nPlease enter a date for the current year (' + currentYear + ').');
-                                return;
-                            }
-                        }
-                    }
-                    
-                    // Ensure user is authenticated
-                    if (!auth.currentUser) {
-                        console.log('User not authenticated, attempting to sign in anonymously...');
-                        await signInAnonymously(auth);
-                        console.log('Anonymous authentication completed');
-                    }
-                    
-                    console.log('Current user:', auth.currentUser?.uid);
-                    
-                    // Create the entry data
-                    const entryData = {
-                        name: formData.name,
-                        email: formData.email || '',
-                        phone: formData.phone || '',
-                        location: formData.location,
-                        date: formData.date,
-                        timeSlot: formData.timeSlot,
-                        details: formData.details,
-                        timestamp: new Date(),
-                        direction: this.direction === 'to-burning-man' ? 'to-brc' : 'from-brc',
-                        type: this.userType,
-                        deleted: false,
-                        flagged: false,
-                        favorites: [],
-                        authorId: auth.currentUser.uid
-                    };
-                    
-                    console.log('Submitting entry data:', entryData);
-                    
-                    // Add type-specific fields
-                    if (this.userType === 'driver') {
-                        entryData.passengerSpace = formData.passengerSpace || '';
-                        entryData.cargoSpace = formData.cargoSpace || '';
-                        entryData.routeDetails = formData.routeDetails || '';
-                    } else if (this.userType === 'rider') {
-                        entryData.riderStuff = formData.riderStuff || '';
-                        entryData.campInfo = formData.campInfo || '';
-                    }
-                    
-                    // Submit to Firestore
-                    const collectionPath = `artifacts/${appId}/public/data/${this.userType}s`;
-                    console.log('Submitting to collection:', collectionPath);
-                    const docRef = await addDoc(collection(window.db, collectionPath), entryData);
-                    console.log('Document created with ID:', docRef.id);
-                    
-                    // Mark as completed
-                    localStorage.setItem('bmir_has_submitted_ride', 'true');
-                    
-                    // Refresh listeners to show the new listing
-                    console.log('Refreshing listeners to show new listing...');
-                    setupListeners();
-                    
-                    // Hide onboarding and show success
-                    this.hide();
-                    
-                    // Show success message
-                    alert('Your ride listing has been created successfully! You can now browse other listings or create additional ones.');
-                    
-                } catch (error) {
-                    console.error('Error submitting form:', error);
-                    console.error('Error details:', error.message, error.code);
-                    alert('There was an error creating your listing. Please try again. Error: ' + error.message);
-                }
-            },
-            
-            buildDetailsText(formData) {
-                let details = formData.details;
-                
-                if (this.userType === 'driver') {
-                    if (formData.passengerSpace) {
-                        details += `\n\nPassenger capacity: ${formData.passengerSpace}`;
-                    }
-                    if (formData.cargoSpace) {
-                        details += `\n\nCargo capacity: ${formData.cargoSpace}`;
-                    }
-                    if (formData.routeDetails) {
-                        details += `\n\nRoute details: ${formData.routeDetails}`;
-                    }
-                } else if (this.userType === 'rider') {
-                    if (formData.riderStuff) {
-                        details += `\n\nBelongings: ${formData.riderStuff}`;
-                    }
-                    if (formData.campInfo) {
-                        details += `\n\nCamp info: ${formData.campInfo}`;
-                    }
-                }
-                
-                return details.trim();
-            }
-        };
+
         
         function initializeUniversalOnboarding() {
             if (typeof window.UniversalOnboarding === 'undefined') {
@@ -4921,18 +4847,28 @@
                     console.log('🎯 Onboarding form submitted');
                     
                     const formData = {
-                        name: document.getElementById('onboarding-name').value,
-                        email: document.getElementById('onboarding-email').value,
-                        phone: document.getElementById('onboarding-phone').value,
-                        location: document.getElementById('onboarding-location').value,
+                        name: document.getElementById('onboarding-name').value.trim(),
+                        email: document.getElementById('onboarding-email').value.trim(),
+                        phone: document.getElementById('onboarding-phone').value.trim(),
+                        location: document.getElementById('onboarding-location').value.trim(),
                         date: document.getElementById('onboarding-date').value,
                         timeSlot: document.getElementById('onboarding-time').value,
-                        details: document.getElementById('onboarding-details').value,
-                        passengerSpace: document.getElementById('onboarding-passenger-space')?.value,
-                        cargoSpace: document.getElementById('onboarding-cargo-space')?.value,
-                        routeDetails: document.getElementById('onboarding-route-details')?.value,
-                        riderStuff: document.getElementById('onboarding-rider-stuff')?.value,
-                        campInfo: document.getElementById('onboarding-camp-info')?.value
+                        details: document.getElementById('onboarding-details').value.trim(),
+                        userType: window.UniversalOnboarding.userType,
+                        direction: window.UniversalOnboarding.direction,
+                        
+                        // Conditional fields based on user type (matching main app pattern)
+                        ...(window.UniversalOnboarding.userType === 'driver' && {
+                            passengerSpace: document.getElementById('onboarding-passenger-space')?.value.trim() || '',
+                            cargoSpace: document.getElementById('onboarding-cargo-space')?.value.trim() || '',
+                            routeDetails: document.getElementById('onboarding-route-details')?.value.trim() || '',
+                            campInfo: document.getElementById('onboarding-camp-info')?.value.trim() || ''
+                        }),
+                        
+                        ...(window.UniversalOnboarding.userType === 'rider' && {
+                            riderStuff: document.getElementById('onboarding-rider-stuff')?.value.trim() || '',
+                            campInfo: document.getElementById('onboarding-camp-info')?.value.trim() || ''
+                        })
                     };
                     
                     if (typeof window.UniversalOnboarding !== 'undefined') {
@@ -5011,6 +4947,72 @@
         // Expose functions to global scope
         window.showSessionCodeModal = showSessionCodeModal;
         
+        // Initialize form validation management on page load
+        function initializeFormValidation() {
+            // Helper function to manage required attributes for hidden fields
+            const manageRequiredAttributes = (container, isVisible) => {
+                if (!container) return;
+                
+                const requiredFields = container.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (isVisible) {
+                        // Restore required attribute if it was temporarily removed
+                        if (field.hasAttribute('data-was-required')) {
+                            field.setAttribute('required', '');
+                            field.removeAttribute('data-was-required');
+                        }
+                    } else {
+                        // Temporarily remove required attribute to prevent browser validation warnings
+                        if (field.hasAttribute('required')) {
+                            field.setAttribute('data-was-required', 'true');
+                            field.removeAttribute('required');
+                        }
+                    }
+                });
+            };
+            
+            // Manage required attributes for initially hidden fields
+            const driverFields = document.getElementById('driver-fields');
+            const riderFields = document.getElementById('rider-fields');
+            const campInfoSection = document.getElementById('camp-info-section');
+            
+            if (driverFields && driverFields.style.display === 'none') {
+                manageRequiredAttributes(driverFields, false);
+            }
+            
+            if (riderFields && riderFields.style.display === 'none') {
+                manageRequiredAttributes(riderFields, false);
+            }
+            
+            if (campInfoSection && campInfoSection.style.display === 'none') {
+                manageRequiredAttributes(campInfoSection, false);
+            }
+            
+            // Also manage onboarding form fields
+            const onboardingDriverFields = document.getElementById('driver-specific-fields');
+            const onboardingRiderFields = document.getElementById('rider-specific-fields');
+            const onboardingCampInfoSection = document.getElementById('camp-info-section');
+            
+            if (onboardingDriverFields && onboardingDriverFields.style.display === 'none') {
+                manageRequiredAttributes(onboardingDriverFields, false);
+            }
+            
+            if (onboardingRiderFields && onboardingRiderFields.style.display === 'none') {
+                manageRequiredAttributes(onboardingRiderFields, false);
+            }
+            
+            if (onboardingCampInfoSection && onboardingCampInfoSection.style.display === 'none') {
+                manageRequiredAttributes(onboardingCampInfoSection, false);
+            }
+        }
+        
+        // Run form validation management when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeFormValidation);
+        } else {
+            initializeFormValidation();
+        }
+        
         // --- Start the App ---
         initialize();
         checkConnectivity();
@@ -5018,8 +5020,7 @@
         setupEasterEgg();
     </script>
     
-    <!-- Test script for universal onboarding -->
-    <!-- <script src="test-universal-onboarding.js"></script> -->
+
     
     <!-- Footer -->
     <footer style="text-align: center; padding: 2rem 1rem; margin-top: 3rem; color: #6b7280; font-size: 0.875rem; border-top: 1px solid #e5e7eb;">
