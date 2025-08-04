@@ -17,6 +17,7 @@ Visit the live application at: [BMIR RideSwap](https://rideswap.auerbach.io)
 - [Developer Guide](#developer-guide)
   - [Architecture Overview](#architecture-overview)
   - [Setup & Installation](#setup--installation)
+  - [Configuration](#configuration)
   - [Development](#development)
   - [Deployment](#deployment)
   - [Performance Optimizations](#performance-optimizations)
@@ -255,9 +256,9 @@ bmir-rideswap/
 
 ### Configuration
 
-#### 🔐 Firebase Configuration
+#### 🔐 Secure Configuration System
 
-The application uses a secure configuration system to protect sensitive API keys and Firebase settings.
+The application uses a secure configuration system to protect sensitive API keys and Firebase settings. **Never commit `config.js` to version control** - it's already in `.gitignore`.
 
 1. **Create Configuration File**
    ```bash
@@ -272,10 +273,10 @@ The application uses a secure configuration system to protect sensitive API keys
    ```javascript
    // Firebase Configuration
    const FIREBASE_CONFIG = {
-       apiKey: "your-api-key-here",
-       authDomain: "your-project.firebaseapp.com",
+       apiKey: "your-firebase-api-key",
+       authDomain: "your-project-id.firebaseapp.com",
        projectId: "your-project-id",
-       storageBucket: "your-project.appspot.com",
+       storageBucket: "your-project-id.appspot.com",
        messagingSenderId: "your-sender-id",
        appId: "your-app-id",
        measurementId: "your-measurement-id"
@@ -283,9 +284,21 @@ The application uses a secure configuration system to protect sensitive API keys
    
    // App Configuration
    const APP_CONFIG = {
-       appId: "your-app-id",
+       appId: "your-project-id",
        projectId: "your-project-id",
-       collectionPath: "artifacts/your-app-id/public/data"
+       collectionPath: "artifacts/your-project-id/public/data"
+   };
+   
+   // Google Analytics Configuration
+   const ANALYTICS_CONFIG = {
+       trackingId: "your-google-analytics-tracking-id",
+       gtagUrl: "https://www.googletagmanager.com/gtag/js"
+   };
+   
+   // reCAPTCHA Configuration
+   const RECAPTCHA_CONFIG = {
+       siteKey: "your-recaptcha-site-key",
+       apiUrl: "https://www.google.com/recaptcha/api.js"
    };
    ```
 

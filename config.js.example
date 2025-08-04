@@ -4,31 +4,31 @@
 
 // Firebase Configuration
 const FIREBASE_CONFIG = {
-    apiKey: "your-api-key-here",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "your-sender-id",
-    appId: "your-app-id",
-    measurementId: "your-measurement-id"
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID",
+    measurementId: "YOUR_MEASUREMENT_ID"
 };
 
 // App Configuration
 const APP_CONFIG = {
-    appId: "your-project-id", // Use project ID like the live site
-    projectId: "your-project-id",
-    collectionPath: "artifacts/your-project-id/public/data"
+    appId: "YOUR_PROJECT_ID", // Use project ID like the live site
+    projectId: "YOUR_PROJECT_ID",
+    collectionPath: "artifacts/YOUR_PROJECT_ID/public/data"
 };
 
 // Google Analytics Configuration
 const ANALYTICS_CONFIG = {
-    trackingId: "your-google-analytics-tracking-id",
+    trackingId: "YOUR_ANALYTICS_ID",
     gtagUrl: "https://www.googletagmanager.com/gtag/js"
 };
 
 // reCAPTCHA Configuration
 const RECAPTCHA_CONFIG = {
-    siteKey: "your-recaptcha-site-key",
+    siteKey: "YOUR_RECAPTCHA_SITE_KEY",
     apiUrl: "https://www.google.com/recaptcha/api.js"
 };
 

@@ -3,6 +3,7 @@
 
 # Configuration files with sensitive data
 config.js
+# Note: config.js.example contains placeholder values and is safe to commit
 
 # Development and testing files
 test-*.js

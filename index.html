@@ -101,7 +101,10 @@
         window.loadRecaptcha = function() {
             if (!window.grecaptcha) {
                 const script = document.createElement('script');
-                const recaptchaConfig = window.RECAPTCHA_CONFIG || { siteKey: '6Lf3vZMrAAAAAPxqjxRRc9RyAV8smuu1UIMOv4Y5' };
+                const recaptchaConfig = window.RECAPTCHA_CONFIG || { 
+                    siteKey: 'YOUR_RECAPTCHA_SITE_KEY',
+                    apiUrl: 'https://www.google.com/recaptcha/api.js'
+                };
                 script.src = `${recaptchaConfig.apiUrl}?render=${recaptchaConfig.siteKey}`;
                 script.async = true;
                 script.defer = true;
@@ -115,7 +118,10 @@
     <script>
       // Lazy load analytics to not block initial page load
       function loadAnalytics() {
-        const analyticsConfig = window.ANALYTICS_CONFIG || { trackingId: 'G-NXHN9M6GQX' };
+        const analyticsConfig = window.ANALYTICS_CONFIG || { 
+          trackingId: 'YOUR_ANALYTICS_ID',
+          gtagUrl: 'https://www.googletagmanager.com/gtag/js'
+        };
         const script = document.createElement('script');
         script.async = true;
         script.src = `${analyticsConfig.gtagUrl}?id=${analyticsConfig.trackingId}`;
@@ -1230,15 +1236,15 @@
         let existingCities = new Set();
 
         // --- Firebase Config ---
-        // Use external config if available, otherwise fall back to hardcoded values
+        // Use external config if available, otherwise fall back to placeholder values
         const firebaseConfig = window.FIREBASE_CONFIG || {
-            apiKey: "AIzaSyCSuS3HjgXbO_II0VXRvho9J84qidSoTw8",
-            authDomain: "bmir-rideshare.firebaseapp.com",
-            projectId: "bmir-rideshare",
-            storageBucket: "bmir-rideshare.appspot.com",
-            messagingSenderId: "739664619765",
-            appId: "1:739664619765:web:118b5b518d0a9e73383dbc",
-            measurementId: "G-NXHN9M6GQX"
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
         };
 
         // Check if running locally

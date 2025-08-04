@@ -812,7 +812,7 @@ const AppState = {
     db: null,
     auth: null,
     userId: null,
-    appId: '1:739664619765:web:118b5b518d0a9e73383dbc',
+    appId: 'YOUR_APP_ID',
     currentDirection: 'to-brc',
     currentDayFilter: 'all',
     currentLocationFilter: 'all',
