@@ -982,35 +982,7 @@
   }
 </script>
 
-<!-- Development Testing Script - Lazy Loaded -->
-<script>
-    // Lazy load testing scripts only when needed
-    window.loadTestScripts = function() {
-        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-            const testScript = document.createElement('script');
-            testScript.src = './test-poor-connectivity.js';
-            testScript.defer = true;
-            testScript.onload = () => console.log('✅ Test script loaded on demand');
-            document.head.appendChild(testScript);
-        }
-    };
-    
-    // Load test scripts after user interaction or after 5 seconds
-    let testScriptsLoaded = false;
-    function loadTestScriptsIfNeeded() {
-        if (!testScriptsLoaded && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-            testScriptsLoaded = true;
-            window.loadTestScripts();
-        }
-    }
-    
-    // Load after user interaction
-    document.addEventListener('click', loadTestScriptsIfNeeded, { once: true });
-    document.addEventListener('keydown', loadTestScriptsIfNeeded, { once: true });
-    
-    // Or load after 5 seconds if no interaction
-    setTimeout(loadTestScriptsIfNeeded, 5000);
-</script>
+
     
     <!-- Configuration (load first) -->
     <script src="config.js"></script>
