@@ -95,6 +95,8 @@
     
     <!-- Remove external CSS as it's now preloaded above -->
     
+
+    
     <!-- Google reCAPTCHA - Defer loading -->
     <script>
         // Lazy load reCAPTCHA only when needed
@@ -116,6 +118,31 @@
     
     <!-- Google tag (gtag.js) - Load after page is interactive -->
     <script>
+      // Make tracking functions available immediately
+      window.trackOnboardingEvent = function(action, label = null, value = null) {
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'onboarding_' + action, {
+            event_category: 'onboarding',
+            event_label: label,
+            value: value
+          });
+        } else {
+          console.log('📊 Analytics not loaded yet, tracking event:', 'onboarding_' + action, label);
+        }
+      };
+      
+      window.trackMainAppEvent = function(action, label = null, value = null) {
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'main_app_' + action, {
+            event_category: 'main_app',
+            event_label: label,
+            value: value
+          });
+        } else {
+          console.log('📊 Analytics not loaded yet, tracking event:', 'main_app_' + action, label);
+        }
+      };
+      
       // Lazy load analytics to not block initial page load
       function loadAnalytics() {
         const analyticsConfig = window.ANALYTICS_CONFIG || { 
@@ -141,6 +168,8 @@
             gtag('config', analyticsConfig.trackingId);
             console.log('📊 Analytics enabled for local development (testing)');
           }
+          
+
         };
       }
       
@@ -2794,7 +2823,7 @@
         let currentPage = 0;
         let driversPage = 0;
         let ridersPage = 0;
-        const ITEMS_PER_PAGE = 20;
+        const ITEMS_PER_PAGE = 15; // Match app.js value
         
         // Helper function to get time slot priority for sorting
         function getTimeSlotPriority(timeSlot) {
@@ -2962,15 +2991,24 @@
 
             // Use separate page variables for drivers and riders
             const pageVar = type === 'driver' ? driversPage : ridersPage;
+            
+            // Check if showing all items for this type
+            const isShowingAll = window[`${type}ShowingAll`] || false;
 
-            // Calculate pagination
-            const startIndex = pageVar * ITEMS_PER_PAGE;
-            const endIndex = startIndex + ITEMS_PER_PAGE;
-            const pageItems = items.slice(startIndex, endIndex);
+            // Calculate items to show
+            let itemsToShow;
+            if (isShowingAll) {
+                itemsToShow = items;
+            } else {
+                const startIndex = pageVar * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                itemsToShow = items.slice(startIndex, endIndex);
+            }
+            
             const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
 
             // Render items
-            pageItems.forEach(entry => {
+            itemsToShow.forEach(entry => {
                 container.appendChild(createEntryCard(entry, type));
             });
 
@@ -2978,19 +3016,63 @@
             if (totalPages > 1) {
                 const paginationContainer = document.createElement('div');
                 paginationContainer.className = 'pagination';
+                
+                // Check if this type is currently showing all items
+                const isShowingAll = window[`${type}ShowingAll`] || false;
+                
                 paginationContainer.innerHTML = `
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
-                        <button class="btn btn-gray" ${pageVar === 0 ? 'disabled' : ''} onclick="changePage(-1, '${type}')">
-                            ← Previous
-                        </button>
-                        <span style="color: #6b7280; font-size: 0.875rem;">
-                            Page ${pageVar + 1} of ${totalPages} (${items.length} total)
-                        </span>
-                        <button class="btn btn-gray" ${pageVar >= totalPages - 1 ? 'disabled' : ''} onclick="changePage(1, '${type}')">
-                            Next →
-                        </button>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; padding: 0.5rem 0.75rem; background: #f9fafb; border-radius: 0.5rem; flex-wrap: nowrap; overflow-x: auto;">
+                        ${!isShowingAll ? `
+                            <button class="btn btn-gray pagination-prev" ${pageVar === 0 ? 'disabled' : ''} data-type="${type}" style="font-size: 0.8rem; padding: 0.4rem 0.6rem; white-space: nowrap; flex-shrink: 0;">
+                                ← Prev
+                            </button>
+                            <span style="color: #6b7280; font-size: 0.8rem; font-weight: 500; white-space: nowrap; flex-shrink: 0;">
+                                ${pageVar + 1}/${totalPages} (${items.length})
+                            </span>
+                            <button class="btn btn-gray pagination-next" ${pageVar >= totalPages - 1 ? 'disabled' : ''} data-type="${type}" style="font-size: 0.8rem; padding: 0.4rem 0.6rem; white-space: nowrap; flex-shrink: 0;">
+                                Next →
+                            </button>
+                        ` : `
+                            <span style="color: #6b7280; font-size: 0.8rem; font-weight: 500; white-space: nowrap; flex-shrink: 0;">
+                                All ${items.length} items
+                            </span>
+                        `}
+                        <div class="tooltip" style="margin-left: 0.25rem; flex-shrink: 0; position: relative;">
+                            <button class="btn btn-gray show-all-toggle" data-type="${type}" style="font-size: 0.8rem; padding: 0.4rem 0.6rem; white-space: nowrap;">
+                                ${isShowingAll ? 'Pages' : 'All'}
+                            </button>
+                            <span class="tooltiptext" style="width: 180px; left: 50%; margin-left: -90px; z-index: 1000;">⚠️ Warning: This might be a very long list!</span>
+                        </div>
                     </div>
                 `;
+                
+                // Add event listeners to pagination buttons
+                const prevBtn = paginationContainer.querySelector('.pagination-prev');
+                const nextBtn = paginationContainer.querySelector('.pagination-next');
+                const showAllBtn = paginationContainer.querySelector('.show-all-toggle');
+                
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        if (!prevBtn.disabled) {
+                            changePage(-1, type);
+                        }
+                    });
+                }
+                
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        if (!nextBtn.disabled) {
+                            changePage(1, type);
+                        }
+                    });
+                }
+                
+                if (showAllBtn) {
+                    showAllBtn.addEventListener('click', () => {
+                        toggleShowAll(type);
+                    });
+                }
+                
                 container.appendChild(paginationContainer);
             }
         }
@@ -3001,6 +3083,22 @@
             } else if (type === 'rider') {
                 ridersPage = Math.max(0, ridersPage + delta);
             }
+            renderFilteredLists();
+        }
+        
+        function toggleShowAll(type) {
+            // Toggle the show all state for this type
+            window[`${type}ShowingAll`] = !window[`${type}ShowingAll`];
+            
+            // Reset to first page when switching back to pagination
+            if (!window[`${type}ShowingAll`]) {
+                if (type === 'driver') {
+                    driversPage = 0;
+                } else if (type === 'rider') {
+                    ridersPage = 0;
+                }
+            }
+            
             renderFilteredLists();
         }
 
@@ -3036,7 +3134,11 @@
             filters.forEach(filter => {
                 if (!filter) return;
                 filter.innerHTML = '<option value="all">All Locations</option>';
-                locations.forEach(location => {
+                
+                // Sort locations alphabetically A-Z
+                const sortedLocations = [...locations].sort((a, b) => a.localeCompare(b));
+                
+                sortedLocations.forEach(location => {
                     const option = document.createElement('option');
                     option.value = location;
                     option.textContent = location;
@@ -3090,7 +3192,26 @@
 
             card.innerHTML = `
                 <div class="card-time-section">
-                    <p class="card-time">${formattedDate} @ ${entry.timeSlot}</p>
+                    <div class="tooltip">
+                        <p class="card-time">${formattedDate} @ ${entry.timeSlot}</p>
+                        <span class="tooltiptext">
+                            ${(() => {
+                                if (entry.timestamp) {
+                                    const timestamp = entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+                                    return `Posted: ${timestamp.toLocaleString('en-US', {
+                                        timeZone: 'America/Los_Angeles',
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                    })} (PST/PDT)`;
+                                }
+                                return 'Post time not available';
+                            })()}
+                        </span>
+                    </div>
                 </div>
                 
                 <div class="card-header">
@@ -3895,6 +4016,13 @@
                         'event_label': type,
                         'value': 1
                     });
+                    
+                    // Track if user completed listing after cancelling onboarding
+                    const hasCancelledOnboarding = localStorage.getItem('bmir_onboarding_cancelled');
+                    if (hasCancelledOnboarding) {
+                        trackMainAppEvent('listing_completed_after_cancelled_onboarding', type);
+                        localStorage.removeItem('bmir_onboarding_cancelled');
+                    }
                 }
                 
                 closeModal();
@@ -4783,6 +4911,7 @@
             if (needRideBtn) {
                 needRideBtn.addEventListener('click', () => {
                     console.log('🎯 Need ride button clicked');
+                    trackOnboardingEvent('user_type_selected', 'rider');
                     console.log('🔍 Checking window.UniversalOnboarding availability...');
                     console.log('  - typeof window.UniversalOnboarding:', typeof window.UniversalOnboarding);
                     console.log('  - window.UniversalOnboarding exists:', !!window.UniversalOnboarding);
@@ -4800,9 +4929,10 @@
             if (provideRideBtn) {
                 provideRideBtn.addEventListener('click', () => {
                     console.log('🎯 Provide ride button clicked');
+                    trackOnboardingEvent('user_type_selected', 'driver');
                     console.log('🔍 Checking window.UniversalOnboarding availability...');
                     console.log('  - typeof window.UniversalOnboarding:', typeof window.UniversalOnboarding);
-                    console.log('  - window.UniversalOnboarding exists:', !!window.UniversalOnboarding);
+                    console.log('  - window.UniversalOnboarding.exists:', !!window.UniversalOnboarding);
                     
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         console.log('✅ UniversalOnboarding available, calling selectUserType...');
@@ -4817,6 +4947,9 @@
             if (browseListingsBtn) {
                 browseListingsBtn.addEventListener('click', () => {
                     console.log('🎯 Browse listings button clicked');
+                    trackOnboardingEvent('browse_listings_selected');
+                    // Mark that user cancelled onboarding
+                    localStorage.setItem('bmir_onboarding_cancelled', 'true');
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.hide();
                         
@@ -4841,6 +4974,7 @@
             if (toBurningManBtn) {
                 toBurningManBtn.addEventListener('click', () => {
                     console.log('🎯 To Burning Man button clicked');
+                    trackOnboardingEvent('direction_selected', 'to-burning-man');
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.selectDirection('to-burning-man');
                     } else {
@@ -4852,6 +4986,7 @@
             if (fromBurningManBtn) {
                 fromBurningManBtn.addEventListener('click', () => {
                     console.log('🎯 From Burning Man button clicked');
+                    trackOnboardingEvent('direction_selected', 'from-burning-man');
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.selectDirection('from-burning-man');
                     } else {
@@ -4867,6 +5002,7 @@
             if (directionBackBtn) {
                 directionBackBtn.addEventListener('click', () => {
                     console.log('🎯 Direction back button clicked');
+                    trackOnboardingEvent('back_button_clicked', 'direction_screen');
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.goBack();
                     } else {
@@ -4878,6 +5014,7 @@
             if (formBackBtn) {
                 formBackBtn.addEventListener('click', () => {
                     console.log('🎯 Form back button clicked');
+                    trackOnboardingEvent('back_button_clicked', 'form_screen');
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.goBack();
                     } else {
@@ -4892,6 +5029,7 @@
                 onboardingForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     console.log('🎯 Onboarding form submitted');
+                    trackOnboardingEvent('form_submitted', window.UniversalOnboarding.userType + '_' + window.UniversalOnboarding.direction);
                     
                     const formData = {
                         name: document.getElementById('onboarding-name').value.trim(),
