@@ -32,17 +32,43 @@ const RECAPTCHA_CONFIG = {
     apiUrl: "https://www.google.com/recaptcha/api.js"
 };
 
+// Branding / Rebranding Configuration
+const BRANDING_CONFIG = {
+    eventName: "Burning Man",            // Friendly name of the event (max 30 chars)
+    brandShortName: "BMIR",              // Short brand/acronym (max 15 chars)
+    siteTitle: "RideSwap",               // Used in <title> tag and meta (max 60 chars)
+    originLocationName: "Black Rock City", // Default city/camp name for the event
+    logos: {
+        square: "https://bmir.org/Org.png", // 1:1 logo (PNG/SVG recommended)
+        wide:   "https://bmir.org/Org.png"  // Wide/rectangular logo
+    },
+    // Styling-safety limits (setup.html will enforce these)
+    MAX_LENGTHS: {
+        eventName: 30,
+        brandShortName: 15,
+        siteTitle: 60
+    }
+};
+
+// Flag indicating that the config file has been customised.  
+// setup.html sets this to true when generating the final file.
+const BRAND_CONFIGURED = true;
+
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { 
         FIREBASE_CONFIG, 
         APP_CONFIG, 
         ANALYTICS_CONFIG, 
-        RECAPTCHA_CONFIG 
+        RECAPTCHA_CONFIG,
+        BRANDING_CONFIG,
+        BRAND_CONFIGURED
     };
 } else {
     window.FIREBASE_CONFIG = FIREBASE_CONFIG;
     window.APP_CONFIG = APP_CONFIG;
     window.ANALYTICS_CONFIG = ANALYTICS_CONFIG;
     window.RECAPTCHA_CONFIG = RECAPTCHA_CONFIG;
+    window.BRANDING_CONFIG = BRANDING_CONFIG;
+    window.BRAND_CONFIGURED = BRAND_CONFIGURED;
 } 

@@ -985,7 +985,45 @@
 
     
     <!-- Configuration (load first) -->
-    <script src="config.js"></script>
+    <script id="config-script" src="config.js" onerror="window.location.href='setup.html'"></script>
+    <script>
+      // Redirect to setup if config has not been customised
+      if (!window.BRAND_CONFIGURED) {
+        console.warn('No custom config detected. Redirecting to setup.');
+        window.location.href = 'setup.html';
+      }
+
+      // --- Apply Branding Helper ---
+      function applyBranding() {
+        if (!window.BRANDING_CONFIG) return;
+        const cfg = window.BRANDING_CONFIG;
+
+        // Update title/meta
+        document.title = `${cfg.siteTitle} - Connect with ${cfg.eventName} Rideshare Community`;
+        const descMeta = document.querySelector('meta[name="description"]');
+        if (descMeta) descMeta.setAttribute('content', `Join the official ${cfg.brandShortName} rideshare community for ${cfg.eventName}! Find drivers with space or riders needing rides.`);
+
+        // Update direction buttons if present
+        const toBtns = [document.getElementById('to-brc-btn'), document.getElementById('to-brc-btn-desktop')].filter(Boolean);
+        const fromBtns = [document.getElementById('from-brc-btn'), document.getElementById('from-brc-btn-desktop')].filter(Boolean);
+        toBtns.forEach(btn => btn.textContent = `To ${cfg.eventName}`);
+        fromBtns.forEach(btn => btn.textContent = `From ${cfg.eventName}`);
+
+        // Generic text replacement as a fallback (lightweight)
+        if (cfg.eventName !== 'Burning Man') {
+          document.body.innerHTML = document.body.innerHTML.replace(/Burning Man/g, cfg.eventName);
+        }
+        if (cfg.brandShortName && cfg.brandShortName !== 'BMIR') {
+          document.body.innerHTML = document.body.innerHTML.replace(/BMIR/g, cfg.brandShortName);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyBranding);
+      } else {
+        applyBranding();
+      }
+    </script>
     
     <script type="module">
         // Firebase Imports

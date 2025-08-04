@@ -63,6 +63,10 @@ const OfflineDebugger = {
     }
 };
 
+// --- Branding helper (auto generated) ---
+// Falls back to original string when BRANDING_CONFIG is not yet defined (e.g., during development)
+const EVENT_NAME = (window.BRANDING_CONFIG && window.BRANDING_CONFIG.eventName) || 'Burning Man';
+
 // Shared Form Utilities for both onboarding and main application
 const FormUtils = {
     // Production-ready data validation function
@@ -152,7 +156,7 @@ const FormUtils = {
             // Camp info validation for "from-burning-man" drivers
             if (data.direction === 'from-burning-man') {
                 if (!data.campInfo || data.campInfo.trim().length === 0) {
-                    errors.push("Camp name and location is required for drivers coming from Burning Man");
+                    errors.push(`Camp name and location is required for drivers coming from ${EVENT_NAME}`);
                 }
             }
         }
@@ -167,7 +171,7 @@ const FormUtils = {
             // Camp info validation for "from-burning-man" riders
             if (data.direction === 'from-burning-man') {
                 if (!data.campInfo || data.campInfo.trim().length === 0) {
-                    errors.push("Camp name and location is required for riders coming from Burning Man");
+                    errors.push(`Camp name and location is required for riders coming from ${EVENT_NAME}`);
                 }
             }
         }
@@ -884,8 +888,8 @@ const memoizedUtils = {
             year: 'numeric' 
         });
         
-        const subject = `Interested in Burning Man Ride - ${formattedDate} ${entry.timeSlot}`;
-        const body = `I'm interested in your ride/offer for Burning Man Rideshare. Please contact me at:`;
+        const subject = `Interested in ${EVENT_NAME} Ride - ${formattedDate} ${entry.timeSlot}`;
+        const body = `I'm interested in your ride/offer for ${EVENT_NAME} Rideshare. Please contact me at:`;
         
         return {
             subject: encodeURIComponent(subject),
@@ -1279,7 +1283,7 @@ const UniversalOnboarding = {
         }
         
         // Update form labels based on direction
-        const directionLabel = this.direction === 'to-burning-man' ? 'to Burning Man' : 'from Burning Man';
+        const directionLabel = this.direction === 'to-burning-man' ? `to ${EVENT_NAME}` : `from ${EVENT_NAME}`;
         const userTypeLabel = this.userType === 'driver' ? 'Driver' : 'Rider';
         
         const formTitle = document.querySelector('.onboarding-form-title');
