@@ -191,10 +191,26 @@ bmir-rideswap/
 ├── index.html                 # Main application file
 ├── styles.css                 # External CSS styles
 ├── app.js                     # External JavaScript
+├── config.js                  # Firebase configuration (not in git)
+├── config.js.example          # Example configuration file
 ├── manifest.json              # PWA manifest
 ├── sw.js                      # Service worker
-├── firestore-rules.txt        # Firestore security rules
+├── firestore.rules            # Firestore security rules
 ├── firestore.indexes.json     # Database indexes
+├── build.sh                   # Simple build script
+├── distribution/              # Production-ready files
+│   ├── index.html            # Main application
+│   ├── app.js                # Application logic
+│   ├── styles.css            # Stylesheets
+│   ├── config.js             # Firebase configuration
+│   ├── manifest.json         # PWA manifest
+│   ├── sw.js                 # Service worker
+│   ├── logo.png              # Application logo
+│   ├── firestore.rules       # Database security rules
+│   ├── firestore.indexes.json # Database indexes
+│   ├── .htaccess             # Server configuration
+│   ├── LICENSE               # License information
+│   └── README.md             # Distribution documentation
 ├── deploy-indexes.sh          # Index deployment script
 ├── package.json               # Dependencies
 └── README.md                  # This file
@@ -400,10 +416,33 @@ export RECAPTCHA_SITE_KEY="your-recaptcha-site-key"
 
 ### Deployment
 
+#### 🚀 Simple Deployment
+
+The project includes a simple build system for easy deployment:
+
+1. **Create Distribution**
+   ```bash
+   # Run the build script
+   ./build.sh
+   ```
+
+2. **Local Testing**
+   - Open `distribution/index.html` in your browser
+   - Works with file:// protocol (no server needed)
+   - Perfect for ChromeBook usage
+
+3. **Web Server Deployment**
+   - Upload all files from `distribution/` to your web server root
+   - Configure Firebase settings in `distribution/config.js`
+   - Deploy Firestore rules using Firebase CLI
+
 #### 🚀 Production Deployment
 
 1. **Build and Test**
    ```bash
+   # Create distribution
+   ./build.sh
+   
    # Test locally first
    firebase serve
    ```
@@ -646,4 +685,4 @@ For support, please contact the BMIR team or create an issue in the repository.
 
 ---
 
-*Last updated: January 2025* 
+*Last updated: August 2024* 
