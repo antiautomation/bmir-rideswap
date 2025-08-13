@@ -2073,6 +2073,16 @@
                 if (showRecentPostsToggleDesktop) showRecentPostsToggleDesktop.checked = true;
             }
             
+            const savedShowRecentPosts = localStorage.getItem('bmir_show_recent_posts');
+            if (savedShowRecentPosts === 'true') {
+                showRecentPostsOnly = true;
+                // Update checkboxes to match saved state
+                const showRecentPostsToggle = document.getElementById('show-recent-posts-toggle');
+                const showRecentPostsToggleDesktop = document.getElementById('show-recent-posts-toggle-desktop');
+                if (showRecentPostsToggle) showRecentPostsToggle.checked = true;
+                if (showRecentPostsToggleDesktop) showRecentPostsToggleDesktop.checked = true;
+            }
+            
             // Set default direction based on date
             setDefaultDirection();
             
