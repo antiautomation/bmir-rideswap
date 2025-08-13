@@ -855,24 +855,24 @@ const memoizedUtils = {
         if (entry.timeSlot === 'Flexible Time') {
             const flexibleEndTime = new Date(entryDate);
             flexibleEndTime.setHours(23, 59, 59, 999);
-            return new Date(flexibleEndTime.getTime() + (12 * 60 * 60 * 1000));
+            return new Date(flexibleEndTime.getTime() + (3 * 60 * 60 * 1000));
         }
         
         const timeSlot = entry.timeSlot;
         if (timeSlot && timeSlot !== 'Flexible Time') {
-            const startTimeMatch = timeSlot.match(/^(\d{2}):(\d{2})/);
-            if (startTimeMatch) {
-                const hours = parseInt(startTimeMatch[1]);
-                const minutes = parseInt(startTimeMatch[2]);
-                const entryDateTime = new Date(entryDate);
-                entryDateTime.setHours(hours, minutes, 0, 0);
-                return new Date(entryDateTime.getTime() + (12 * 60 * 60 * 1000));
+            const endTimeMatch = timeSlot.match(/(\d{2}):(\d{2})\s*$/);
+            if (endTimeMatch) {
+                const hours = parseInt(endTimeMatch[1]);
+                const minutes = parseInt(endTimeMatch[2]);
+                const entryEndTime = new Date(entryDate);
+                entryEndTime.setHours(hours, minutes, 0, 0);
+                return new Date(entryEndTime.getTime() + (3 * 60 * 60 * 1000));
             }
         }
         
         const endOfDay = new Date(entryDate);
         endOfDay.setHours(23, 59, 59, 999);
-        return new Date(endOfDay.getTime() + (12 * 60 * 60 * 1000));
+        return new Date(endOfDay.getTime() + (3 * 60 * 60 * 1000));
     }),
     
     generateEmailContent: performanceUtils.memoize((entry) => {
@@ -1055,7 +1055,7 @@ const RenderingEngine = {
         const expirationTime = memoizedUtils.getExpirationTime(entry);
         const timeUntilExpiration = expirationTime - now;
         const hoursUntilExpiration = timeUntilExpiration / (1000 * 60 * 60);
-        return hoursUntilExpiration > 0 && hoursUntilExpiration <= 6;
+        return hoursUntilExpiration > 0 && hoursUntilExpiration <= 1;
     }
 };
 
