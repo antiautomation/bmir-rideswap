@@ -1,5 +1,5 @@
-const CACHE_NAME = 'bmir-rideshare-v2';
-const RUNTIME_CACHE = 'bmir-rideshare-runtime';
+const CACHE_NAME = 'ridefinder-v2';
+const RUNTIME_CACHE = 'ridefinder-runtime';
 const urlsToCache = [
   '/',
   '/index.html',
