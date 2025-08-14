@@ -1078,9 +1078,11 @@ body {
 }
 
 .card-actions .flag-btn:hover {
-  color: var(--error);
-  background: #fef2f2;
-  border-color: #fecaca;
+  color: white;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .card-actions .favorite-btn:hover {
@@ -1433,9 +1435,11 @@ body {
 }
 
 .rate-limit-status.limit-reached {
-  background: #fef2f2;
-  color: var(--error);
-  border: 1px solid #fecaca;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Enhanced Dev Badge */
@@ -1828,6 +1832,8 @@ footer a:hover {
   align-items: center;
   text-align: center;
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 .onboarding-logo {
@@ -1869,6 +1875,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  margin: 0 auto;
 }
 
 .onboarding-btn {
@@ -1940,6 +1947,8 @@ footer a:hover {
   margin-bottom: 2rem;
   width: 100%;
   max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .onboarding-back {
@@ -1975,6 +1984,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin: 0 auto;
 }
 
 .onboarding-form .form-section {
@@ -2088,7 +2098,7 @@ footer a:hover {
   .onboarding-subtitle {
     font-size: 0.875rem;
     margin-bottom: 1.5rem;
-    max-width: 280px;
+    max-width: 320px;
   }
   
   .onboarding-screen-title {
@@ -2096,11 +2106,11 @@ footer a:hover {
   }
   
   .onboarding-options {
-    max-width: 280px;
+    max-width: 320px;
   }
   
   .onboarding-form {
-    max-width: 280px;
+    max-width: 320px;
   }
   
   .onboarding-form .form-label {
