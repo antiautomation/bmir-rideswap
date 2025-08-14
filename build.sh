@@ -16,7 +16,6 @@ cp index.html distribution/
 cp app.js distribution/
 cp styles.css distribution/
 cp styles-modern.css distribution/
-cp design-demo.html distribution/
 cp manifest.json distribution/
 cp sw.js distribution/
 cp config.js distribution/

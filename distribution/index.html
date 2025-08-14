@@ -5139,87 +5139,28 @@
             }, 2 * 60 * 1000); // 2 minutes
         }
 
-        // Helper function to remap old classification values to new ones
-        function remapBelongingsClassification(value) {
-            if (!value) return value;
-            
-            const oldToNew = {
-                // Old classifications that might exist in the database
-                'low': 'minimal',
-                'small': 'minimal',
-                'basic': 'minimal',
-                'none': 'minimal',
-                
-                'medium': 'standard',
-                'normal': 'standard',
-                'average': 'standard',
-                
-                'high': 'substantial',
-                'large': 'substantial',
-                'advanced': 'substantial',
-                
-                'very high': 'extensive',
-                'very large': 'extensive',
-                'maximum': 'extensive'
-            };
-            
-            const lowerValue = value.toLowerCase().trim();
-            return oldToNew[lowerValue] || value;
-        }
-
-        // Helper function to check if driver can accommodate rider belongings
-        function canDriverAccommodateBelongings(driverCargo, riderBelongings) {
-            if (!driverCargo || !riderBelongings) return false;
-            
-            // Remap both values to ensure consistency
-            const driverCargoRemapped = remapBelongingsClassification(driverCargo);
-            const riderBelongingsRemapped = remapBelongingsClassification(riderBelongings);
-            
-            // Define hierarchy (higher index = more capacity)
-            const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
-            
-            const driverIndex = hierarchy.indexOf(driverCargoRemapped);
-            const riderIndex = hierarchy.indexOf(riderBelongingsRemapped);
-            
-            // Driver can accommodate if their capacity is >= rider's belongings
-            return driverIndex >= riderIndex;
-        }
-
-        // Helper function to check if driver matches belongings filter (hierarchical)
-        function driverMatchesBelongingsFilter(driverCargo, filterValue) {
-            if (!filterValue || filterValue === 'all') return true;
-            if (!driverCargo) return false;
-            
-            // Remap both values to ensure consistency
-            const driverCargoRemapped = remapBelongingsClassification(driverCargo);
-            const filterValueRemapped = remapBelongingsClassification(filterValue);
-            
-            // Define hierarchy (higher index = more capacity)
-            const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
-            
-            const driverIndex = hierarchy.indexOf(driverCargoRemapped);
-            const filterIndex = hierarchy.indexOf(filterValueRemapped);
-            
-            // For drivers: show all drivers with capacity LESS THAN or EQUAL TO the filter
-            // This means if filter is "extensive", show all drivers
-            // If filter is "standard", show minimal and standard drivers
-            return driverIndex <= filterIndex;
-        }
-
-        // Helper function to check if rider matches belongings filter (exact match)
-        function riderMatchesBelongingsFilter(riderBelongings, filterValue) {
-            if (!filterValue || filterValue === 'all') return true;
-            if (!riderBelongings) return false;
-            
-            // Remap both values to ensure consistency
-            const riderBelongingsRemapped = remapBelongingsClassification(riderBelongings);
-            const filterValueRemapped = remapBelongingsClassification(filterValue);
-            
-            // For riders: exact match only
-            return riderBelongingsRemapped === filterValueRemapped;
-        }
-
         // --- Easter Egg ---
+        function setupInfoCardsCollapsible() {
+            const infoCardsCollapsible = document.getElementById('info-cards-collapsible');
+            if (!infoCardsCollapsible) return;
+            
+            // Check if user has previously collapsed the section
+            const isCollapsed = localStorage.getItem('bmir_info_cards_collapsed') === 'true';
+            
+            // Set initial state
+            if (isCollapsed) {
+                infoCardsCollapsible.removeAttribute('open');
+            } else {
+                infoCardsCollapsible.setAttribute('open', '');
+            }
+            
+            // Listen for toggle events
+            infoCardsCollapsible.addEventListener('toggle', () => {
+                const isOpen = infoCardsCollapsible.hasAttribute('open');
+                localStorage.setItem('bmir_info_cards_collapsed', (!isOpen).toString());
+            });
+        }
+
         function setupEasterEgg() {
             let tapCount = 0;
             let tapTimeout;
@@ -5608,6 +5549,87 @@
         checkConnectivity();
         setupAutoRefresh();
         setupEasterEgg();
+        setupInfoCardsCollapsible();
+
+        // Helper function to remap old classification values to new ones
+        function remapBelongingsClassification(value) {
+            if (!value) return value;
+            
+            const oldToNew = {
+                // Old classifications that might exist in the database
+                'low': 'minimal',
+                'small': 'minimal',
+                'basic': 'minimal',
+                'none': 'minimal',
+                
+                'medium': 'standard',
+                'normal': 'standard',
+                'average': 'standard',
+                
+                'high': 'substantial',
+                'large': 'substantial',
+                'advanced': 'substantial',
+                
+                'very high': 'extensive',
+                'very large': 'extensive',
+                'maximum': 'extensive'
+            };
+            
+            const lowerValue = value.toLowerCase().trim();
+            return oldToNew[lowerValue] || value;
+        }
+
+        // Helper function to check if driver can accommodate rider belongings
+        function canDriverAccommodateBelongings(driverCargo, riderBelongings) {
+            if (!driverCargo || !riderBelongings) return false;
+            
+            // Remap both values to ensure consistency
+            const driverCargoRemapped = remapBelongingsClassification(driverCargo);
+            const riderBelongingsRemapped = remapBelongingsClassification(riderBelongings);
+            
+            // Define hierarchy (higher index = more capacity)
+            const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
+            
+            const driverIndex = hierarchy.indexOf(driverCargoRemapped);
+            const riderIndex = hierarchy.indexOf(riderBelongingsRemapped);
+            
+            // Driver can accommodate if their capacity is >= rider's belongings
+            return driverIndex >= riderIndex;
+        }
+
+        // Helper function to check if driver matches belongings filter (hierarchical)
+        function driverMatchesBelongingsFilter(driverCargo, filterValue) {
+            if (!filterValue || filterValue === 'all') return true;
+            if (!driverCargo) return false;
+            
+            // Remap both values to ensure consistency
+            const driverCargoRemapped = remapBelongingsClassification(driverCargo);
+            const filterValueRemapped = remapBelongingsClassification(filterValue);
+            
+            // Define hierarchy (higher index = more capacity)
+            const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
+            
+            const driverIndex = hierarchy.indexOf(driverCargoRemapped);
+            const filterIndex = hierarchy.indexOf(filterValueRemapped);
+            
+            // For drivers: show all drivers with capacity LESS THAN or EQUAL TO the filter
+            // This means if filter is "extensive", show all drivers
+            // If filter is "standard", show minimal and standard drivers
+            return driverIndex <= filterIndex;
+        }
+
+        // Helper function to check if rider matches belongings filter (exact match)
+        function riderMatchesBelongingsFilter(riderBelongings, filterValue) {
+            if (!filterValue || filterValue === 'all') return true;
+            if (!riderBelongings) return false;
+            
+            // Remap both values to ensure consistency
+            const riderBelongingsRemapped = remapBelongingsClassification(riderBelongings);
+            const filterValueRemapped = remapBelongingsClassification(filterValue);
+            
+            // For riders: exact match only
+            return riderBelongingsRemapped === filterValueRemapped;
+        }
     </script>
     
 
