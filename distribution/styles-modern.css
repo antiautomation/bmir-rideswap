@@ -748,6 +748,10 @@ body {
   font-weight: 600;
   color: var(--gray-700);
   margin-bottom: var(--space-2);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
 }
 
 .form-input,
@@ -760,6 +764,10 @@ body {
   background: white;
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-sm);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  resize: vertical;
+  min-height: 44px;
 }
 
 .form-input:focus,
@@ -904,7 +912,7 @@ body {
   margin-bottom: var(--space-4);
   transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   word-wrap: break-word;
   word-break: break-word;
 }
@@ -1036,6 +1044,10 @@ body {
   flex: 1;
   padding-right: var(--space-4);
   color: var(--gray-800);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 .card-actions {
@@ -1066,9 +1078,11 @@ body {
 }
 
 .card-actions .flag-btn:hover {
-  color: var(--error);
-  background: #fef2f2;
-  border-color: #fecaca;
+  color: white;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .card-actions .favorite-btn:hover {
@@ -1104,6 +1118,9 @@ body {
   font-size: var(--font-size-sm);
   color: var(--gray-500);
   margin-top: var(--space-1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .card-time {
@@ -1120,6 +1137,9 @@ body {
   color: var(--gray-700);
   margin-top: var(--space-3);
   line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Enhanced Modal */
@@ -1158,6 +1178,10 @@ body {
   margin-bottom: var(--space-4);
   color: var(--gray-800);
   text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 .modal-buttons {
@@ -1411,9 +1435,11 @@ body {
 }
 
 .rate-limit-status.limit-reached {
-  background: #fef2f2;
-  color: var(--error);
-  border: 1px solid #fecaca;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Enhanced Dev Badge */
@@ -1806,6 +1832,8 @@ footer a:hover {
   align-items: center;
   text-align: center;
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 .onboarding-logo {
@@ -1825,6 +1853,9 @@ footer a:hover {
   color: white;
   margin-bottom: 0.75rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .onboarding-subtitle {
@@ -1833,6 +1864,9 @@ footer a:hover {
   margin-bottom: 2rem;
   line-height: 1.5;
   max-width: 300px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .onboarding-options {
@@ -1841,6 +1875,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  margin: 0 auto;
 }
 
 .onboarding-btn {
@@ -1859,6 +1894,8 @@ footer a:hover {
   text-decoration: none;
   position: relative;
   overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .onboarding-btn::before {
@@ -1910,6 +1947,8 @@ footer a:hover {
   margin-bottom: 2rem;
   width: 100%;
   max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .onboarding-back {
@@ -1934,6 +1973,9 @@ footer a:hover {
   color: white;
   margin: 0;
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .onboarding-form {
@@ -1942,6 +1984,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin: 0 auto;
 }
 
 .onboarding-form .form-section {
@@ -1950,10 +1993,16 @@ footer a:hover {
   padding: 1rem;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .onboarding-form .form-group {
   margin-bottom: 1rem;
+}
+
+.onboarding-form .form-group:last-child {
+  margin-bottom: 0;
 }
 
 .onboarding-form .form-label {
@@ -1961,6 +2010,11 @@ footer a:hover {
   font-weight: 600;
   margin-bottom: 0.5rem;
   display: block;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  line-height: 1.4;
 }
 
 .onboarding-form .form-input,
@@ -1973,6 +2027,10 @@ footer a:hover {
   color: var(--gray-800);
   font-size: 1rem;
   transition: all 0.2s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  resize: vertical;
+  min-height: 44px;
 }
 
 .onboarding-form .form-input:focus,
@@ -1987,6 +2045,10 @@ footer a:hover {
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.875rem;
   margin-top: 0.25rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
 }
 
 .onboarding-form-buttons {
@@ -1999,8 +2061,30 @@ footer a:hover {
 
 .btn-text {
   font-weight: 600;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
+/* Enhanced section title styling for better contrast */
+.onboarding-form .section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
+}
+
+/* Improved textarea styling */
+.onboarding-form .form-input[rows] {
+  min-height: 80px;
+  max-height: 200px;
+}
+
+/* Enhanced mobile responsiveness */
 @media (max-width: 640px) {
   .onboarding-content {
     padding: 1rem;
@@ -2008,6 +2092,13 @@ footer a:hover {
   
   .onboarding-title {
     font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .onboarding-subtitle {
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    max-width: 320px;
   }
   
   .onboarding-screen-title {
@@ -2015,10 +2106,226 @@ footer a:hover {
   }
   
   .onboarding-options {
-    max-width: 280px;
+    max-width: 320px;
   }
   
   .onboarding-form {
-    max-width: 280px;
+    max-width: 320px;
+  }
+  
+  .onboarding-form .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.375rem;
+  }
+  
+  .onboarding-form .form-input,
+  .onboarding-form .form-select {
+    padding: 0.625rem;
+    font-size: 0.875rem;
+  }
+  
+  .onboarding-form .section-title {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .onboarding-form .form-hint {
+    font-size: 0.75rem;
+  }
+  
+  .onboarding-btn {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .onboarding-btn.large {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+  }
+}
+
+/* Enhanced tablet responsiveness */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .onboarding-content {
+    padding: 2rem;
+  }
+  
+  .onboarding-title {
+    font-size: 2rem;
+  }
+  
+  .onboarding-subtitle {
+    font-size: 1.125rem;
+    max-width: 400px;
+  }
+  
+  .onboarding-options {
+    max-width: 400px;
+  }
+  
+  .onboarding-form {
+    max-width: 400px;
+  }
+  
+  .onboarding-form .form-label {
+    font-size: 1rem;
+  }
+  
+  .onboarding-form .form-input,
+  .onboarding-form .form-select {
+    padding: 0.875rem;
+    font-size: 1rem;
+  }
+  
+  .onboarding-form .section-title {
+    font-size: 1.375rem;
+  }
+}
+
+/* Enhanced desktop responsiveness */
+@media (min-width: 1025px) {
+  .onboarding-content {
+    padding: 2.5rem;
+  }
+  
+  .onboarding-title {
+    font-size: 2.25rem;
+  }
+  
+  .onboarding-subtitle {
+    font-size: 1.25rem;
+    max-width: 450px;
+  }
+  
+  .onboarding-options {
+    max-width: 450px;
+  }
+  
+  .onboarding-form {
+    max-width: 450px;
+  }
+  
+  .onboarding-form .form-label {
+    font-size: 1.125rem;
+  }
+  
+  .onboarding-form .form-input,
+  .onboarding-form .form-select {
+    padding: 1rem;
+    font-size: 1.125rem;
+  }
+  
+  .onboarding-form .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .onboarding-btn {
+    padding: 1.125rem 1.5rem;
+    font-size: 1.125rem;
+  }
+  
+  .onboarding-btn.large {
+    padding: 1.375rem 1.75rem;
+    font-size: 1.25rem;
+  }
+}
+
+/* Ultra-wide screen optimizations */
+@media (min-width: 1440px) {
+  .onboarding-content {
+    max-width: 800px;
+    padding: 4rem 3rem;
+    margin: 0 auto;
+  }
+  
+  .onboarding-title {
+    font-size: 3rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  
+  .onboarding-subtitle {
+    font-size: 1.5rem;
+    max-width: 600px;
+  }
+  
+  .onboarding-options {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .onboarding-btn {
+    padding: 2rem 2.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .onboarding-form {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .onboarding-form .form-label {
+    font-size: 1.25rem;
+  }
+  
+  .onboarding-form .form-input,
+  .onboarding-form .form-select {
+    padding: 1.25rem;
+    font-size: 1.25rem;
+  }
+  
+  .onboarding-form .section-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* Large desktop screens */
+@media (min-width: 1920px) {
+  .onboarding-content {
+    max-width: 900px;
+    padding: 5rem 4rem;
+    margin: 0 auto;
+  }
+  
+  .onboarding-title {
+    font-size: 3.5rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  
+  .onboarding-subtitle {
+    font-size: 1.75rem;
+    max-width: 700px;
+  }
+  
+  .onboarding-options {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .onboarding-btn {
+    padding: 2.5rem 3rem;
+    font-size: 1.375rem;
+  }
+  
+  .onboarding-form {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .onboarding-form .form-label {
+    font-size: 1.375rem;
+  }
+  
+  .onboarding-form .form-input,
+  .onboarding-form .form-select {
+    padding: 1.5rem;
+    font-size: 1.375rem;
+  }
+  
+  .onboarding-form .section-title {
+    font-size: 2rem;
   }
 }

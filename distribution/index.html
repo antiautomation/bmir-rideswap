@@ -21,9 +21,9 @@
     <meta property="og:url" content="https://ridefinder.site/">
     <meta property="og:title" content="RideFinder App for Burners - The Official Burning Man RideShare App">
     <meta property="og:description" content="Connect with The Official #1 World-Famous RideFinder App community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Make your journey to the dust easier with our trusted community!">
-    <meta property="og:image" content="https://bmir.org/Org.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+    <meta property="og:image" content="./logo.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
     <meta property="og:image:alt" content="RideFinder App for Burners">
     <meta property="og:site_name" content="RideFinder App for Burners">
     <meta property="og:locale" content="en_US">
@@ -33,12 +33,12 @@
     <meta name="twitter:url" content="https://ridefinder.site/">
     <meta name="twitter:title" content="RideFinder App for Burners - The Official Burning Man RideShare App">
     <meta name="twitter:description" content="Join The Official #1 World-Famous RideFinder App community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Connect with your playa family!">
-    <meta name="twitter:image" content="https://bmir.org/Org.png">
+    <meta name="twitter:image" content="./logo.png">
     <meta name="twitter:image:alt" content="RideFinder App for Burners">
     
     <!-- WhatsApp, Telegram, and other social platforms -->
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:secure_url" content="https://bmir.org/Org.png">
+    <meta property="og:image:secure_url" content="./logo.png">
     
     <!-- Performance optimizations -->
     <meta name="format-detection" content="telephone=no">
@@ -145,6 +145,12 @@
     <script>
       // Make tracking functions available immediately
       window.trackOnboardingEvent = function(action, label = null, value = null) {
+        // Check if we're in station mode (local development) - inline check to avoid uninitialized variable
+        const isStationMode = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (isStationMode) {
+          console.log('📊 Analytics disabled in station mode, skipping event:', 'onboarding_' + action, label);
+          return;
+        }
         if (typeof gtag !== 'undefined') {
           gtag('event', 'onboarding_' + action, {
             event_category: 'onboarding',
@@ -157,6 +163,12 @@
       };
       
       window.trackMainAppEvent = function(action, label = null, value = null) {
+        // Check if we're in station mode (local development) - inline check to avoid uninitialized variable
+        const isStationMode = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (isStationMode) {
+          console.log('📊 Analytics disabled in station mode, skipping event:', 'main_app_' + action, label);
+          return;
+        }
         if (typeof gtag !== 'undefined') {
           gtag('event', 'main_app_' + action, {
             event_category: 'main_app',
@@ -184,14 +196,13 @@
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           
-          // Track in production and optionally in development
-          if (location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+          // Track in production only - disable analytics in station mode (local development)
+          if (location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:') {
             gtag('config', analyticsConfig.trackingId);
             console.log('📊 Analytics enabled for production');
           } else {
-            // Enable for testing - comment out this line to disable local tracking
-            gtag('config', analyticsConfig.trackingId);
-            console.log('📊 Analytics enabled for local development (testing)');
+            // Disable analytics in station mode (local development)
+            console.log('📊 Analytics disabled in station mode (local development)');
           }
           
 
@@ -1090,11 +1101,108 @@
     </script>
     
     <script type="module">
-        // Firebase Imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
+        // Firebase Imports with fallback for local development
+        let initializeApp, getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, setPersistence, browserLocalPersistence;
+        let getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs, query, where, increment, limit, orderBy, writeBatch;
+        let initializeAppCheck, ReCaptchaV3Provider;
+        
+        // Check if we're running locally with file:// protocol
+        const isFileProtocol = location.protocol === 'file:';
+        
+        if (isFileProtocol) {
+            console.log('🔧 File protocol detected - Firebase modules will be loaded dynamically');
+            // For file:// protocol, we'll load Firebase dynamically to avoid CORS issues
+            try {
+                const firebaseAppModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+                const firebaseAuthModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+                const firebaseFirestoreModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const firebaseAppCheckModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js");
+                
+                // Extract functions from modules
+                initializeApp = firebaseAppModule.initializeApp;
+                getAuth = firebaseAuthModule.getAuth;
+                signInAnonymously = firebaseAuthModule.signInAnonymously;
+                onAuthStateChanged = firebaseAuthModule.onAuthStateChanged;
+                signInWithCustomToken = firebaseAuthModule.signInWithCustomToken;
+                setPersistence = firebaseAuthModule.setPersistence;
+                browserLocalPersistence = firebaseAuthModule.browserLocalPersistence;
+                
+                getFirestore = firebaseFirestoreModule.getFirestore;
+                collection = firebaseFirestoreModule.collection;
+                onSnapshot = firebaseFirestoreModule.onSnapshot;
+                addDoc = firebaseFirestoreModule.addDoc;
+                doc = firebaseFirestoreModule.doc;
+                deleteDoc = firebaseFirestoreModule.deleteDoc;
+                updateDoc = firebaseFirestoreModule.updateDoc;
+                setDoc = firebaseFirestoreModule.setDoc;
+                getDoc = firebaseFirestoreModule.getDoc;
+                getDocs = firebaseFirestoreModule.getDocs;
+                query = firebaseFirestoreModule.query;
+                where = firebaseFirestoreModule.where;
+                increment = firebaseFirestoreModule.increment;
+                limit = firebaseFirestoreModule.limit;
+                orderBy = firebaseFirestoreModule.orderBy;
+                writeBatch = firebaseFirestoreModule.writeBatch;
+                
+                initializeAppCheck = firebaseAppCheckModule.initializeAppCheck;
+                ReCaptchaV3Provider = firebaseAppCheckModule.ReCaptchaV3Provider;
+                
+                console.log('✅ Firebase modules loaded successfully for file:// protocol');
+            } catch (error) {
+                console.error('❌ Failed to load Firebase modules for file:// protocol:', error);
+                console.log('💡 Try using a local server instead: python3 -m http.server 8000');
+                // Show a user-friendly error message
+                document.body.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; font-family: Arial, sans-serif;">
+                        <h2>🚫 Local File Protocol Issue</h2>
+                        <p>The app cannot load properly when opened directly as a file due to browser security restrictions.</p>
+                        <p><strong>Solution:</strong> Use a local server instead:</p>
+                        <div style="background: #f0f0f0; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; font-family: monospace;">
+                            cd distribution<br>
+                            python3 -m http.server 8000<br>
+                            open http://localhost:8000
+                        </div>
+                        <p>Or use any other local server like Live Server in VS Code.</p>
+                    </div>
+                `;
+                throw error;
+            }
+        } else {
+            // Normal import for http/https protocols
+            const firebaseAppModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+            const firebaseAuthModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+            const firebaseFirestoreModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const firebaseAppCheckModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js");
+            
+            // Extract functions from modules
+            initializeApp = firebaseAppModule.initializeApp;
+            getAuth = firebaseAuthModule.getAuth;
+            signInAnonymously = firebaseAuthModule.signInAnonymously;
+            onAuthStateChanged = firebaseAuthModule.onAuthStateChanged;
+            signInWithCustomToken = firebaseAuthModule.signInWithCustomToken;
+            setPersistence = firebaseAuthModule.setPersistence;
+            browserLocalPersistence = firebaseAuthModule.browserLocalPersistence;
+            
+            getFirestore = firebaseFirestoreModule.getFirestore;
+            collection = firebaseFirestoreModule.collection;
+            onSnapshot = firebaseFirestoreModule.onSnapshot;
+            addDoc = firebaseFirestoreModule.addDoc;
+            doc = firebaseFirestoreModule.doc;
+            deleteDoc = firebaseFirestoreModule.deleteDoc;
+            updateDoc = firebaseFirestoreModule.updateDoc;
+            setDoc = firebaseFirestoreModule.setDoc;
+            getDoc = firebaseFirestoreModule.getDoc;
+            getDocs = firebaseFirestoreModule.getDocs;
+            query = firebaseFirestoreModule.query;
+            where = firebaseFirestoreModule.where;
+            increment = firebaseFirestoreModule.increment;
+            limit = firebaseFirestoreModule.limit;
+            orderBy = firebaseFirestoreModule.orderBy;
+            writeBatch = firebaseFirestoreModule.writeBatch;
+            
+            initializeAppCheck = firebaseAppCheckModule.initializeAppCheck;
+            ReCaptchaV3Provider = firebaseAppCheckModule.ReCaptchaV3Provider;
+        }
         
         // Make Firebase functions available globally for app.js
         window.initializeApp = initializeApp;
@@ -1122,6 +1230,8 @@
         window.browserLocalPersistence = browserLocalPersistence;
         window.initializeAppCheck = initializeAppCheck;
         window.ReCaptchaV3Provider = ReCaptchaV3Provider;
+        
+
 
         // --- Caching System ---
         const cache = new Map();
@@ -1394,6 +1504,12 @@
         const statusBar = document.getElementById('status-bar');
         const devBadge = document.getElementById('dev-badge');
         const rateLimitStatusElement = document.getElementById('rate-limit-status');
+        
+        // Show station mode badge when running locally (after DOM elements are initialized)
+        if (isLocalDevelopment && devBadge) {
+            devBadge.style.display = 'block';
+            console.log('🏷️ Station mode badge displayed');
+        }
 
         // Add loading states
         function showLoading(container) {

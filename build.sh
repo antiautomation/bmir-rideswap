@@ -13,8 +13,8 @@ echo "📁 Copying files..."
 
 # Copy all necessary files to root of distribution (flat structure)
 cp index.html distribution/
+cp privacy.html distribution/
 cp app.js distribution/
-cp styles.css distribution/
 cp styles-modern.css distribution/
 cp manifest.json distribution/
 cp sw.js distribution/
