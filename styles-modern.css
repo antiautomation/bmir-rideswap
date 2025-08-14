@@ -912,7 +912,7 @@ body {
   margin-bottom: var(--space-4);
   transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   word-wrap: break-word;
   word-break: break-word;
 }
