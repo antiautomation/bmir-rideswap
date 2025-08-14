@@ -3665,6 +3665,7 @@
                         currentDirection = newDirection;
                         toBrcBtn.classList.toggle('active', currentDirection === 'to-brc');
                         fromBrcBtn.classList.toggle('active', currentDirection === 'from-brc');
+                        directionToggle.classList.toggle('from-brc', currentDirection === 'from-brc');
                         
                         // Track direction change
                         if (typeof gtag !== 'undefined') {
@@ -3694,6 +3695,7 @@
                         currentDirection = newDirection;
                         toBrcBtnDesktop.classList.toggle('active', currentDirection === 'to-brc');
                         fromBrcBtnDesktop.classList.toggle('active', currentDirection === 'from-brc');
+                        directionToggleDesktop.classList.toggle('from-brc', currentDirection === 'from-brc');
                         
                         // Track direction change
                         if (typeof gtag !== 'undefined') {
@@ -4819,6 +4821,12 @@
                 if (fromBrcBtn) fromBrcBtn.classList.add('active');
                 if (toBrcBtnDesktop) toBrcBtnDesktop.classList.remove('active');
                 if (fromBrcBtnDesktop) fromBrcBtnDesktop.classList.add('active');
+                if (directionToggle) directionToggle.classList.add('from-brc');
+                if (directionToggleDesktop) directionToggleDesktop.classList.add('from-brc');
+            } else {
+                // Initialize direction toggle containers
+                if (directionToggle) directionToggle.classList.toggle('from-brc', currentDirection === 'from-brc');
+                if (directionToggleDesktop) directionToggleDesktop.classList.toggle('from-brc', currentDirection === 'from-brc');
             }
         }
         

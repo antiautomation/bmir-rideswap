@@ -572,6 +572,11 @@ body {
   border-radius: var(--radius-lg);
   transition: transform var(--transition-normal);
   z-index: 1;
+  transform: translateX(0);
+}
+
+.direction-toggle.from-brc::before {
+  transform: translateX(100%);
 }
 
 .direction-toggle button {
