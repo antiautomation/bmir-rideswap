@@ -614,6 +614,16 @@ body {
     padding: var(--space-2) var(--space-3);
     height: 2.75rem;
   }
+  
+  .card-time {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .card-time {
+    font-size: var(--font-size-xs);
+  }
 }
 
 /* Enhanced Buttons */
@@ -894,7 +904,9 @@ body {
   margin-bottom: var(--space-4);
   transition: all var(--transition-normal);
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .card::before {
@@ -1099,6 +1111,9 @@ body {
   font-size: var(--font-size-base);
   margin-bottom: var(--space-2);
   color: var(--gray-800);
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .card-description {
