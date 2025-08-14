@@ -431,7 +431,7 @@ body {
 
 /* Enhanced Visitor Counter */
 .visitor-counter {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -482,7 +482,8 @@ body {
 /* Enhanced Help Link */
 .help-link-container {
   text-align: center;
-  margin-bottom: var(--space-8);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .help-link {
@@ -508,7 +509,8 @@ body {
 
 @media (max-width: 640px) {
   .help-link-container {
-    margin-bottom: var(--space-6);
+    margin-top: var(--space-3);
+    margin-bottom: var(--space-3);
   }
   
   .help-link {
