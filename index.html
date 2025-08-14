@@ -19,9 +19,9 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ridefinder.site/">
-    <meta property="og:title" content="RideFinder App for Burners - The Official Burning Man RideShare App">
+    <meta property="og:title" content="RideFinder App for Burners - The #1 Burning Man RideShare App">
     <meta property="og:description" content="Connect with The Official #1 World-Famous RideFinder App community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Make your journey to the dust easier with our trusted community!">
-    <meta property="og:image" content="./logo.png">
+    <meta property="og:image" content="https://ridefinder.site/logo.png">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
     <meta property="og:image:alt" content="RideFinder App for Burners">
@@ -31,14 +31,14 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://ridefinder.site/">
-    <meta name="twitter:title" content="RideFinder App for Burners - The Official Burning Man RideShare App">
+    <meta name="twitter:title" content="RideFinder App for Burners - The #1 Burning Man RideShare App">
     <meta name="twitter:description" content="Join The Official #1 World-Famous RideFinder App community for Burning Man! Find drivers with space or riders needing rides to/from Black Rock City. Real-time updates, mobile-friendly, and completely free. Connect with your playa family!">
-    <meta name="twitter:image" content="./logo.png">
+    <meta name="twitter:image" content="https://ridefinder.site/logo.png">
     <meta name="twitter:image:alt" content="RideFinder App for Burners">
     
     <!-- WhatsApp, Telegram, and other social platforms -->
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:secure_url" content="./logo.png">
+    <meta property="og:image:secure_url" content="https://ridefinder.site/logo.png">
     
     <!-- Performance optimizations -->
     <meta name="format-detection" content="telephone=no">
@@ -1876,6 +1876,11 @@
                 if (sessionCodeDisplay) {
                     sessionCodeDisplay.style.display = 'none';
                 }
+                
+                // Ensure event listeners are set up
+                setTimeout(() => {
+                    setupSessionCodeEventListeners();
+                }, 100);
             }
         }
 
@@ -1970,27 +1975,45 @@
         });
         
         // Fix session code input button click and Enter key
-        document.addEventListener('DOMContentLoaded', function() {
+        function setupSessionCodeEventListeners() {
             // Add event listener to the Enter button
             const enterButton = document.getElementById('session-code-enter-btn');
             if (enterButton) {
-                enterButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    enterSessionCode();
-                });
+                // Remove existing listeners to prevent duplicates
+                enterButton.removeEventListener('click', handleEnterButtonClick);
+                enterButton.addEventListener('click', handleEnterButtonClick);
             }
             
             // Add Enter key support for session code field
             const sessionCodeField = document.getElementById('session-code-field');
             if (sessionCodeField) {
-                sessionCodeField.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        enterSessionCode();
-                    }
-                });
+                // Remove existing listeners to prevent duplicates
+                sessionCodeField.removeEventListener('keydown', handleSessionCodeKeydown);
+                sessionCodeField.addEventListener('keydown', handleSessionCodeKeydown);
             }
-        });
+        }
+        
+        function handleEnterButtonClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔑 Enter button clicked');
+            enterSessionCode();
+        }
+        
+        function handleSessionCodeKeydown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔑 Enter key pressed in session code field');
+                enterSessionCode();
+            }
+        }
+        
+        // Setup event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', setupSessionCodeEventListeners);
+        
+        // Also setup when session code input is shown (in case DOM wasn't ready)
+        window.setupSessionCodeEventListeners = setupSessionCodeEventListeners;
         
 
 
