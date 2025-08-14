@@ -151,7 +151,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 .card-actions button:hover{color:#4f46e5}
 .card-actions .flag-btn{color:#6b7280;background-color:#f3f4f6;border:1px solid #d1d5db}
 .card-actions .flag-btn:hover{color:#dc2626;background-color:#fef2f2;border-color:#fecaca}
-.card-actions .flag-btn.flagged{color:#ef4444;background-color:#fef2f2;border-color:#fecaca}
+.card-actions .flag-btn.flagged{color:white;font-weight:700;background-color:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3);text-shadow:0 1px 2px rgba(0,0,0,0.3)}
 .card-actions .favorite-btn{color:#6b7280;background-color:#f3f4f6;border:1px solid #d1d5db}
 .card-actions .favorite-btn:hover{color:#eab308;background-color:#fefce8;border-color:#fde047}
 .card-actions .favorite-btn.favorited{color:#eab308;background-color:#fefce8;border-color:#fde047}
@@ -411,6 +411,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     align-items: center;
     text-align: center;
     position: relative;
+    width: 100%;
+    max-width: 100%;
 }
 
 .onboarding-logo {
@@ -559,6 +561,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     max-width: 400px;
     text-align: left;
     margin-top: 5rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .form-section {
@@ -668,7 +672,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     .onboarding-subtitle {
         font-size: 0.875rem;
         margin-bottom: 1.5rem;
-        max-width: 280px;
+        max-width: 320px;
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
