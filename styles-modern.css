@@ -2235,6 +2235,7 @@ footer a:hover {
   .onboarding-content {
     max-width: 800px;
     padding: 4rem 3rem;
+    margin: 0 auto;
   }
   
   .onboarding-title {
@@ -2251,6 +2252,7 @@ footer a:hover {
   
   .onboarding-options {
     max-width: 600px;
+    margin: 0 auto;
   }
   
   .onboarding-btn {
@@ -2260,6 +2262,7 @@ footer a:hover {
   
   .onboarding-form {
     max-width: 700px;
+    margin: 0 auto;
   }
   
   .onboarding-form .form-label {
@@ -2282,6 +2285,7 @@ footer a:hover {
   .onboarding-content {
     max-width: 900px;
     padding: 5rem 4rem;
+    margin: 0 auto;
   }
   
   .onboarding-title {
@@ -2298,6 +2302,7 @@ footer a:hover {
   
   .onboarding-options {
     max-width: 700px;
+    margin: 0 auto;
   }
   
   .onboarding-btn {
@@ -2307,6 +2312,7 @@ footer a:hover {
   
   .onboarding-form {
     max-width: 800px;
+    margin: 0 auto;
   }
   
   .onboarding-form .form-label {
