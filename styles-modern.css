@@ -394,7 +394,7 @@ body {
   }
   
   .info-card-text {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
   }
 }
 
@@ -424,8 +424,8 @@ body {
   }
   
   .info-card-text {
-    font-size: var(--font-size-xs);
-    line-height: 1.5;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
   }
 }
 
