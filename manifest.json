@@ -9,6 +9,8 @@
   "orientation": "portrait-primary",
   "scope": "./",
   "lang": "en",
+  "permissions": ["notifications"],
+  "gcm_sender_id": "YOUR_SENDER_ID",
   "icons": [
     {
       "src": "logo.png",
@@ -50,6 +52,18 @@
       "short_name": "Offer Ride",
       "description": "Post your available seats for Burning Man",
       "url": "./?direction=to-brc&action=offer",
+      "icons": [
+        {
+          "src": "logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "View your conversations",
+      "url": "./?action=messages",
       "icons": [
         {
           "src": "logo.png",

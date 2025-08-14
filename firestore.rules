@@ -6,6 +6,22 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/artifacts/bmir-rideshare/public/data/godMode/$(request.auth.uid));
     }
     
+    // Helper function to get user ID (supports both authenticated and anonymous users)
+    function getUserId() {
+      return request.auth != null ? request.auth.uid : 'anonymous';
+    }
+    
+    // Helper function to check if user is a participant in a conversation
+    function isConversationParticipant(conversationData) {
+      return getUserId() in conversationData.participantIds;
+    }
+    
+    // Helper function to check if user can message (has messaging enabled)
+    function canUserMessage(userId) {
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      return userDoc == null || userDoc.data.messagingEnabled != false;
+    }
+    
     // Main rideshare data (drivers, riders, flags)
     match /artifacts/bmir-rideshare/public/data/{collection}/{document} {
       // Allow read access to everyone (needed for the app to work)
@@ -52,6 +68,101 @@ service cloud.firestore {
       allow delete: if 
         request.auth != null &&
         (resource.data.authorId == request.auth.uid || isGodMode());
+    }
+    
+    // User profiles for messaging
+    match /users/{userId} {
+      // Users can read their own profile and limited info about others
+      allow read: if 
+        getUserId() == userId || 
+        // Allow reading displayName and messagingEnabled for UI purposes
+        (request.resource.data.keys().hasAll(['displayName', 'messagingEnabled']) &&
+         request.resource.data.displayName is string &&
+         request.resource.data.messagingEnabled is bool);
+      
+      // Users can create/update their own profile
+      allow create, update: if 
+        getUserId() == userId &&
+        request.resource.data.keys().hasAll(['displayName', 'messagingEnabled']) &&
+        request.resource.data.displayName is string &&
+        request.resource.data.displayName.size() > 0 &&
+        request.resource.data.displayName.size() <= 100 &&
+        request.resource.data.messagingEnabled is bool;
+      
+      // Users can delete their own profile
+      allow delete: if getUserId() == userId;
+    }
+    
+    // Conversations
+    match /conversations/{conversationId} {
+      // Only participants can read/write conversations
+      allow read, write: if 
+        request.auth != null &&
+        isConversationParticipant(resource.data);
+      
+      // Allow creation with validation
+      allow create: if 
+        request.auth != null &&
+        request.resource.data.keys().hasAll(['listingId', 'participantIds', 'participantDisplay', 'createdBy']) &&
+        request.resource.data.participantIds is list &&
+        request.resource.data.participantIds.size() == 2 &&
+        getUserId() in request.resource.data.participantIds &&
+        request.resource.data.createdBy == getUserId() &&
+        // Ensure both participants can message
+        canUserMessage(request.resource.data.participantIds[0]) &&
+        canUserMessage(request.resource.data.participantIds[1]);
+    }
+    
+    // Messages in conversations
+    match /conversations/{conversationId}/messages/{messageId} {
+      // Only conversation participants can read messages
+      allow read: if 
+        request.auth != null &&
+        isConversationParticipant(get(/databases/$(database)/documents/conversations/$(conversationId)).data);
+      
+      // Allow message creation by participants
+      allow create: if 
+        request.auth != null &&
+        request.resource.data.keys().hasAll(['fromUserId', 'toUserId', 'body']) &&
+        request.resource.data.fromUserId == getUserId() &&
+        request.resource.data.body is string &&
+        request.resource.data.body.size() > 0 &&
+        request.resource.data.body.size() <= 1000 &&
+        // Verify sender is a participant in the conversation
+        getUserId() in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+      
+      // Allow updates for delivery/read status
+      allow update: if 
+        request.auth != null &&
+        // Only the recipient can mark messages as read
+        (request.resource.data.toUserId == getUserId() ||
+         // Either participant can mark as delivered
+         getUserId() in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds) &&
+        // Ensure core message content doesn't change
+        resource.data.fromUserId == request.resource.data.fromUserId &&
+        resource.data.toUserId == request.resource.data.toUserId &&
+        resource.data.body == request.resource.data.body;
+    }
+    
+    // Favorites (existing or new)
+    match /favorites/{favoriteId} {
+      // Users can read their own favorites
+      allow read: if 
+        request.auth != null &&
+        resource.data.userId == getUserId();
+      
+      // Users can create/update their own favorites
+      allow create, update: if 
+        request.auth != null &&
+        request.resource.data.userId == getUserId() &&
+        request.resource.data.keys().hasAll(['userId', 'listingId']) &&
+        request.resource.data.userId is string &&
+        request.resource.data.listingId is string;
+      
+      // Users can delete their own favorites
+      allow delete: if 
+        request.auth != null &&
+        resource.data.userId == getUserId();
     }
     
     // God mode management - users can manage their own god mode status

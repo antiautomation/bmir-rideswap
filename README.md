@@ -85,6 +85,39 @@ Visit the live application at: [BMIR RideSwap](https://rideswap.auerbach.io)
 - **Restore**: God mode users can restore deleted entries with 🔄 button
 - **Real-time Updates**: Changes appear immediately
 
+#### 💬 Real-time Messaging
+
+**Requirements to Message:**
+- You must have created at least one listing (driver or rider)
+- The recipient must have messaging enabled
+- You must have messaging enabled
+
+**Starting a Conversation:**
+1. **Find a listing** you're interested in
+2. **Click the message button (💬)** on the listing card
+3. **Type your message** and click "Send"
+4. **Auto-favorite**: The listing is automatically added to your favorites
+
+**Managing Conversations:**
+- **Access Messages**: Click "💬 Messages" in the header
+- **View Conversations**: See all your active conversations
+- **Real-time Updates**: Messages appear instantly
+- **Status Indicators**: 
+  - ✓ Sent (message delivered to server)
+  - ✓✓ Delivered (recipient received the message)
+  - ✓✓ Read (recipient opened the conversation)
+
+**Privacy & Settings:**
+- **Disable Messaging**: Uncheck "Allow others to message me" in Messages
+- **Hide Message Button**: When disabled, others won't see the message button on your listings
+- **Notification Settings**: Control push notifications in your browser settings
+
+**Push Notifications:**
+- **Permission Request**: App will ask for notification permission on first use
+- **Background Notifications**: Receive alerts even when app is closed
+- **Click to Open**: Click notification to open the conversation
+- **Graceful Degradation**: Works without notifications if permission denied
+
 ### Features
 
 #### 🎯 Core Features
@@ -98,6 +131,10 @@ Visit the live application at: [BMIR RideSwap](https://rideswap.auerbach.io)
 
 #### 🔧 Advanced Features
 - **Smart Expiration**: Listings automatically hide after 12 hours
+- **Real-time Messaging**: Private conversations between users
+- **Push Notifications**: Get notified of new messages
+- **Auto-favorites**: Automatically favorite listings when messaging
+- **Privacy Controls**: Disable messaging to prevent unwanted contact
 - **Flexible Time Slots**: "Flexible Time" option for open schedules
 - **City Autocomplete**: 500+ US cities with smart search
 - **Rate Limiting**: Prevents spam (5 submissions per hour)
@@ -595,6 +632,35 @@ const RATE_LIMIT_CONFIG = {
 const SESSION_CODE_LENGTH = 8;
 ```
 
+#### 🔔 FCM Configuration (Messaging)
+
+For push notifications to work, you need to configure Firebase Cloud Messaging:
+
+1. **Get VAPID Key**:
+   - Go to Firebase Console > Project Settings > Cloud Messaging
+   - Generate a new Web Push certificate
+   - Copy the public key
+
+2. **Update config.js**:
+   ```javascript
+   const FCM_CONFIG = {
+     vapidKey: "YOUR_VAPID_KEY_HERE",
+     fcmServerKey: "YOUR_SERVER_KEY" // Optional
+   };
+   ```
+
+3. **Update manifest.json**:
+   ```json
+   {
+     "gcm_sender_id": "YOUR_SENDER_ID"
+   }
+   ```
+
+4. **Test Notifications**:
+   - Grant notification permission in browser
+   - Send a test message between users
+   - Verify background notifications work
+
 ### Troubleshooting
 
 #### 🐛 Common Issues
@@ -622,6 +688,14 @@ const SESSION_CODE_LENGTH = 8;
 6. **PWA Installation Issues**
    - **Symptom**: Can't install as app
    - **Solution**: Check HTTPS, verify manifest.json
+
+7. **Messaging Issues**
+   - **Symptom**: Can't send messages
+   - **Solution**: Ensure you have created a listing, check messaging is enabled
+   - **Symptom**: No push notifications
+   - **Solution**: Check FCM configuration, verify notification permissions
+   - **Symptom**: Messages not appearing in real-time
+   - **Solution**: Check Firestore rules, verify conversation permissions
 
 #### 🔧 Debug Commands
 

@@ -360,6 +360,11 @@
                 <div class="help-link-container">
                     <button id="help-link" class="help-link">❓ How This App Works</button>
                 </div>
+                
+                <!-- Messaging Link -->
+                <div class="messaging-link-container">
+                    <button id="messaging-link" class="messaging-link" onclick="MessagingSystem.showMessagingHome()">💬 Messages</button>
+                </div>
             </details>
         </header>
         
@@ -653,6 +658,11 @@
                     <!-- Rider cards will be injected here -->
                 </div>
             </div>
+        </div>
+        
+        <!-- Messaging Container -->
+        <div id="messaging-container" class="messaging-overlay hidden">
+            <!-- Messaging content will be injected here -->
         </div>
     </div>
     
@@ -2368,8 +2378,19 @@
                     updateConnectionStatus(false);
                 });
                 
-                // Initial status
-                updateConnectionStatus(navigator.onLine);
+                            // Initial status
+            updateConnectionStatus(navigator.onLine);
+            
+            // Listen for service worker messages (for push notifications)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'OPEN_CONVERSATION') {
+                        if (typeof window.MessagingSystem !== 'undefined') {
+                            window.MessagingSystem.openConversation(event.data.conversationId);
+                        }
+                    }
+                });
+            }
                 
                 // Monitor connection quality for adaptive loading
                 let connectionQuality = 'unknown';
@@ -2392,6 +2413,23 @@
             // Setup UI elements that don't depend on Firebase
             populateTimeSlots();
             setupUIEventListeners();
+            
+            // Handle messaging shortcut URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'messages') {
+                // Wait for messaging system to be ready
+                const waitForMessaging = setInterval(() => {
+                    if (typeof window.MessagingSystem !== 'undefined') {
+                        clearInterval(waitForMessaging);
+                        window.MessagingSystem.showMessagingHome();
+                    }
+                }, 100);
+                
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    clearInterval(waitForMessaging);
+                }, 5000);
+            }
             
             // Restore session code if it exists
             restoreSessionCode();
@@ -2425,13 +2463,25 @@
                 }, 5000);
             }
             
-            // Wait for app.js to be ready before initializing onboarding
+            // Wait for app.js to be ready before initializing onboarding and messaging
             console.log('⏳ Waiting for app.js to be ready...');
             const waitForAppJs = setInterval(() => {
                 if (typeof window.UniversalOnboarding !== 'undefined' && typeof window.FormUtils !== 'undefined') {
                     clearInterval(waitForAppJs);
                     console.log('✅ app.js is ready, initializing universal onboarding');
                     initializeUniversalOnboarding();
+                    
+                    // Initialize messaging system after onboarding
+                    if (typeof window.MessagingSystem !== 'undefined') {
+                        console.log('💬 Initializing messaging system...');
+                        window.MessagingSystem.init().then(() => {
+                            console.log('✅ Messaging system initialized');
+                        }).catch(error => {
+                            console.error('❌ Failed to initialize messaging system:', error);
+                        });
+                    } else {
+                        console.log('⚠️ MessagingSystem not available');
+                    }
                 } else {
                     console.log('⏳ Still waiting for app.js...');
                 }

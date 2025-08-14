@@ -12,7 +12,8 @@ const urlsToCache = [
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js'
+  'https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js',
+  'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js'
 ];
 
 // Silent logging for offline scenarios
@@ -180,20 +181,37 @@ async function syncPendingData() {
   // This would typically involve uploading locally stored data
 }
 
-// Handle push notifications (for future use)
+// Handle push notifications for messaging
 self.addEventListener('push', event => {
   if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.body,
-      icon: '/icon-192x192.png',
-      badge: '/badge-72x72.png',
-      data: data.data
-    };
-    
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
+    try {
+      const data = event.data.json();
+      const options = {
+        body: data.body || data.message || 'New message received',
+        icon: '/logo.png',
+        badge: '/logo.png',
+        data: data.data || {},
+        requireInteraction: false,
+        silent: false,
+        tag: data.data?.conversationId || 'message',
+        actions: [
+          {
+            action: 'open',
+            title: 'Open Conversation'
+          },
+          {
+            action: 'dismiss',
+            title: 'Dismiss'
+          }
+        ]
+      };
+      
+      event.waitUntil(
+        self.registration.showNotification(data.title || 'New Message', options)
+      );
+    } catch (error) {
+      logOffline('Failed to handle push notification: ' + error.message);
+    }
   }
 });
 
@@ -201,7 +219,66 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   
+  const action = event.action;
+  const data = event.notification.data;
+  
+  if (action === 'dismiss') {
+    return;
+  }
+  
   event.waitUntil(
-    clients.openWindow('/')
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // Check if there's already a window/tab open with the app
+      for (const client of clientList) {
+        if (client.url.includes(location.origin) && 'focus' in client) {
+          // Focus the existing window
+          client.focus();
+          
+          // If it's a message notification, try to open the conversation
+          if (data?.conversationId) {
+            client.postMessage({
+              type: 'OPEN_CONVERSATION',
+              conversationId: data.conversationId
+            });
+          }
+          return;
+        }
+      }
+      
+      // If no existing window, open a new one
+      return clients.openWindow('/').then(client => {
+        // Wait a bit for the page to load, then send the message
+        setTimeout(() => {
+          if (data?.conversationId) {
+            client.postMessage({
+              type: 'OPEN_CONVERSATION',
+              conversationId: data.conversationId
+            });
+          }
+        }, 1000);
+      });
+    })
   );
-}); 
+});
+
+// Handle background sync for messaging
+self.addEventListener('sync', event => {
+  if (event.tag === 'background-sync') {
+    logOffline('Background sync triggered');
+    event.waitUntil(doBackgroundSync());
+  } else if (event.tag === 'message-sync') {
+    logOffline('Message sync triggered');
+    event.waitUntil(syncPendingMessages());
+  }
+});
+
+// Sync pending messages
+async function syncPendingMessages() {
+  try {
+    logOffline('Syncing pending messages...');
+    // This would sync any pending messages that were queued offline
+    // Implementation depends on how offline message queuing is handled
+  } catch (error) {
+    logOffline('Message sync failed: ' + error.message);
+  }
+} 
