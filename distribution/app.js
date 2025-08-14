@@ -65,6 +65,86 @@ const OfflineDebugger = {
 
 // Shared Form Utilities for both onboarding and main application
 const FormUtils = {
+    // Helper function to remap old classification values to new ones
+    remapBelongingsClassification(value) {
+        if (!value) return value;
+        
+        const oldToNew = {
+            // Old classifications that might exist in the database
+            'low': 'minimal',
+            'small': 'minimal',
+            'basic': 'minimal',
+            'none': 'minimal',
+            
+            'medium': 'standard',
+            'normal': 'standard',
+            'average': 'standard',
+            
+            'high': 'substantial',
+            'large': 'substantial',
+            'advanced': 'substantial',
+            
+            'very high': 'extensive',
+            'very large': 'extensive',
+            'maximum': 'extensive'
+        };
+        
+        const lowerValue = value.toLowerCase().trim();
+        return oldToNew[lowerValue] || value;
+    },
+
+    // Helper function to check if driver can accommodate rider belongings
+    canDriverAccommodateBelongings(driverCargo, riderBelongings) {
+        if (!driverCargo || !riderBelongings) return false;
+        
+        // Remap both values to ensure consistency
+        const driverCargoRemapped = this.remapBelongingsClassification(driverCargo);
+        const riderBelongingsRemapped = this.remapBelongingsClassification(riderBelongings);
+        
+        // Define hierarchy (higher index = more capacity)
+        const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
+        
+        const driverIndex = hierarchy.indexOf(driverCargoRemapped);
+        const riderIndex = hierarchy.indexOf(riderBelongingsRemapped);
+        
+        // Driver can accommodate if their capacity is >= rider's belongings
+        return driverIndex >= riderIndex;
+    },
+
+    // Helper function to check if driver matches belongings filter (hierarchical)
+    driverMatchesBelongingsFilter(driverCargo, filterValue) {
+        if (!filterValue || filterValue === 'all') return true;
+        if (!driverCargo) return false;
+        
+        // Remap both values to ensure consistency
+        const driverCargoRemapped = this.remapBelongingsClassification(driverCargo);
+        const filterValueRemapped = this.remapBelongingsClassification(filterValue);
+        
+        // Define hierarchy (higher index = more capacity)
+        const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
+        
+        const driverIndex = hierarchy.indexOf(driverCargoRemapped);
+        const filterIndex = hierarchy.indexOf(filterValueRemapped);
+        
+        // For drivers: show all drivers with capacity LESS THAN or EQUAL TO the filter
+        // This means if filter is "extensive", show all drivers
+        // If filter is "standard", show minimal and standard drivers
+        return driverIndex <= filterIndex;
+    },
+
+    // Helper function to check if rider matches belongings filter (exact match)
+    riderMatchesBelongingsFilter(riderBelongings, filterValue) {
+        if (!filterValue || filterValue === 'all') return true;
+        if (!riderBelongings) return false;
+        
+        // Remap both values to ensure consistency
+        const riderBelongingsRemapped = this.remapBelongingsClassification(riderBelongings);
+        const filterValueRemapped = this.remapBelongingsClassification(filterValue);
+        
+        // For riders: exact match only
+        return riderBelongingsRemapped === filterValueRemapped;
+    },
+
     // Production-ready data validation function
     validateEntry(data) {
         const errors = [];

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideFinder - Modern Design Demo</title>
+    <link rel="stylesheet" href="styles-modern.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        🟢 Live Updating App, No Refresh Required 🟢
+    </div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <img src="logo.png" alt="RideFinder Logo" class="logo">
+            </div>
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="info-card-icon">🚗</div>
+                    <div class="info-card-content">
+                        <h3 class="info-card-title">Coordinate Your Journey</h3>
+                        <p class="info-card-text">Coordinate your journey to and from the playa to save money, make friends, and be better to the environment.</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">📻</div>
+                    <div class="info-card-content">
+                        <h3 class="info-card-title">Visit BMIR Station</h3>
+                        <p class="info-card-text"><a href="https://bmir.org" target="_blank" rel="noopener noreferrer" class="bmir-link">Listen to BMIR 94.5FM</a> and stop by the camp @ 5:30 & Esplanade to use this app at the station.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visitor Counter -->
+            <div class="visitor-counter">
+                <div class="visitor-item">
+                    <span>👥</span>
+                    <span>2,055 total visits</span>
+                </div>
+                <div class="visitor-item">
+                    <span>🟢</span>
+                    <span>39 active now</span>
+                </div>
+                <div class="visitor-item">
+                    <span>🔑</span>
+                    <span>TP3SP2R9</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Help Link -->
+        <div class="help-link-container">
+            <button class="help-link">❓ How This App Works</button>
+        </div>
+        
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <!-- Mobile Layout -->
+            <div class="mobile-controls">
+                <!-- Direction Toggle -->
+                <div class="form-group">
+                    <label class="form-label">Direction</label>
+                    <div class="direction-toggle">
+                        <button class="active">To Burning Man</button>
+                        <button>From Burning Man</button>
+                    </div>
+                </div>
+                
+                <!-- Collapsible Filters -->
+                <details class="filters-collapsible">
+                    <summary class="filters-summary">
+                        <span>🔍 Filters & Options</span>
+                        <span class="filters-toggle">▼</span>
+                    </summary>
+                    <div class="filters-content">
+                        <div class="space-y-4">
+                            <div class="form-group">
+                                <label for="day-filter" class="form-label">Filter by Day</label>
+                                <select id="day-filter" class="form-select">
+                                    <option value="all">All Days</option>
+                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="location-filter" class="form-label">Filter by Location</label>
+                                <select id="location-filter" class="form-select">
+                                    <option value="all">All Locations</option>
+                                    <option value="Reno, NV">Reno, NV</option>
+                                    <option value="San Francisco, CA">San Francisco, CA</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                    Show expired entries
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                    Show Starred ⭐ Only
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+                
+                <!-- Buttons -->
+                <div class="button-container">
+                    <button class="btn btn-primary">Offer a Ride</button>
+                    <button class="btn btn-secondary">Need a Ride</button>
+                </div>
+            </div>
+            
+            <!-- Desktop Layout -->
+            <div class="desktop-controls">
+                <div class="controls-grid">
+                    <!-- Direction Toggle -->
+                    <div class="form-group">
+                        <label class="form-label">Direction</label>
+                        <div class="direction-toggle">
+                            <button class="active">To Burning Man</button>
+                            <button>From Burning Man</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="form-group">
+                        <label class="form-label">Filters</label>
+                        <div class="filters-stacked">
+                            <select class="form-select">
+                                <option value="all">All Days</option>
+                                <option value="Sunday">Sunday</option>
+                                <option value="Monday">Monday</option>
+                            </select>
+                            <select class="form-select">
+                                <option value="all">All Locations</option>
+                                <option value="Reno, NV">Reno, NV</option>
+                            </select>
+                            <select class="form-select">
+                                <option value="all">All Belongings</option>
+                                <option value="minimal">Minimal</option>
+                                <option value="standard">Standard</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="form-group">
+                        <label class="form-label">Actions</label>
+                        <div class="button-container">
+                            <button class="btn btn-primary">Offer a Ride</button>
+                            <button class="btn btn-secondary">Need a Ride</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Checkboxes -->
+                    <div class="form-group desktop-checkbox-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" checked>
+                            <span class="checkmark"></span>
+                            Show expired entries
+                        </label>
+                    </div>
+                    
+                    <div class="form-group desktop-checkbox-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Show Starred ⭐ Only
+                        </label>
+                    </div>
+                    
+                    <div class="form-group desktop-checkbox-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Show only drivers
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Drivers Section -->
+            <div class="content-section">
+                <h2 class="section-title">Drivers with Space</h2>
+                <div>
+                    <!-- Sample Driver Card -->
+                    <div class="card driver">
+                        <div class="card-header">
+                            <div class="card-name">Jakub Gaj</div>
+                            <div class="card-actions">
+                                <button class="favorite-btn">⭐</button>
+                                <button class="flag-btn">🚩</button>
+                            </div>
+                        </div>
+                        <div class="card-contact">
+                            <a href="mailto:jakub@example.com">jakub@example.com</a><br>
+                            <a href="tel:+1234567890">+1 (234) 567-890</a>
+                        </div>
+                        <div class="card-location">📍 <a href="#" class="tooltip">Reno, NV</a></div>
+                        <div class="card-time">Monday, Aug 25, 2025 @ 09:00 - 12:00</div>
+                        <div class="card-description">
+                            Experienced driver with comfortable vehicle. Looking for friendly passengers to share the journey to the playa. I have space for 2 passengers and can accommodate standard luggage. Will be taking the most direct route via I-80.
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                            <strong>Passenger capacity:</strong> 2<br>
+                            <strong>Cargo capacity:</strong> standard<br>
+                            <strong>Route details:</strong> Direct route via I-80, no stops planned
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Driver Card 2 -->
+                    <div class="card driver expiring">
+                        <div class="card-header">
+                            <div class="card-name">Sarah Johnson</div>
+                            <div class="card-actions">
+                                <button class="favorite-btn favorited">⭐</button>
+                                <button class="flag-btn">🚩</button>
+                            </div>
+                        </div>
+                        <div class="card-contact">
+                            <a href="mailto:sarah@example.com">sarah@example.com</a><br>
+                            <a href="tel:+1987654321">+1 (987) 654-321</a>
+                        </div>
+                        <div class="card-location">📍 <a href="#" class="tooltip">San Francisco, CA</a></div>
+                        <div class="card-time">Sunday, Aug 24, 2025 @ 14:00 - 17:00</div>
+                        <div class="card-description">
+                            First-time burner excited to meet new friends! I have a spacious SUV with room for 3 passengers and can handle substantial gear including bikes and camping equipment.
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                            <strong>Passenger capacity:</strong> 3<br>
+                            <strong>Cargo capacity:</strong> substantial<br>
+                            <strong>Route details:</strong> Flexible route, happy to make stops along the way
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Riders Section -->
+            <div class="content-section">
+                <h2 class="section-title">People Needing Rides</h2>
+                <div>
+                    <!-- Sample Rider Card -->
+                    <div class="card rider">
+                        <div class="card-header">
+                            <div class="card-name">Nish</div>
+                            <div class="card-actions">
+                                <button class="favorite-btn">⭐</button>
+                                <button class="flag-btn">🚩</button>
+                            </div>
+                        </div>
+                        <div class="card-contact">
+                            <a href="mailto:nish@example.com">nish@example.com</a>
+                        </div>
+                        <div class="card-location">📍 <a href="#" class="tooltip">Reno, NV</a></div>
+                        <div class="card-time">Saturday, Aug 23, 2025 @ 18:00 - 21:00</div>
+                        <div class="card-description">
+                            Looking for a ride to the playa! I'm a friendly person who loves meeting new people. I have minimal belongings - just a backpack and small cooler. Happy to contribute to gas and share stories along the way.
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                            <strong>Belongings:</strong> minimal
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Rider Card 2 -->
+                    <div class="card rider">
+                        <div class="card-header">
+                            <div class="card-name">Alex Chen</div>
+                            <div class="card-actions">
+                                <button class="favorite-btn">⭐</button>
+                                <button class="flag-btn">🚩</button>
+                            </div>
+                        </div>
+                        <div class="card-contact">
+                            <a href="mailto:alex@example.com">alex@example.com</a><br>
+                            <a href="tel:+1555123456">+1 (555) 123-456</a>
+                        </div>
+                        <div class="card-location">📍 <a href="#" class="tooltip">Sacramento, CA</a></div>
+                        <div class="card-time">Friday, Aug 22, 2025 @ 10:00 - 13:00</div>
+                        <div class="card-description">
+                            Need a ride from Sacramento! I have a bike and some camping gear, so I'll need a vehicle with some cargo space. I'm a veteran burner and happy to share tips and stories. Will contribute generously to gas and snacks!
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                            <strong>Belongings:</strong> substantial
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Demo Info -->
+    <div style="position: fixed; bottom: 1rem; right: 1rem; background: rgba(0,0,0,0.8); color: white; padding: 1rem; border-radius: 0.5rem; font-size: 0.875rem; max-width: 300px; z-index: 1000;">
+        <h3 style="margin: 0 0 0.5rem 0; color: #f59e0b;">🎨 Design Improvements</h3>
+        <ul style="margin: 0; padding-left: 1rem; line-height: 1.4;">
+            <li>Modern gradient background</li>
+            <li>Enhanced visual hierarchy</li>
+            <li>Improved mobile experience</li>
+            <li>Better color scheme</li>
+            <li>Smooth animations</li>
+            <li>Glass morphism effects</li>
+            <li>Enhanced accessibility</li>
+        </ul>
+    </div>
+</body>
+</html>

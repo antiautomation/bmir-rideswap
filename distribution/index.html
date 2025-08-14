@@ -63,24 +63,49 @@
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="./styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="./styles.css"></noscript>
+    <link rel="preload" href="./styles-modern.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./styles-modern.css"></noscript>
     <link rel="preload" href="./app.js" as="script">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
     
     <!-- Critical CSS inlined for immediate rendering -->
     <style>
-        /* Critical above-the-fold styles */
+        /* Critical above-the-fold styles for modern design */
+        :root {
+            --primary-orange: #e4622f;
+            --primary-orange-dark: #d35420;
+            --primary-orange-light: #f97316;
+            --secondary-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --gray-800: #1f2937;
+            --gray-600: #4b5563;
+            --gray-400: #9ca3af;
+            --gray-200: #e5e7eb;
+            --gray-100: #f3f4f6;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --transition-normal: 0.2s ease;
+        }
+        
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f3f4f6;color:#1f2937;line-height:1.6}
-        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
-        .header{text-align:center;margin-bottom:2rem;padding-top:0}
-        .title{font-size:2.25rem;font-weight:700;color:#1f2937;margin-bottom:1.5rem}
-        .status-bar{position:fixed;top:0;left:0;right:0;background-color:#10b981;color:white;padding:.5rem 1rem;text-align:center;font-size:.875rem;font-weight:500;z-index:50;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-        .status-bar.offline{background-color:#ef4444}
-        .loading-spinner{display:inline-block;width:2rem;height:2rem;border:2px solid #e5e7eb;border-top:2px solid #6366f1;border-radius:50%;animation:spin 1s linear infinite}
+        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #e4622f 100%);background-attachment:fixed;color:#1f2937;line-height:1.6;min-height:100vh;overflow-x:hidden}
+        .container{max-width:1200px;margin:0 auto;padding:0 var(--space-4);position:relative;z-index:1}
+        .header{text-align:center;margin-bottom:var(--space-8);padding-top:var(--space-8);position:relative}
+        .status-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);color:white;padding:var(--space-3) var(--space-4);text-align:center;font-size:.875rem;font-weight:600;z-index:50;box-shadow:var(--shadow-lg);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);animation:statusPulse 3s ease-in-out infinite;padding-top:max(var(--space-3),env(safe-area-inset-top));padding-left:max(var(--space-4),env(safe-area-inset-left));padding-right:max(var(--space-4),env(safe-area-inset-right));display:flex;align-items:center;justify-content:center;gap:var(--space-2)}
+        .status-bar::before{content:'';width:8px;height:8px;background:white;border-radius:50%;animation:pulse 2s infinite}
+        .status-bar.offline{background:linear-gradient(135deg, var(--accent-yellow) 0%, #d97706 100%);animation:none}
+        .loading-spinner{display:inline-block;width:2rem;height:2rem;border:2px solid var(--gray-200);border-top:2px solid var(--primary-orange);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.8}}
+        @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.7}}
     </style>
 
     <!-- Canonical URL -->
@@ -277,7 +302,28 @@
             <div class="logo-container">
                 <img src="logo.png" alt="RideFinder Logo" class="logo">
             </div>
-            <p class="subtitle">Coordinate your journey to and from the playa to save money, make friends, and be better to the environment.<br><a href="https://bmir.org" target="_blank" rel="noopener noreferrer" style="color: #e4622f; text-decoration: none; font-weight: 600;">Listen to BMIR 94.5FM</a> and stop by the camp @ 5:30 & Esplanade to use this app at the station.</p>
+            <details class="info-cards-collapsible" id="info-cards-collapsible">
+                <summary class="info-cards-summary">
+                    <span>ℹ️ App Information</span>
+                    <span class="info-cards-toggle">▼</span>
+                </summary>
+                <div class="info-cards">
+                    <div class="info-card">
+                        <div class="info-card-icon">🚗</div>
+                        <div class="info-card-content">
+                            <h3 class="info-card-title">Coordinate Your Journey</h3>
+                            <p class="info-card-text">Coordinate your journey to and from the playa to save money, make friends, and be better to the environment.</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">📻</div>
+                        <div class="info-card-content">
+                            <h3 class="info-card-title">Visit the BMIR Station</h3>
+                            <p class="info-card-text"><a href="https://bmir.org" target="_blank" rel="noopener noreferrer" class="bmir-link">Listen to BMIR 94.5FM</a> and stop by the camp @ 5:30 & Esplanade to use this app at the station.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
             
             <!-- Visitor Counter -->
             <div class="visitor-counter">
@@ -3025,6 +3071,17 @@
             return tooltips[belongingsType] || 'Amount of belongings for this ride request.';
         }
 
+        function getCargoTooltip(cargoType) {
+            const tooltips = {
+                'minimal': 'Can accommodate backpack, small bag, or minimal personal items. Limited cargo space available.',
+                'standard': 'Can accommodate suitcase, cooler, sleeping bag, and typical camping gear. Standard cargo capacity for a Burning Man trip.',
+                'substantial': 'Can accommodate bike, camping gear, multiple bags, and larger items. Good cargo space with careful packing.',
+                'extensive': 'Can accommodate multiple bikes, large camp items, extensive gear, or bulky equipment. Maximum cargo capacity available.'
+            };
+            
+            return tooltips[cargoType] || 'Cargo capacity for this vehicle.';
+        }
+
         // --- Rendering Logic with Virtual Scrolling ---
         let currentPage = 0;
         let driversPage = 0;
@@ -3117,7 +3174,7 @@
                 }
                 if (currentDayFilter !== 'all' && getDayNameCached(d.date) !== currentDayFilter) return false;
                 if (currentLocationFilter !== 'all' && d.location !== currentLocationFilter) return false;
-                if (currentBelongingsFilter !== 'all' && d.riderStuff !== currentBelongingsFilter) return false;
+                if (currentBelongingsFilter !== 'all' && !driverMatchesBelongingsFilter(d.cargoSpace, currentBelongingsFilter)) return false;
                 // Only filter out hidden entries if showHiddenEntries is false (God mode toggle)
                 if (shouldHideEntry(d.id, 'driver') && !showHiddenEntries) return false;
                 if (!showExpiredEntries && isEntryExpired(d)) return false;
@@ -3152,7 +3209,7 @@
                 }
                 if (currentDayFilter !== 'all' && getDayNameCached(r.date) !== currentDayFilter) return false;
                 if (currentLocationFilter !== 'all' && r.location !== currentLocationFilter) return false;
-                if (currentBelongingsFilter !== 'all' && r.riderStuff !== currentBelongingsFilter) return false;
+                if (currentBelongingsFilter !== 'all' && !riderMatchesBelongingsFilter(r.riderStuff, currentBelongingsFilter)) return false;
                 // Only filter out hidden entries if showHiddenEntries is false (God mode toggle)
                 if (shouldHideEntry(r.id, 'rider') && !showHiddenEntries) return false;
                 if (!showExpiredEntries && isEntryExpired(r)) return false;
@@ -3499,7 +3556,13 @@
                     
                     ${type === 'driver' && entry.cargoSpace ? `
                         <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;">
-                            <strong>Cargo capacity:</strong> ${entry.cargoSpace}
+                            <strong>Cargo capacity:</strong> 
+                            <span class="cargo-tooltip" data-cargo="${entry.cargoSpace}" style="cursor: help; text-decoration: underline dotted;">
+                                ${entry.cargoSpace}
+                                <span class="tooltiptext">
+                                    ${getCargoTooltip(entry.cargoSpace)}
+                                </span>
+                            </span>
                         </p>
                     ` : ''}
                     
@@ -3713,14 +3776,10 @@
                                 loadExpiredEntries('riders')
                             ]);
                         } else {
-                            // Remove expired entries from display by filtering out duplicates
-                            // First, get the original non-expired entries from cache
-                            const originalDrivers = QueryOptimizer.getCachedData('drivers_data') || [];
-                            const originalRiders = QueryOptimizer.getCachedData('riders_data') || [];
-                            
-                            // Filter to only include non-expired entries
-                            allDrivers = originalDrivers.filter(d => !isEntryExpired(d));
-                            allRiders = originalRiders.filter(r => !isEntryExpired(r));
+                            // Remove expired entries from display by filtering out expired entries
+                            // Filter current arrays to only include non-expired entries
+                            allDrivers = allDrivers.filter(d => !isEntryExpired(d));
+                            allRiders = allRiders.filter(r => !isEntryExpired(r));
                         }
                         
                         // Sync both checkboxes
@@ -5080,6 +5139,86 @@
             }, 2 * 60 * 1000); // 2 minutes
         }
 
+        // Helper function to remap old classification values to new ones
+        function remapBelongingsClassification(value) {
+            if (!value) return value;
+            
+            const oldToNew = {
+                // Old classifications that might exist in the database
+                'low': 'minimal',
+                'small': 'minimal',
+                'basic': 'minimal',
+                'none': 'minimal',
+                
+                'medium': 'standard',
+                'normal': 'standard',
+                'average': 'standard',
+                
+                'high': 'substantial',
+                'large': 'substantial',
+                'advanced': 'substantial',
+                
+                'very high': 'extensive',
+                'very large': 'extensive',
+                'maximum': 'extensive'
+            };
+            
+            const lowerValue = value.toLowerCase().trim();
+            return oldToNew[lowerValue] || value;
+        }
+
+        // Helper function to check if driver can accommodate rider belongings
+        function canDriverAccommodateBelongings(driverCargo, riderBelongings) {
+            if (!driverCargo || !riderBelongings) return false;
+            
+            // Remap both values to ensure consistency
+            const driverCargoRemapped = remapBelongingsClassification(driverCargo);
+            const riderBelongingsRemapped = remapBelongingsClassification(riderBelongings);
+            
+            // Define hierarchy (higher index = more capacity)
+            const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
+            
+            const driverIndex = hierarchy.indexOf(driverCargoRemapped);
+            const riderIndex = hierarchy.indexOf(riderBelongingsRemapped);
+            
+            // Driver can accommodate if their capacity is >= rider's belongings
+            return driverIndex >= riderIndex;
+        }
+
+        // Helper function to check if driver matches belongings filter (hierarchical)
+        function driverMatchesBelongingsFilter(driverCargo, filterValue) {
+            if (!filterValue || filterValue === 'all') return true;
+            if (!driverCargo) return false;
+            
+            // Remap both values to ensure consistency
+            const driverCargoRemapped = remapBelongingsClassification(driverCargo);
+            const filterValueRemapped = remapBelongingsClassification(filterValue);
+            
+            // Define hierarchy (higher index = more capacity)
+            const hierarchy = ['minimal', 'standard', 'substantial', 'extensive'];
+            
+            const driverIndex = hierarchy.indexOf(driverCargoRemapped);
+            const filterIndex = hierarchy.indexOf(filterValueRemapped);
+            
+            // For drivers: show all drivers with capacity LESS THAN or EQUAL TO the filter
+            // This means if filter is "extensive", show all drivers
+            // If filter is "standard", show minimal and standard drivers
+            return driverIndex <= filterIndex;
+        }
+
+        // Helper function to check if rider matches belongings filter (exact match)
+        function riderMatchesBelongingsFilter(riderBelongings, filterValue) {
+            if (!filterValue || filterValue === 'all') return true;
+            if (!riderBelongings) return false;
+            
+            // Remap both values to ensure consistency
+            const riderBelongingsRemapped = remapBelongingsClassification(riderBelongings);
+            const filterValueRemapped = remapBelongingsClassification(filterValue);
+            
+            // For riders: exact match only
+            return riderBelongingsRemapped === filterValueRemapped;
+        }
+
         // --- Easter Egg ---
         function setupEasterEgg() {
             let tapCount = 0;
@@ -5474,10 +5613,10 @@
 
     
     <!-- Footer -->
-    <footer style="text-align: center; padding: 2rem 1rem; margin-top: 3rem; color: #6b7280; font-size: 0.875rem; border-top: 1px solid #e5e7eb;">
-        Made with ❤️ by <a href="mailto:ridefinderapp@icloud.com?subject=Feedback on RideFinder" style="color: #e4622f; text-decoration: none;">Wavy Davy</a> at BMIR
+    <footer>
+        Made with ❤️ by <a href="mailto:ridefinderapp@icloud.com?subject=Feedback on RideFinder">Wavy Davy</a> at BMIR
         <br>
-        <a href="privacy.html" style="color: #e4622f; text-decoration: none; font-weight: 500; margin-top: 0.5rem; display: inline-block;">Privacy Policy</a>
+        <a href="privacy.html">Privacy Policy</a>
     </footer>
 </body>
 </html>
