@@ -576,6 +576,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     color: white;
     margin-bottom: 1rem;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.3;
 }
 
 .onboarding-form .form-group {
@@ -592,6 +596,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     margin-bottom: 0.5rem;
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.4;
 }
 
 .onboarding-form .form-input,
@@ -606,6 +614,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
     transition: all 0.2s ease;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    resize: vertical;
+    min-height: 44px;
 }
 
 .onboarding-form .form-input:focus,
