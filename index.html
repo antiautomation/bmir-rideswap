@@ -1832,6 +1832,16 @@
                     renderFilteredLists();
                 }, 100);
                 
+                // Track god mode activation
+                trackMainAppEvent('god_mode_activated', 'admin_access', 1);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'god_mode_activated', {
+                        'event_category': 'engagement',
+                        'event_label': 'admin_access',
+                        'value': 1
+                    });
+                }
+                
                 alert('🔐 God mode activated! You now have admin access.');
                 return;
             }
@@ -1861,6 +1871,16 @@
                     console.log('🎬 Onboarding is active, hiding session code display');
                 }
                 sessionCodeInput.style.display = 'none';
+            }
+            
+            // Track session code usage
+            trackMainAppEvent('session_code_entered', 'regular_session_code', 1);
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'session_code_entered', {
+                    'event_category': 'engagement',
+                    'event_label': 'regular_session_code',
+                    'value': 1
+                });
             }
             
             alert('Session code entered! You can now edit your listings.');
@@ -3777,6 +3797,16 @@
             if (helpLink) {
                 helpLink.addEventListener('click', () => {
                     helpModal.classList.remove('hidden');
+                    
+                    // Track help modal usage
+                    trackMainAppEvent('help_modal_opened', 'how_app_works', 1);
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'help_modal_opened', {
+                            'event_category': 'engagement',
+                            'event_label': 'how_app_works',
+                            'value': 1
+                        });
+                    }
                 });
             }
             
@@ -3866,6 +3896,17 @@
                         updateLocationFilter();
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track filter usage
+                        trackMainAppEvent('filter_used', 'day_filter', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'filter_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'day_filter',
+                                'custom_parameter_1': filter.value,
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -3880,6 +3921,17 @@
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track filter usage
+                        trackMainAppEvent('filter_used', 'location_filter', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'filter_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'location_filter',
+                                'custom_parameter_1': filter.value,
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -3894,6 +3946,17 @@
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track filter usage
+                        trackMainAppEvent('filter_used', 'belongings_filter', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'filter_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'belongings_filter',
+                                'custom_parameter_1': filter.value,
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -3932,6 +3995,17 @@
                         updateLocationFilter();
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track toggle usage
+                        trackMainAppEvent('toggle_used', 'show_expired_entries', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'toggle_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'show_expired_entries',
+                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -3955,6 +4029,17 @@
                         updateLocationFilter();
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track toggle usage
+                        trackMainAppEvent('toggle_used', 'show_favorites_only', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'toggle_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'show_favorites_only',
+                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -3987,6 +4072,17 @@
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track toggle usage
+                        trackMainAppEvent('toggle_used', 'show_drivers_only', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'toggle_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'show_drivers_only',
+                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -4019,6 +4115,17 @@
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track toggle usage
+                        trackMainAppEvent('toggle_used', 'show_riders_only', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'toggle_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'show_riders_only',
+                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -4041,6 +4148,17 @@
                         ridersPage = 0; // Reset riders page
                         debouncedRender();
                         updateClearFiltersVisibility();
+                        
+                        // Track toggle usage
+                        trackMainAppEvent('toggle_used', 'show_recent_posts', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'toggle_used', {
+                                'event_category': 'engagement',
+                                'event_label': 'show_recent_posts',
+                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
+                                'value': 1
+                            });
+                        }
                     });
                 }
             });
@@ -4135,6 +4253,16 @@
                 updateLocationFilter();
                 debouncedRender();
                 updateClearFiltersVisibility();
+                
+                // Track clear filters action
+                trackMainAppEvent('filters_cleared', 'all_filters', 1);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'filters_cleared', {
+                        'event_category': 'engagement',
+                        'event_label': 'all_filters',
+                        'value': 1
+                    });
+                }
                 
                 console.log('🗑️ All filters cleared');
             }
@@ -4486,6 +4614,23 @@
                     if (hasCancelledOnboarding) {
                         trackMainAppEvent('listing_completed_after_cancelled_onboarding', type);
                         localStorage.removeItem('bmir_onboarding_cancelled');
+                    }
+                    
+                    // Track new user listing completion goal
+                    const isNewUser = !localStorage.getItem('bmir_returning_user');
+                    if (isNewUser) {
+                        // Mark as returning user for future visits
+                        localStorage.setItem('bmir_returning_user', 'true');
+                        
+                        // Track new user listing completion
+                        trackMainAppEvent('new_user_listing_completed', type, 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'new_user_listing_completed', {
+                                'event_category': 'conversion',
+                                'event_label': type,
+                                'value': 1
+                            });
+                        }
                     }
                 }
                 
@@ -5439,6 +5584,20 @@
                 browseListingsBtn.addEventListener('click', () => {
                     console.log('🎯 Browse listings button clicked');
                     trackOnboardingEvent('browse_listings_selected');
+                    
+                    // Track onboarding cancellation
+                    const isNewUser = !localStorage.getItem('bmir_returning_user');
+                    if (isNewUser) {
+                        trackOnboardingEvent('new_user_onboarding_cancelled', 'browse_listings', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'new_user_onboarding_cancelled', {
+                                'event_category': 'engagement',
+                                'event_label': 'browse_listings',
+                                'value': 1
+                            });
+                        }
+                    }
+                    
                     // Mark that user cancelled onboarding
                     localStorage.setItem('bmir_onboarding_cancelled', 'true');
                     if (typeof window.UniversalOnboarding !== 'undefined') {
@@ -5494,6 +5653,20 @@
                 directionBackBtn.addEventListener('click', () => {
                     console.log('🎯 Direction back button clicked');
                     trackOnboardingEvent('back_button_clicked', 'direction_screen');
+                    
+                    // Track potential onboarding exit
+                    const isNewUser = !localStorage.getItem('bmir_returning_user');
+                    if (isNewUser) {
+                        trackOnboardingEvent('new_user_onboarding_exit_attempt', 'direction_back_button', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'new_user_onboarding_exit_attempt', {
+                                'event_category': 'engagement',
+                                'event_label': 'direction_back_button',
+                                'value': 1
+                            });
+                        }
+                    }
+                    
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.goBack();
                     } else {
@@ -5506,6 +5679,20 @@
                 formBackBtn.addEventListener('click', () => {
                     console.log('🎯 Form back button clicked');
                     trackOnboardingEvent('back_button_clicked', 'form_screen');
+                    
+                    // Track potential onboarding exit
+                    const isNewUser = !localStorage.getItem('bmir_returning_user');
+                    if (isNewUser) {
+                        trackOnboardingEvent('new_user_onboarding_exit_attempt', 'form_back_button', 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'new_user_onboarding_exit_attempt', {
+                                'event_category': 'engagement',
+                                'event_label': 'form_back_button',
+                                'value': 1
+                            });
+                        }
+                    }
+                    
                     if (typeof window.UniversalOnboarding !== 'undefined') {
                         window.UniversalOnboarding.goBack();
                     } else {
@@ -5521,6 +5708,23 @@
                     e.preventDefault();
                     console.log('🎯 Onboarding form submitted');
                     trackOnboardingEvent('form_submitted', window.UniversalOnboarding.userType + '_' + window.UniversalOnboarding.direction);
+                    
+                    // Track onboarding completion goal
+                    const isNewUser = !localStorage.getItem('bmir_returning_user');
+                    if (isNewUser) {
+                        // Mark as returning user for future visits
+                        localStorage.setItem('bmir_returning_user', 'true');
+                        
+                        // Track new user onboarding completion
+                        trackOnboardingEvent('new_user_onboarding_completed', window.UniversalOnboarding.userType + '_' + window.UniversalOnboarding.direction, 1);
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'new_user_onboarding_completed', {
+                                'event_category': 'conversion',
+                                'event_label': window.UniversalOnboarding.userType + '_' + window.UniversalOnboarding.direction,
+                                'value': 1
+                            });
+                        }
+                    }
                     
                     const formData = {
                         name: document.getElementById('onboarding-name').value.trim(),
