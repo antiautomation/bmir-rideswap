@@ -1588,27 +1588,33 @@ body {
 .tooltip {
   position: relative;
   display: inline-block;
+  z-index: 1;
 }
 
 .tooltiptext {
   visibility: hidden;
-  width: 200px;
+  min-width: 200px;
+  max-width: 300px;
+  width: auto;
   background: var(--gray-800);
   color: white;
   text-align: center;
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
-  position: absolute;
-  z-index: 99999;
+  position: absolute !important;
+  z-index: 999999 !important;
   bottom: 125%;
   left: 50%;
-  margin-left: -100px;
+  transform: translateX(-50%);
   font-size: var(--font-size-xs);
   opacity: 0;
   transition: opacity var(--transition-normal);
   box-shadow: var(--shadow-lg);
   pointer-events: none;
   white-space: nowrap;
+  overflow: visible;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .tooltip:hover .tooltiptext {
@@ -1616,39 +1622,30 @@ body {
   opacity: 1;
 }
 
-/* Ensure tooltips can escape any clipping */
-.tooltip {
-  position: relative;
-  display: inline-block;
-  z-index: 1;
-}
-
-.tooltiptext {
-  position: absolute !important;
-  z-index: 999999 !important;
-}
-
 @media (max-width: 768px) {
   .tooltiptext {
-    width: 160px;
+    min-width: 160px;
+    max-width: 200px;
+    width: auto;
     font-size: 11px;
     padding: var(--space-1) var(--space-2);
     left: 50%;
-    margin-left: -80px;
+    transform: translateX(-50%);
   }
 }
 
 @media (max-width: 640px) {
   .tooltiptext {
-    width: 140px;
+    min-width: 140px;
+    max-width: 180px;
+    width: auto;
     font-size: 10px;
     padding: var(--space-1);
     bottom: 125%;
     left: 50%;
-    margin-left: -70px;
+    transform: translateX(-50%);
     white-space: normal;
     line-height: 1.2;
-    max-width: 140px;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
@@ -1686,7 +1683,9 @@ footer a:hover {
 
 .belongings-tooltip .tooltiptext {
   visibility: hidden;
-  width: 250px;
+  min-width: 250px;
+  max-width: 350px;
+  width: auto;
   background: var(--gray-800);
   color: white;
   text-align: left;
@@ -1696,7 +1695,7 @@ footer a:hover {
   z-index: 999999 !important;
   bottom: 125%;
   left: 50%;
-  margin-left: -125px;
+  transform: translateX(-50%);
   font-size: var(--font-size-xs);
   opacity: 0;
   transition: opacity var(--transition-normal);
@@ -1704,6 +1703,9 @@ footer a:hover {
   box-shadow: var(--shadow-lg);
   pointer-events: none;
   white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .belongings-tooltip:hover .tooltiptext {
@@ -1713,8 +1715,10 @@ footer a:hover {
 
 @media (max-width: 768px) {
   .belongings-tooltip .tooltiptext {
-    width: 200px;
-    margin-left: -100px;
+    min-width: 200px;
+    max-width: 250px;
+    width: auto;
+    transform: translateX(-50%);
     font-size: 11px;
     padding: var(--space-2);
   }
@@ -1722,8 +1726,10 @@ footer a:hover {
 
 @media (max-width: 640px) {
   .belongings-tooltip .tooltiptext {
-    width: 180px;
-    margin-left: -90px;
+    min-width: 180px;
+    max-width: 220px;
+    width: auto;
+    transform: translateX(-50%);
     font-size: 10px;
     padding: var(--space-2);
     line-height: 1.3;
@@ -1738,7 +1744,9 @@ footer a:hover {
 
 .cargo-tooltip .tooltiptext {
   visibility: hidden;
-  width: 250px;
+  min-width: 250px;
+  max-width: 350px;
+  width: auto;
   background: var(--gray-800);
   color: white;
   text-align: left;
@@ -1748,7 +1756,7 @@ footer a:hover {
   z-index: 999999 !important;
   bottom: 125%;
   left: 50%;
-  margin-left: -125px;
+  transform: translateX(-50%);
   font-size: var(--font-size-xs);
   opacity: 0;
   transition: opacity var(--transition-normal);
@@ -1756,6 +1764,9 @@ footer a:hover {
   box-shadow: var(--shadow-lg);
   pointer-events: none;
   white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .cargo-tooltip:hover .tooltiptext {
@@ -1765,8 +1776,10 @@ footer a:hover {
 
 @media (max-width: 768px) {
   .cargo-tooltip .tooltiptext {
-    width: 200px;
-    margin-left: -100px;
+    min-width: 200px;
+    max-width: 250px;
+    width: auto;
+    transform: translateX(-50%);
     font-size: 11px;
     padding: var(--space-2);
   }
@@ -1774,8 +1787,10 @@ footer a:hover {
 
 @media (max-width: 640px) {
   .cargo-tooltip .tooltiptext {
-    width: 180px;
-    margin-left: -90px;
+    min-width: 180px;
+    max-width: 220px;
+    width: auto;
+    transform: translateX(-50%);
     font-size: 10px;
     padding: var(--space-2);
     line-height: 1.3;
