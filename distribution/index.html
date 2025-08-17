@@ -379,6 +379,16 @@
                         </div>
                     </div>
                     
+                <!-- User Type Toggle (Always Visible) -->
+                <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Show</label>
+                        <div id="user-type-toggle" class="user-type-toggle">
+                            <button id="show-all-btn" class="active">All</button>
+                            <button id="show-riders-btn">Riders</button>
+                            <button id="show-drivers-btn">Drivers</button>
+                        </div>
+                    </div>
+                    
                 <!-- Collapsible Filters Header -->
                 <details class="filters-collapsible">
                     <summary class="filters-summary">
@@ -440,22 +450,7 @@
                         </label>
                             </div>
                     
-                    <!-- Show Only Filter -->
-                            <div class="form-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-drivers-only-toggle">
-                            <span class="checkmark"></span>
-                            Show only drivers
-                        </label>
-                    </div>
-                    
-                            <div class="form-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-riders-only-toggle">
-                            <span class="checkmark"></span>
-                            Show only riders
-                        </label>
-                            </div>
+
                             
                             <!-- Show by Most Recent Toggle -->
                             <div class="form-group">
@@ -513,93 +508,99 @@
             <!-- Desktop Layout -->
             <div class="desktop-controls">
                 <div class="controls-grid">
-                    <!-- Direction Toggle -->
-                    <div class="form-group">
-                        <label class="form-label">Direction</label>
-                        <div id="direction-toggle-desktop" class="direction-toggle">
-                            <button id="to-brc-btn-desktop" class="active">To Burning Man</button>
-                            <button id="from-brc-btn-desktop">From Burning Man</button>
+                    <!-- Top Row: Direction, Show, and Actions -->
+                    <div class="desktop-top-row">
+                        <!-- Left side: Direction and Show toggles -->
+                        <div class="desktop-toggles-left">
+                            <!-- Direction Toggle -->
+                            <div class="form-group">
+                                <label class="form-label">Direction</label>
+                                <div id="direction-toggle-desktop" class="direction-toggle">
+                                    <button id="to-brc-btn-desktop" class="active">To Burning Man</button>
+                                    <button id="from-brc-btn-desktop">From Burning Man</button>
+                                </div>
+                            </div>
+                            
+                            <!-- User Type Toggle -->
+                            <div class="form-group">
+                                <label class="form-label">Show</label>
+                                <div id="user-type-toggle-desktop" class="user-type-toggle">
+                                    <button id="show-all-btn-desktop" class="active">All</button>
+                                    <button id="show-riders-btn-desktop">Riders</button>
+                                    <button id="show-drivers-btn-desktop">Drivers</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right side: Actions -->
+                        <div class="desktop-actions-right">
+                            <div class="form-group">
+                                <label class="form-label">Actions</label>
+                                <div class="button-container">
+                                    <button id="add-driver-btn-desktop" class="btn btn-primary">Offer a Ride</button>
+                                    <button id="add-rider-btn-desktop" class="btn btn-secondary">Need a Ride</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Filters Stacked -->
-                    <div class="form-group">
-                        <label class="form-label">Filters</label>
-                        <div class="filters-stacked">
-                            <select id="day-filter-desktop" class="form-select">
-                                <option value="all">All Days</option>
-                                <option value="Sunday">Sunday</option>
-                                <option value="Monday">Monday</option>
-                                <option value="Tuesday">Tuesday</option>
-                                <option value="Wednesday">Wednesday</option>
-                                <option value="Thursday">Thursday</option>
-                                <option value="Friday">Friday</option>
-                                <option value="Saturday">Saturday</option>
-                            </select>
-                            <select id="location-filter-desktop" class="form-select">
-                                <option value="all">All Locations</option>
-                            </select>
-                            <select id="belongings-filter-desktop" class="form-select">
-                                <option value="all">All Belongings</option>
-                                <option value="minimal">Minimal (backpack, small bag)</option>
-                                <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
-                                <option value="substantial">Substantial (bike, camping gear, multiple bags)</option>
-                                <option value="extensive">Extensive (multiple bikes, large camp items)</option>
-                            </select>
+                    <!-- Second Row: Dropdown Filters -->
+                    <div class="desktop-filters-row">
+                        <div class="form-group">
+                            <label class="form-label">Filters</label>
+                            <div class="filters-stacked">
+                                <select id="day-filter-desktop" class="form-select">
+                                    <option value="all">All Days</option>
+                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                                <select id="location-filter-desktop" class="form-select">
+                                    <option value="all">All Locations</option>
+                                </select>
+                                <select id="belongings-filter-desktop" class="form-select">
+                                    <option value="all">All Belongings</option>
+                                    <option value="minimal">Minimal (backpack, small bag)</option>
+                                    <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
+                                    <option value="substantial">Substantial (bike, camping gear, multiple bags)</option>
+                                    <option value="extensive">Extensive (multiple bikes, large camp items)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Buttons -->
-                    <div class="form-group">
-                        <label class="form-label">Actions</label>
-                        <div class="button-container">
-                            <button id="add-driver-btn-desktop" class="btn btn-primary">Offer a Ride</button>
-                            <button id="add-rider-btn-desktop" class="btn btn-secondary">Need a Ride</button>
+                    <!-- Third Row: Filter Checkboxes -->
+                    <div class="desktop-checkboxes-row">
+                        <!-- Show Expired Entries Toggle -->
+                        <div class="form-group desktop-checkbox-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-expired-toggle-desktop">
+                                <span class="checkmark"></span>
+                                Show expired entries
+                            </label>
                         </div>
-                    </div>
-                    
-                    <!-- Show Expired Entries Toggle -->
-                    <div class="form-group desktop-checkbox-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-expired-toggle-desktop">
-                            <span class="checkmark"></span>
-                            Show expired entries
-                        </label>
-                    </div>
-                    
-                    <!-- Show Starred Only Toggle -->
-                    <div class="form-group desktop-checkbox-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-favorites-toggle-desktop">
-                            <span class="checkmark"></span>
-                            Show Starred ⭐ Only
-                        </label>
-                    </div>
-                    
-                    <!-- Show Only Filter -->
-                    <div class="form-group desktop-checkbox-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-drivers-only-toggle-desktop">
-                            <span class="checkmark"></span>
-                            Show only drivers
-                        </label>
-                    </div>
-                    
-                    <div class="form-group desktop-checkbox-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-riders-only-toggle-desktop">
-                            <span class="checkmark"></span>
-                            Show only riders
-                        </label>
-                    </div>
-                    
-                    <!-- Show by Most Recent Toggle (Desktop) -->
-                    <div class="form-group desktop-checkbox-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="show-recent-posts-toggle-desktop">
-                            <span class="checkmark"></span>
-                            Show by most recent
-                        </label>
+                        
+                        <!-- Show Starred Only Toggle -->
+                        <div class="form-group desktop-checkbox-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-favorites-toggle-desktop">
+                                <span class="checkmark"></span>
+                                Show Starred ⭐ Only
+                            </label>
+                        </div>
+                        
+                        <!-- Show by Most Recent Toggle (Desktop) -->
+                        <div class="form-group desktop-checkbox-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-recent-posts-toggle-desktop">
+                                <span class="checkmark"></span>
+                                Show by most recent
+                            </label>
+                        </div>
                     </div>
                     
                     <!-- Clear Filters Button (Desktop) -->
@@ -609,30 +610,34 @@
                         </button>
                     </div>
                     
-                    <!-- God Mode Filters (Desktop) -->
-                    <div id="god-mode-filters-desktop" style="display: none;">
-                        <div class="form-group" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
-                            <label class="form-label" style="color: #dc2626; font-weight: 600;">🛡️ God Mode Filters</label>
-                            
-                            <!-- Show Deleted Entries Toggle -->
-                            <div class="form-group desktop-checkbox-group" style="margin-top: 0.5rem;">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-deleted-toggle-desktop">
-                                    <span class="checkmark"></span>
-                                    Show deleted entries
-                                </label>
-                            </div>
-                            
-                            <!-- Show Hidden Entries Toggle -->
-                            <div class="form-group desktop-checkbox-group" style="margin-top: 0.5rem;">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-hidden-toggle-desktop">
-                                    <span class="checkmark"></span>
-                                    Show hidden entries
-                                </label>
+                    <!-- God Mode Filters (Desktop) - Column 3 of Row 2 -->
+                    <div class="desktop-god-mode-row">
+                        <!-- God Mode Filters (Desktop) -->
+                        <div id="god-mode-filters-desktop" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" style="color: #dc2626; font-weight: 600;">🛡️ God Mode Filters</label>
+                                
+                                <!-- Show Deleted Entries Toggle -->
+                                <div class="form-group desktop-checkbox-group" style="margin-top: 0.5rem;">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" id="show-deleted-toggle-desktop">
+                                        <span class="checkmark"></span>
+                                        Show deleted entries
+                                    </label>
+                                </div>
+                                
+                                <!-- Show Hidden Entries Toggle -->
+                                <div class="form-group desktop-checkbox-group" style="margin-top: 0.5rem;">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" id="show-hidden-toggle-desktop">
+                                        <span class="checkmark"></span>
+                                        Show hidden entries
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
                     
 
                 </div>
@@ -1472,6 +1477,35 @@
         const fromBrcBtn = document.getElementById('from-brc-btn');
         const toBrcBtnDesktop = document.getElementById('to-brc-btn-desktop');
         const fromBrcBtnDesktop = document.getElementById('from-brc-btn-desktop');
+        
+        // User Type Toggle Elements
+        const userTypeToggle = document.getElementById('user-type-toggle');
+        const userTypeToggleDesktop = document.getElementById('user-type-toggle-desktop');
+        const showAllBtn = document.getElementById('show-all-btn');
+        const showRidersBtn = document.getElementById('show-riders-btn');
+        const showDriversBtn = document.getElementById('show-drivers-btn');
+        const showAllBtnDesktop = document.getElementById('show-all-btn-desktop');
+        const showRidersBtnDesktop = document.getElementById('show-riders-btn-desktop');
+        const showDriversBtnDesktop = document.getElementById('show-drivers-btn-desktop');
+        
+        // Debug logging for toggle elements
+        console.log('🔍 Toggle elements found:', {
+            userTypeToggle: !!userTypeToggle,
+            userTypeToggleDesktop: !!userTypeToggleDesktop,
+            showAllBtn: !!showAllBtn,
+            showRidersBtn: !!showRidersBtn,
+            showDriversBtn: !!showDriversBtn,
+            showAllBtnDesktop: !!showAllBtnDesktop,
+            showRidersBtnDesktop: !!showRidersBtnDesktop,
+            showDriversBtnDesktop: !!showDriversBtnDesktop
+        });
+        
+        // Additional debugging
+        if (!userTypeToggle) console.warn('⚠️ userTypeToggle not found');
+        if (!userTypeToggleDesktop) console.warn('⚠️ userTypeToggleDesktop not found');
+        if (!showAllBtn) console.warn('⚠️ showAllBtn not found');
+        if (!showRidersBtn) console.warn('⚠️ showRidersBtn not found');
+        if (!showDriversBtn) console.warn('⚠️ showDriversBtn not found');
         const dayFilter = document.getElementById('day-filter');
         const dayFilterDesktop = document.getElementById('day-filter-desktop');
         const locationFilter = document.getElementById('location-filter');
@@ -2244,34 +2278,57 @@
             if (savedShowRidersOnly === 'true') {
                 showRidersOnly = true;
                 showDriversOnly = false; // Ensure mutual exclusion
-                // Update checkboxes to match saved state
-                const showRidersOnlyToggle = document.getElementById('show-riders-only-toggle');
-                const showRidersOnlyToggleDesktop = document.getElementById('show-riders-only-toggle-desktop');
-                if (showRidersOnlyToggle) showRidersOnlyToggle.checked = true;
-                if (showRidersOnlyToggleDesktop) showRidersOnlyToggleDesktop.checked = true;
                 
-                // Ensure drivers only is unchecked
-                const showDriversOnlyToggle = document.getElementById('show-drivers-only-toggle');
-                const showDriversOnlyToggleDesktop = document.getElementById('show-drivers-only-toggle-desktop');
-                if (showDriversOnlyToggle) showDriversOnlyToggle.checked = false;
-                if (showDriversOnlyToggleDesktop) showDriversOnlyToggleDesktop.checked = false;
+                // Update new toggle UI to match saved state (with null checks)
+                try {
+                    if (showAllBtn) showAllBtn.classList.remove('active');
+                    if (showRidersBtn) showRidersBtn.classList.add('active');
+                    if (showDriversBtn) showDriversBtn.classList.remove('active');
+                    if (userTypeToggle) userTypeToggle.classList.add('show-riders');
+                    
+                    if (showAllBtnDesktop) showAllBtnDesktop.classList.remove('active');
+                    if (showRidersBtnDesktop) showRidersBtnDesktop.classList.add('active');
+                    if (showDriversBtnDesktop) showDriversBtnDesktop.classList.remove('active');
+                    if (userTypeToggleDesktop) userTypeToggleDesktop.classList.add('show-riders');
+                } catch (error) {
+                    console.warn('⚠️ Error updating toggle UI for riders:', error);
+                }
                 
                 // Clear the conflicting localStorage entry
                 localStorage.removeItem('bmir_show_drivers_only');
             } else if (savedShowDriversOnly === 'true') {
                 showDriversOnly = true;
                 showRidersOnly = false; // Ensure mutual exclusion
-                // Update checkboxes to match saved state
-                const showDriversOnlyToggle = document.getElementById('show-drivers-only-toggle');
-                const showDriversOnlyToggleDesktop = document.getElementById('show-drivers-only-toggle-desktop');
-                if (showDriversOnlyToggle) showDriversOnlyToggle.checked = true;
-                if (showDriversOnlyToggleDesktop) showDriversOnlyToggleDesktop.checked = true;
                 
-                // Ensure riders only is unchecked
-                const showRidersOnlyToggle = document.getElementById('show-riders-only-toggle');
-                const showRidersOnlyToggleDesktop = document.getElementById('show-riders-only-toggle-desktop');
-                if (showRidersOnlyToggle) showRidersOnlyToggle.checked = false;
-                if (showRidersOnlyToggleDesktop) showRidersOnlyToggleDesktop.checked = false;
+                // Update new toggle UI to match saved state (with null checks)
+                try {
+                    if (showAllBtn) showAllBtn.classList.remove('active');
+                    if (showRidersBtn) showRidersBtn.classList.remove('active');
+                    if (showDriversBtn) showDriversBtn.classList.add('active');
+                    if (userTypeToggle) userTypeToggle.classList.add('show-drivers');
+                    
+                    if (showAllBtnDesktop) showAllBtnDesktop.classList.remove('active');
+                    if (showRidersBtnDesktop) showRidersBtnDesktop.classList.remove('active');
+                    if (showDriversBtnDesktop) showDriversBtnDesktop.classList.add('active');
+                    if (userTypeToggleDesktop) userTypeToggleDesktop.classList.add('show-drivers');
+                } catch (error) {
+                    console.warn('⚠️ Error updating toggle UI for drivers:', error);
+                }
+            } else {
+                // Default to "All" - ensure UI matches (with null checks)
+                try {
+                    if (showAllBtn) showAllBtn.classList.add('active');
+                    if (showRidersBtn) showRidersBtn.classList.remove('active');
+                    if (showDriversBtn) showDriversBtn.classList.remove('active');
+                    if (userTypeToggle) userTypeToggle.classList.remove('show-riders', 'show-drivers');
+                    
+                    if (showAllBtnDesktop) showAllBtnDesktop.classList.add('active');
+                    if (showRidersBtnDesktop) showRidersBtnDesktop.classList.remove('active');
+                    if (showDriversBtnDesktop) showDriversBtnDesktop.classList.remove('active');
+                    if (userTypeToggleDesktop) userTypeToggleDesktop.classList.remove('show-riders', 'show-drivers');
+                } catch (error) {
+                    console.warn('⚠️ Error updating toggle UI for default state:', error);
+                }
             }
             
             const savedShowRecentPosts = localStorage.getItem('bmir_show_recent_posts');
@@ -3389,6 +3446,17 @@
             // Render with pagination based on filters
             const driversSection = document.getElementById('drivers-section');
             const ridersSection = document.getElementById('riders-section');
+            const mainContent = document.querySelector('.main-content');
+            
+            // Manage CSS classes for single-column layout
+            if (mainContent) {
+                mainContent.classList.remove('drivers-only', 'riders-only');
+                if (showDriversOnly) {
+                    mainContent.classList.add('drivers-only');
+                } else if (showRidersOnly) {
+                    mainContent.classList.add('riders-only');
+                }
+            }
             
             if (!showRidersOnly) {
                 renderPaginatedList(driversList, filteredDrivers, 'driver');
@@ -3872,6 +3940,98 @@
                 });
             }
 
+            // User Type Toggle (Mobile)
+            if (userTypeToggle) {
+                userTypeToggle.addEventListener('click', (e) => {
+                    console.log('🎯 User type toggle clicked:', e.target.id, e.target.tagName);
+                    if (e.target.tagName === 'BUTTON') {
+                        let newUserType = 'all';
+                        if (e.target.id === 'show-riders-btn') {
+                            newUserType = 'riders';
+                        } else if (e.target.id === 'show-drivers-btn') {
+                            newUserType = 'drivers';
+                        }
+                        
+                        console.log('🔄 User type changing to:', newUserType);
+                        
+                        // Update state
+                        showDriversOnly = newUserType === 'drivers';
+                        showRidersOnly = newUserType === 'riders';
+                        
+                        // Update UI
+                        showAllBtn.classList.toggle('active', newUserType === 'all');
+                        showRidersBtn.classList.toggle('active', newUserType === 'riders');
+                        showDriversBtn.classList.toggle('active', newUserType === 'drivers');
+                        userTypeToggle.classList.toggle('show-riders', newUserType === 'riders');
+                        userTypeToggle.classList.toggle('show-drivers', newUserType === 'drivers');
+                        
+                        // Save to localStorage
+                        localStorage.setItem('bmir_show_drivers_only', showDriversOnly.toString());
+                        localStorage.setItem('bmir_show_riders_only', showRidersOnly.toString());
+                        
+                        // Track user type change
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'user_type_changed', {
+                                'event_category': 'navigation',
+                                'event_label': newUserType,
+                                'value': 1
+                            });
+                        }
+                        
+                        // Clear caches and reload data
+                        clearCaches();
+                        debouncedRender();
+                        updateClearFiltersVisibility();
+                    }
+                });
+            }
+
+            // User Type Toggle (Desktop)
+            if (userTypeToggleDesktop) {
+                userTypeToggleDesktop.addEventListener('click', (e) => {
+                    console.log('🎯 User type toggle (desktop) clicked:', e.target.id, e.target.tagName);
+                    if (e.target.tagName === 'BUTTON') {
+                        let newUserType = 'all';
+                        if (e.target.id === 'show-riders-btn-desktop') {
+                            newUserType = 'riders';
+                        } else if (e.target.id === 'show-drivers-btn-desktop') {
+                            newUserType = 'drivers';
+                        }
+                        
+                        console.log('🔄 User type changing to:', newUserType);
+                        
+                        // Update state
+                        showDriversOnly = newUserType === 'drivers';
+                        showRidersOnly = newUserType === 'riders';
+                        
+                        // Update UI
+                        showAllBtnDesktop.classList.toggle('active', newUserType === 'all');
+                        showRidersBtnDesktop.classList.toggle('active', newUserType === 'riders');
+                        showDriversBtnDesktop.classList.toggle('active', newUserType === 'drivers');
+                        userTypeToggleDesktop.classList.toggle('show-riders', newUserType === 'riders');
+                        userTypeToggleDesktop.classList.toggle('show-drivers', newUserType === 'drivers');
+                        
+                        // Save to localStorage
+                        localStorage.setItem('bmir_show_drivers_only', showDriversOnly.toString());
+                        localStorage.setItem('bmir_show_riders_only', showRidersOnly.toString());
+                        
+                        // Track user type change
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'user_type_changed', {
+                                'event_category': 'navigation',
+                                'event_label': newUserType,
+                                'value': 1
+                            });
+                        }
+                        
+                        // Clear caches and reload data
+                        clearCaches();
+                        debouncedRender();
+                        updateClearFiltersVisibility();
+                    }
+                });
+            }
+
             // Day Filter
             [dayFilter, dayFilterDesktop].forEach(filter => {
                 if (filter) {
@@ -4032,92 +4192,6 @@
                 }
             });
 
-            // Show Drivers Only Toggle
-            const showDriversOnlyToggle = document.getElementById('show-drivers-only-toggle');
-            const showDriversOnlyToggleDesktop = document.getElementById('show-drivers-only-toggle-desktop');
-            
-            [showDriversOnlyToggle, showDriversOnlyToggleDesktop].forEach(toggle => {
-                if (toggle) {
-                    toggle.addEventListener('change', () => {
-                        showDriversOnly = toggle.checked;
-                        // If drivers only is checked, uncheck riders only
-                        if (showDriversOnly && showRidersOnly) {
-                            showRidersOnly = false;
-                            const showRidersOnlyToggle = document.getElementById('show-riders-only-toggle');
-                            const showRidersOnlyToggleDesktop = document.getElementById('show-riders-only-toggle-desktop');
-                            if (showRidersOnlyToggle) showRidersOnlyToggle.checked = false;
-                            if (showRidersOnlyToggleDesktop) showRidersOnlyToggleDesktop.checked = false;
-                            // Clear riders only from localStorage
-                            localStorage.removeItem('bmir_show_riders_only');
-                        }
-                        // Sync both checkboxes
-                        if (showDriversOnlyToggle) showDriversOnlyToggle.checked = showDriversOnly;
-                        if (showDriversOnlyToggleDesktop) showDriversOnlyToggleDesktop.checked = showDriversOnly;
-                        // Save state to localStorage
-                        localStorage.setItem('bmir_show_drivers_only', showDriversOnly.toString());
-                        currentPage = 0; // Reset to first page
-                        driversPage = 0; // Reset drivers page
-                        ridersPage = 0; // Reset riders page
-                        debouncedRender();
-                        updateClearFiltersVisibility();
-                        
-                        // Track toggle usage
-                        trackMainAppEvent('toggle_used', 'show_drivers_only', 1);
-                        if (typeof gtag !== 'undefined') {
-                            gtag('event', 'toggle_used', {
-                                'event_category': 'engagement',
-                                'event_label': 'show_drivers_only',
-                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
-                                'value': 1
-                            });
-                        }
-                    });
-                }
-            });
-
-            // Show Riders Only Toggle
-            const showRidersOnlyToggle = document.getElementById('show-riders-only-toggle');
-            const showRidersOnlyToggleDesktop = document.getElementById('show-riders-only-toggle-desktop');
-            
-            [showRidersOnlyToggle, showRidersOnlyToggleDesktop].forEach(toggle => {
-                if (toggle) {
-                    toggle.addEventListener('change', () => {
-                        showRidersOnly = toggle.checked;
-                        // If riders only is checked, uncheck drivers only
-                        if (showRidersOnly && showDriversOnly) {
-                            showDriversOnly = false;
-                            const showDriversOnlyToggle = document.getElementById('show-drivers-only-toggle');
-                            const showDriversOnlyToggleDesktop = document.getElementById('show-drivers-only-toggle-desktop');
-                            if (showDriversOnlyToggle) showDriversOnlyToggle.checked = false;
-                            if (showDriversOnlyToggleDesktop) showDriversOnlyToggleDesktop.checked = false;
-                            // Clear drivers only from localStorage
-                            localStorage.removeItem('bmir_show_drivers_only');
-                        }
-                        // Sync both checkboxes
-                        if (showRidersOnlyToggle) showRidersOnlyToggle.checked = showRidersOnly;
-                        if (showRidersOnlyToggleDesktop) showRidersOnlyToggleDesktop.checked = showRidersOnly;
-                        // Save state to localStorage
-                        localStorage.setItem('bmir_show_riders_only', showRidersOnly.toString());
-                        currentPage = 0; // Reset to first page
-                        driversPage = 0; // Reset drivers page
-                        ridersPage = 0; // Reset riders page
-                        debouncedRender();
-                        updateClearFiltersVisibility();
-                        
-                        // Track toggle usage
-                        trackMainAppEvent('toggle_used', 'show_riders_only', 1);
-                        if (typeof gtag !== 'undefined') {
-                            gtag('event', 'toggle_used', {
-                                'event_category': 'engagement',
-                                'event_label': 'show_riders_only',
-                                'custom_parameter_1': toggle.checked ? 'enabled' : 'disabled',
-                                'value': 1
-                            });
-                        }
-                    });
-                }
-            });
-
             // Show by Most Recent Toggle
             const showRecentPostsToggle = document.getElementById('show-recent-posts-toggle');
             const showRecentPostsToggleDesktop = document.getElementById('show-recent-posts-toggle-desktop');
@@ -4193,8 +4267,6 @@
                 const belongingsFilters = [belongingsFilter, belongingsFilterDesktop];
                 const showExpiredToggles = [showExpiredToggle, showExpiredToggleDesktop];
                 const showFavoritesToggles = [showFavoritesToggle, showFavoritesToggleDesktop];
-                const showDriversOnlyToggles = [showDriversOnlyToggle, showDriversOnlyToggleDesktop];
-                const showRidersOnlyToggles = [showRidersOnlyToggle, showRidersOnlyToggleDesktop];
                 const showRecentPostsToggles = [showRecentPostsToggle, showRecentPostsToggleDesktop];
                 
                 // Reset select elements
@@ -4215,15 +4287,20 @@
                 showFavoritesToggles.forEach(toggle => {
                     if (toggle) toggle.checked = false;
                 });
-                showDriversOnlyToggles.forEach(toggle => {
-                    if (toggle) toggle.checked = false;
-                });
-                showRidersOnlyToggles.forEach(toggle => {
-                    if (toggle) toggle.checked = false;
-                });
                 showRecentPostsToggles.forEach(toggle => {
                     if (toggle) toggle.checked = false;
                 });
+                
+                // Reset user type toggle to "All"
+                if (showAllBtn) showAllBtn.classList.add('active');
+                if (showRidersBtn) showRidersBtn.classList.remove('active');
+                if (showDriversBtn) showDriversBtn.classList.remove('active');
+                if (userTypeToggle) userTypeToggle.classList.remove('show-riders', 'show-drivers');
+                
+                if (showAllBtnDesktop) showAllBtnDesktop.classList.add('active');
+                if (showRidersBtnDesktop) showRidersBtnDesktop.classList.remove('active');
+                if (showDriversBtnDesktop) showDriversBtnDesktop.classList.remove('active');
+                if (userTypeToggleDesktop) userTypeToggleDesktop.classList.remove('show-riders', 'show-drivers');
                 
                 // Clear localStorage
                 localStorage.removeItem('bmir_show_expired');
