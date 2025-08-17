@@ -100,8 +100,11 @@
         .container{max-width:1200px;margin:0 auto;padding:0 var(--space-4);position:relative;z-index:1}
         .header{text-align:center;margin-bottom:var(--space-8);padding-top:var(--space-8);position:relative}
         .status-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);color:white;padding:var(--space-3) var(--space-4);text-align:center;font-size:.875rem;font-weight:600;z-index:50;box-shadow:var(--shadow-lg);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);animation:statusPulse 3s ease-in-out infinite;padding-top:max(var(--space-3),env(safe-area-inset-top));padding-left:max(var(--space-4),env(safe-area-inset-left));padding-right:max(var(--space-4),env(safe-area-inset-right));display:flex;align-items:center;justify-content:center;gap:var(--space-2)}
-        .status-bar::before{content:'';width:8px;height:8px;background:white;border-radius:50%;animation:pulse 2s infinite}
+        /* Removed ::before pseudo-element to avoid duplicate dots */
         .status-bar.offline{background:linear-gradient(135deg, var(--accent-yellow) 0%, #d97706 100%);animation:none}
+        .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px;animation:pulse 2s infinite}
+        .status-dot.online-dot{background:white}
+        .status-dot.offline-dot{background:white}
         .loading-spinner{display:inline-block;width:2rem;height:2rem;border:2px solid var(--gray-200);border-top:2px solid var(--primary-orange);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.8}}
@@ -286,7 +289,7 @@
 <body>
     <!-- Status Bar -->
     <div id="status-bar" class="status-bar">
-        🟢 Live Updating App, No Refresh Required 🟢
+        <span class="status-dot online-dot"></span> Live Updating App, No Refresh Required <span class="status-dot online-dot"></span>
     </div>
     
     <!-- PWA Install Prompt -->
@@ -5367,11 +5370,11 @@
             const showOfflineMode = statusBar.dataset.showLastUpdate !== 'true';
             
             if (showOfflineMode) {
-                statusBar.innerHTML = '📡 Offline Mode, Do Not Refresh! 📡';
+                statusBar.innerHTML = '<span class="status-dot offline-dot"></span> Offline Mode, Do Not Refresh! <span class="status-dot offline-dot"></span>';
                 statusBar.dataset.showLastUpdate = 'true';
             } else {
                 const lastUpdate = lastUpdateTime ? formatLastUpdateTime(lastUpdateTime) : 'Unknown';
-                statusBar.innerHTML = `📡 Last updated ${lastUpdate} 📡`;
+                statusBar.innerHTML = `<span class="status-dot offline-dot"></span> Last updated ${lastUpdate} <span class="status-dot offline-dot"></span>`;
                 statusBar.dataset.showLastUpdate = 'false';
             }
         }
@@ -5401,7 +5404,7 @@
                 if (statusBar) {
                     statusBar.className = 'status-bar';
                     stopOfflineStatusAlternation();
-                    statusBar.innerHTML = '🟢 Live Updating App, No Refresh Required 🟢';
+                    statusBar.innerHTML = '<span class="status-dot online-dot"></span> Live Updating App, No Refresh Required <span class="status-dot online-dot"></span>';
                 }
             }
         }
@@ -5410,7 +5413,7 @@
             if (statusBar) {
                 statusBar.className = 'status-bar';
                 stopOfflineStatusAlternation();
-                statusBar.innerHTML = '🟢 Live Updating App, No Refresh Required 🟢';
+                statusBar.innerHTML = '<span class="status-dot online-dot"></span> Live Updating App, No Refresh Required <span class="status-dot online-dot"></span>';
             }
         });
         
@@ -5432,7 +5435,7 @@
                 if (statusBar) {
                     statusBar.innerHTML = '🔄 Refreshing data...';
                     setTimeout(() => {
-                        statusBar.innerHTML = '🟢 Live Updating App, No Refresh Required 🟢';
+                        statusBar.innerHTML = '<span class="status-dot online-dot"></span> Live Updating App, No Refresh Required <span class="status-dot online-dot"></span>';
                     }, 1000);
                 }
             }
