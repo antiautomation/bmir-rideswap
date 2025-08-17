@@ -5157,8 +5157,23 @@
                     
                     activeUsersElement.textContent = activeUsers;
                     console.log('✅ Updated active users (Firestore):', activeUsers);
+                    
+                    // Session listener success indicates good Firebase connectivity
+                    if (!realConnectivityStatus) {
+                        console.log('🌐 Firebase connectivity confirmed via session listener');
+                        realConnectivityStatus = true;
+                        updateStatusBar();
+                    }
                 }, (error) => {
                     console.log("Firestore session listener failed, falling back to localStorage:", error);
+                    
+                    // Session listener failure indicates Firebase connectivity issues
+                    if (realConnectivityStatus) {
+                        console.log('📴 Firebase connectivity lost via session listener');
+                        realConnectivityStatus = false;
+                        updateStatusBar();
+                    }
+                    
                     setupLocalStorageTracking();
                 });
                 
@@ -5353,6 +5368,8 @@
         
         // --- Connection Status Support ---
         let offlineStatusInterval = null;
+        let realConnectivityStatus = true; // Track real Firebase connectivity
+        let connectivityCheckTimeout = null;
         
         function formatLastUpdateTime(timestamp) {
             if (!timestamp) return '';
@@ -5394,34 +5411,86 @@
             }
         }
         
-        function checkConnectivity() {
-            if (!navigator.onLine) {
-                if (statusBar) {
-                    statusBar.className = 'status-bar offline';
-                    startOfflineStatusAlternation();
-                }
-            } else {
-                if (statusBar) {
-                    statusBar.className = 'status-bar';
-                    stopOfflineStatusAlternation();
-                    statusBar.innerHTML = '<span class="status-dot online-dot"></span> Live Updating App, No Refresh Required <span class="status-dot online-dot"></span>';
-                }
-            }
+        function checkRealConnectivity() {
+            // Test Firebase connectivity by attempting a simple operation
+            const sessionsCollection = collection(window.db, `artifacts/${window.APP_CONFIG?.appId || 'bmir-rideshare'}/public/data/sessions`);
+            
+            // Use a timeout to detect slow/unresponsive connections
+            const timeoutPromise = new Promise((_, reject) => {
+                connectivityCheckTimeout = setTimeout(() => {
+                    reject(new Error('Firebase connectivity timeout'));
+                }, 5000); // 5 second timeout
+            });
+            
+            // Test with a simple query
+            const connectivityPromise = getDocs(query(sessionsCollection, limit(1)));
+            
+            Promise.race([connectivityPromise, timeoutPromise])
+                .then(() => {
+                    // Firebase is responsive
+                    if (connectivityCheckTimeout) {
+                        clearTimeout(connectivityCheckTimeout);
+                        connectivityCheckTimeout = null;
+                    }
+                    
+                    if (!realConnectivityStatus) {
+                        console.log('🌐 Real connectivity restored');
+                        realConnectivityStatus = true;
+                        updateStatusBar();
+                    }
+                })
+                .catch((error) => {
+                    // Firebase is not responsive
+                    if (connectivityCheckTimeout) {
+                        clearTimeout(connectivityCheckTimeout);
+                        connectivityCheckTimeout = null;
+                    }
+                    
+                    if (realConnectivityStatus) {
+                        console.log('📴 Real connectivity lost:', error.message);
+                        realConnectivityStatus = false;
+                        updateStatusBar();
+                    }
+                });
         }
         
-        window.addEventListener('online', () => {
-            if (statusBar) {
+        function updateStatusBar() {
+            if (!statusBar) return;
+            
+            // Consider offline if either navigator.onLine is false OR real connectivity is lost
+            const isOffline = !navigator.onLine || !realConnectivityStatus;
+            
+            if (isOffline) {
+                statusBar.className = 'status-bar offline';
+                startOfflineStatusAlternation();
+            } else {
                 statusBar.className = 'status-bar';
                 stopOfflineStatusAlternation();
                 statusBar.innerHTML = '<span class="status-dot online-dot"></span> Live Updating App, No Refresh Required <span class="status-dot online-dot"></span>';
             }
+        }
+        
+        function checkConnectivity() {
+            // Check both navigator.onLine and real Firebase connectivity
+            if (!navigator.onLine) {
+                realConnectivityStatus = false;
+                updateStatusBar();
+            } else {
+                // If navigator.onLine is true, test real connectivity
+                checkRealConnectivity();
+            }
+        }
+        
+        window.addEventListener('online', () => {
+            console.log('🌐 Browser reports online - testing real connectivity...');
+            // Test real connectivity when browser reports online
+            checkRealConnectivity();
         });
         
         window.addEventListener('offline', () => {
-            if (statusBar) {
-                statusBar.className = 'status-bar offline';
-                startOfflineStatusAlternation();
-            }
+            console.log('📴 Browser reports offline');
+            realConnectivityStatus = false;
+            updateStatusBar();
         });
         
         // --- Visibility Change Handler ---
@@ -5459,6 +5528,17 @@
             setInterval(() => {
                 renderFilteredLists();
             }, 2 * 60 * 1000); // 2 minutes
+        }
+        
+        // --- Periodic connectivity monitoring ---
+        function setupConnectivityMonitoring() {
+            // Check real connectivity every 30 seconds if navigator.onLine is true
+            setInterval(() => {
+                if (navigator.onLine && realConnectivityStatus) {
+                    // Only check if we think we're online to avoid unnecessary requests
+                    checkRealConnectivity();
+                }
+            }, 30 * 1000); // 30 seconds
         }
 
         // --- Easter Egg ---
@@ -5929,6 +6009,7 @@
         initialize();
         checkConnectivity();
         setupAutoRefresh();
+        setupConnectivityMonitoring();
         setupEasterEgg();
         setupInfoCardsCollapsible();
 
