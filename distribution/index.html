@@ -437,7 +437,7 @@
                         <label class="checkbox-container">
                             <input type="checkbox" id="show-expired-toggle">
                             <span class="checkmark"></span>
-                            Show expired entries
+                            ⏰ Show Expired Entries
                         </label>
                     </div>
                     
@@ -580,7 +580,7 @@
                             <label class="checkbox-container">
                                 <input type="checkbox" id="show-expired-toggle-desktop">
                                 <span class="checkmark"></span>
-                                Show expired entries
+                                ⏰ Show Expired Entries
                             </label>
                         </div>
                         
@@ -1293,13 +1293,15 @@
         let currentDayFilter = 'all';
         let currentLocationFilter = 'all';
         let currentBelongingsFilter = 'all';
-        let showExpiredEntries = false; // New state for expired entries toggle
+        let showExpiredEntries = false; // State for showing entries up to 7 days past expiration
         let showFavoritesOnly = false; // New state for favorites filter
         let showDriversOnly = false; // New state for drivers only filter
         let showRidersOnly = false; // New state for riders only filter
         let showRecentPostsOnly = false; // New state for most recent sorting
         let allDrivers = [];
         let allRiders = [];
+        let originalDrivers = []; // Store original data for filtering
+        let originalRiders = []; // Store original data for filtering
         let driversUnsubscribe = null;
         let ridersUnsubscribe = null;
         let entryToDelete = null;
@@ -2597,8 +2599,10 @@
                             
                             // Update the appropriate array
                             if (type === 'Drivers') {
+                                originalDrivers = data; // Store original data
                                 allDrivers = data;
                             } else if (type === 'Riders') {
+                                originalRiders = data; // Store original data
                                 allRiders = data;
                             }
                             
@@ -2613,8 +2617,10 @@
                             if (cachedData) {
                                 console.log(`📦 Using cached ${type} data (${cachedData.length} items)`);
                                 if (type === 'Drivers') {
+                                    originalDrivers = cachedData; // Store original data
                                     allDrivers = cachedData;
                                 } else if (type === 'Riders') {
+                                    originalRiders = cachedData; // Store original data
                                     allRiders = cachedData;
                                 }
                                 renderFilteredLists();
@@ -2638,8 +2644,10 @@
                                 if (offlineData) {
                                     console.log(`📦 Using offline ${type} data as fallback (${offlineData.length} items)`);
                                     if (type === 'Drivers') {
+                                        originalDrivers = offlineData; // Store original data
                                         allDrivers = offlineData;
                                     } else if (type === 'Riders') {
+                                        originalRiders = offlineData; // Store original data
                                         allRiders = offlineData;
                                     }
                                     renderFilteredLists();
@@ -3023,78 +3031,9 @@
             }
         };
         
-        // Clean up expired cache every 10 minutes
-        setInterval(() => QueryOptimizer.clearExpiredCache(), 10 * 60 * 1000);
 
-        // Load expired entries on demand with enhanced error handling
-        async function loadExpiredEntries(collectionType) {
-            console.log(`📅 Loading expired ${collectionType} entries...`);
-            
-            const cacheKey = `expired_${collectionType}`;
-            const cachedData = QueryOptimizer.getCachedData(cacheKey);
-            
-            if (cachedData) {
-                console.log(`📦 Using cached expired ${collectionType} data (${cachedData.length} items)`);
-                mergeExpiredEntries(collectionType, cachedData);
-                return;
-            }
-            
-            const collectionPath = `artifacts/${appId}/public/data/${collectionType}`;
-            const cutoffDate = new Date();
-            cutoffDate.setTime(cutoffDate.getTime() - (12 * 60 * 60 * 1000)); // 12 hours ago
-            
-            const expiredQuery = query(
-                collection(window.db, collectionPath),
-                where('deleted', '!=', true),
-                where('timestamp', '<=', cutoffDate),
-                orderBy('timestamp', 'desc'),
-                limit(50)
-            );
-            
-            try {
-                const snapshot = await QueryOptimizer.retryWithBackoff(
-                    () => getDocs(expiredQuery),
-                    `expired ${collectionType} query`
-                );
-                
-                const expiredEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                console.log(`📅 Loaded ${expiredEntries.length} expired ${collectionType} entries`);
-                
-                // Cache the results
-                QueryOptimizer.setCachedData(cacheKey, expiredEntries);
-                
-                // Merge with existing entries
-                mergeExpiredEntries(collectionType, expiredEntries);
-                
-            } catch (error) {
-                console.error(`Error loading expired ${collectionType}:`, error);
-                
-                // Try to use cached data as fallback
-                const fallbackData = QueryOptimizer.getCachedData(cacheKey);
-                if (fallbackData) {
-                    console.log(`📦 Using fallback cached expired ${collectionType} data`);
-                    mergeExpiredEntries(collectionType, fallbackData);
-                }
-            }
-        }
-        
-        // Helper function to merge expired entries
-        function mergeExpiredEntries(collectionType, entries) {
-            if (collectionType === 'drivers') {
-                // Create a Set of existing IDs to avoid duplicates
-                const existingIds = new Set(allDrivers.map(d => d.id));
-                const newEntries = entries.filter(entry => !existingIds.has(entry.id));
-                allDrivers = [...allDrivers, ...newEntries];
-                console.log(`📅 Merged ${newEntries.length} new expired drivers (${entries.length} total, ${newEntries.length} new)`);
-            } else if (collectionType === 'riders') {
-                // Create a Set of existing IDs to avoid duplicates
-                const existingIds = new Set(allRiders.map(r => r.id));
-                const newEntries = entries.filter(entry => !existingIds.has(entry.id));
-                allRiders = [...allRiders, ...newEntries];
-                console.log(`📅 Merged ${newEntries.length} new expired riders (${entries.length} total, ${newEntries.length} new)`);
-            }
-            renderFilteredLists();
-        }
+
+
         
         // Load deleted entries on demand with enhanced error handling
         async function loadDeletedEntries(collectionType) {
@@ -3244,6 +3183,13 @@
             const now = new Date();
             const expirationTime = getExpirationTime(entry);
             return now > expirationTime;
+        }
+
+        function isEntry7DaysPastExpiration(entry) {
+            const now = new Date();
+            const expirationTime = getExpirationTime(entry);
+            const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+            return now > (expirationTime.getTime() + sevenDaysInMs);
         }
 
         function isEntryCloseToExpiring(entry) {
@@ -4119,17 +4065,15 @@
                         showExpiredEntries = toggle.checked;
                         
                         if (showExpiredEntries) {
-                            // Load expired entries on demand
-                            console.log('📅 Loading expired entries on demand...');
-                            await Promise.all([
-                                loadExpiredEntries('drivers'),
-                                loadExpiredEntries('riders')
-                            ]);
+                            // Show entries up to 7 days past expiration
+                            console.log('📅 Showing entries up to 7 days past expiration...');
+                            allDrivers = originalDrivers.filter(d => !isEntry7DaysPastExpiration(d));
+                            allRiders = originalRiders.filter(r => !isEntry7DaysPastExpiration(r));
                         } else {
-                            // Remove expired entries from display by filtering out expired entries
-                            // Filter current arrays to only include non-expired entries
-                            allDrivers = allDrivers.filter(d => !isEntryExpired(d));
-                            allRiders = allRiders.filter(r => !isEntryExpired(r));
+                            // Show only entries that are not expired (normal 3-hour behavior)
+                            console.log('📅 Showing only non-expired entries (3-hour window)...');
+                            allDrivers = originalDrivers.filter(d => !isEntryExpired(d));
+                            allRiders = originalRiders.filter(r => !isEntryExpired(r));
                         }
                         
                         // Sync both checkboxes
