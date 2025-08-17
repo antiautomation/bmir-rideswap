@@ -95,5 +95,11 @@ service cloud.firestore {
         request.auth != null &&
         resource.data.userId == request.auth.uid;
     }
+    
+    // App configuration (read-only for public app, admin can write)
+    match /artifacts/bmir-rideshare/public/data/appConfig/{document} {
+      allow read: if true;
+      allow write: if isGodMode();
+    }
   }
 } 

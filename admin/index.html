@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMIR RideSwap Admin</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="icon" type="image/png" href="../logo.png">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <!-- Configuration -->
+    <script src="../config.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="header-content">
+                <h1>🚗 BMIR RideSwap Admin</h1>
+                <div class="header-actions">
+                    <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    <div class="status-indicator" id="statusIndicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <button class="nav-tab active" data-tab="posts">📝 Posts Editor</button>
+            <button class="nav-tab" data-tab="events">🎪 Event Settings</button>
+            <button class="nav-tab" data-tab="config">⚙️ Configuration</button>
+            <button class="nav-tab" data-tab="private">🔐 Private Settings</button>
+        </nav>
+
+        <main class="admin-content">
+            <!-- Posts Editor Tab -->
+            <div id="posts-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>📝 Posts Editor</h2>
+                    <div class="tab-actions">
+                        <button id="exportCsvBtn" class="btn btn-secondary">📊 Export CSV</button>
+                        <button id="savePostsBtn" class="btn btn-primary">💾 Save Changes</button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="typeFilter">Type:</label>
+                        <select id="typeFilter">
+                            <option value="">All</option>
+                            <option value="driver">Drivers</option>
+                            <option value="rider">Riders</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="directionFilter">Direction:</label>
+                        <select id="directionFilter">
+                            <option value="">All</option>
+                            <option value="to-brc">To Burning Man</option>
+                            <option value="from-brc">From Burning Man</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="statusFilter">Status:</label>
+                        <select id="statusFilter">
+                            <option value="active">Active</option>
+                            <option value="deleted">Deleted</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateFilter">Date Range:</label>
+                        <input type="date" id="dateFilter" placeholder="Filter by date">
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="postsTable" class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Direction</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTableBody">
+                            <tr>
+                                <td colspan="9" class="loading">Loading posts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Event Settings Tab -->
+            <div id="events-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>🎪 Event Settings</h2>
+                    <button id="saveEventBtn" class="btn btn-primary">💾 Save Event Settings</button>
+                </div>
+                
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="eventName">Event Name:</label>
+                        <input type="text" id="eventName" placeholder="BMIR RideSwap 2024">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="eventLogoUrl">Event Logo URL:</label>
+                        <input type="url" id="eventLogoUrl" placeholder="https://example.com/logo.png">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="eventLogoDarkUrl">Dark Logo URL (optional):</label>
+                        <input type="url" id="eventLogoDarkUrl" placeholder="https://example.com/logo-dark.png">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="eventStart">Event Start Date:</label>
+                        <input type="datetime-local" id="eventStart">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="eventEnd">Event End Date:</label>
+                        <input type="datetime-local" id="eventEnd">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="listingExpirationHours">Listing Expiration (hours):</label>
+                        <input type="number" id="listingExpirationHours" min="1" max="168" value="12">
+                    </div>
+                </div>
+                
+                <div class="copy-settings">
+                    <h3>Event Copy</h3>
+                    <div class="setting-group">
+                        <label for="homeHero">Home Hero Text:</label>
+                        <textarea id="homeHero" rows="3" placeholder="Welcome to BMIR RideSwap..."></textarea>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="listingHint">Listing Hint Text:</label>
+                        <textarea id="listingHint" rows="2" placeholder="Tips for creating a good listing..."></textarea>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="footerNote">Footer Note:</label>
+                        <textarea id="footerNote" rows="2" placeholder="Additional footer information..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Tab -->
+            <div id="config-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>⚙️ Public Configuration</h2>
+                    <button id="downloadConfigBtn" class="btn btn-secondary">📥 Download config.js</button>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Firebase Configuration</h3>
+                    <div class="setting-group">
+                        <label for="firebaseApiKey">API Key:</label>
+                        <input type="text" id="firebaseApiKey" placeholder="Your Firebase API Key">
+                    </div>
+                    <div class="setting-group">
+                        <label for="firebaseAuthDomain">Auth Domain:</label>
+                        <input type="text" id="firebaseAuthDomain" placeholder="your-project.firebaseapp.com">
+                    </div>
+                    <div class="setting-group">
+                        <label for="firebaseProjectId">Project ID:</label>
+                        <input type="text" id="firebaseProjectId" placeholder="your-project-id">
+                    </div>
+                    <div class="setting-group">
+                        <label for="firebaseStorageBucket">Storage Bucket:</label>
+                        <input type="text" id="firebaseStorageBucket" placeholder="your-project.appspot.com">
+                    </div>
+                    <div class="setting-group">
+                        <label for="firebaseMessagingSenderId">Messaging Sender ID:</label>
+                        <input type="text" id="firebaseMessagingSenderId" placeholder="123456789">
+                    </div>
+                    <div class="setting-group">
+                        <label for="firebaseAppId">App ID:</label>
+                        <input type="text" id="firebaseAppId" placeholder="1:123456789:web:abcdef">
+                    </div>
+                    <div class="setting-group">
+                        <label for="firebaseMeasurementId">Measurement ID:</label>
+                        <input type="text" id="firebaseMeasurementId" placeholder="G-XXXXXXXXXX">
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <h3>App Configuration</h3>
+                    <div class="setting-group">
+                        <label for="appId">App ID:</label>
+                        <input type="text" id="appId" placeholder="your-project-id">
+                    </div>
+                    <div class="setting-group">
+                        <label for="projectId">Project ID:</label>
+                        <input type="text" id="projectId" placeholder="your-project-id">
+                    </div>
+                    <div class="setting-group">
+                        <label for="collectionPath">Collection Path:</label>
+                        <input type="text" id="collectionPath" placeholder="artifacts/your-project-id/public/data">
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Analytics Configuration</h3>
+                    <div class="setting-group">
+                        <label for="analyticsTrackingId">Tracking ID:</label>
+                        <input type="text" id="analyticsTrackingId" placeholder="G-XXXXXXXXXX">
+                    </div>
+                    <div class="setting-group">
+                        <label for="analyticsGtagUrl">GTag URL:</label>
+                        <input type="url" id="analyticsGtagUrl" value="https://www.googletagmanager.com/gtag/js">
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <h3>reCAPTCHA Configuration</h3>
+                    <div class="setting-group">
+                        <label for="recaptchaSiteKey">Site Key:</label>
+                        <input type="text" id="recaptchaSiteKey" placeholder="6Lxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    <div class="setting-group">
+                        <label for="recaptchaApiUrl">API URL:</label>
+                        <input type="url" id="recaptchaApiUrl" value="https://www.google.com/recaptcha/api.js">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Private Settings Tab -->
+            <div id="private-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>🔐 Private Settings</h2>
+                    <button id="savePrivateBtn" class="btn btn-primary">💾 Save Private Settings</button>
+                </div>
+                
+                <div class="warning-box">
+                    <p>⚠️ <strong>Security Notice:</strong> These settings are stored in a private file and are not accessible to the public app. Use this for API keys and other sensitive configuration.</p>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Private API Keys</h3>
+                    <div class="setting-group">
+                        <label for="serviceXApiKey">Service X API Key:</label>
+                        <input type="password" id="serviceXApiKey" placeholder="Enter API key">
+                    </div>
+                    <div class="setting-group">
+                        <label for="serviceYApiKey">Service Y API Key:</label>
+                        <input type="password" id="serviceYApiKey" placeholder="Enter API key">
+                    </div>
+                    <div class="setting-group">
+                        <label for="adminEmail">Admin Email:</label>
+                        <input type="email" id="adminEmail" placeholder="admin@example.com">
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Admin Notes</h3>
+                    <div class="setting-group">
+                        <label for="adminNotes">Notes:</label>
+                        <textarea id="adminNotes" rows="4" placeholder="Add any admin notes here..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for editing posts -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Post</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editName">Name:</label>
+                            <input type="text" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editType">Type:</label>
+                            <select id="editType" required>
+                                <option value="driver">Driver</option>
+                                <option value="rider">Rider</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editEmail">Email:</label>
+                            <input type="email" id="editEmail">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">Phone:</label>
+                            <input type="tel" id="editPhone">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editLocation">Location:</label>
+                            <input type="text" id="editLocation" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDirection">Direction:</label>
+                            <select id="editDirection" required>
+                                <option value="to-brc">To Burning Man</option>
+                                <option value="from-brc">From Burning Man</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDate">Date:</label>
+                            <input type="date" id="editDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTimeSlot">Time Slot:</label>
+                            <input type="text" id="editTimeSlot" placeholder="e.g., Morning, Afternoon, Evening">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDetails">Details:</label>
+                        <textarea id="editDetails" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDeleted">Status:</label>
+                            <select id="editDeleted">
+                                <option value="false">Active</option>
+                                <option value="true">Deleted</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFlagged">Flagged:</label>
+                            <select id="editFlagged">
+                                <option value="false">Not Flagged</option>
+                                <option value="true">Flagged</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveEdit">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

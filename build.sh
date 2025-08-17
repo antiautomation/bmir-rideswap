@@ -27,6 +27,11 @@ cp LICENSE distribution/
 # Copy images
 cp logo.png distribution/
 
+# Copy admin files
+echo "📁 Copying admin files..."
+mkdir -p distribution/admin/api
+cp -r admin/* distribution/admin/
+
 echo "✅ Distribution created successfully!"
 echo ""
 echo "📦 Distribution folder: distribution/"

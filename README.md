@@ -642,6 +642,51 @@ firebase hosting:channel:list
 lighthouse https://your-site.com
 ```
 
+## 🛠️ Admin Interface
+
+BMIR RideSwap includes a lightweight admin configuration backend for managing posts, event settings, and configuration.
+
+### 🔐 Admin Access
+
+The admin interface is located at `/admin/` and is protected by Basic Authentication.
+
+#### Setup Instructions
+
+1. **Create .htpasswd file** (outside web root for security):
+   ```bash
+   htpasswd -c /path/outside/webroot/.htpasswd adminuser
+   ```
+
+2. **Update admin/.htaccess** with the correct path:
+   ```apache
+   AuthUserFile /path/outside/webroot/.htpasswd
+   ```
+
+3. **Set proper permissions**:
+   ```bash
+   chmod 755 admin/
+   chmod 644 admin/*.html admin/*.css admin/*.js
+   chmod 644 admin/.htaccess
+   chmod 755 admin/api/
+   chmod 644 admin/api/*.php
+   ```
+
+#### Admin Features
+
+- **📝 Posts Editor**: Spreadsheet-like interface for managing listings
+- **🎪 Event Settings**: Configure event name, logos, dates, and copy
+- **⚙️ Configuration**: View/edit public configuration (Firebase, Analytics, reCAPTCHA)
+- **🔐 Private Settings**: Store sensitive API keys securely
+
+#### Security
+
+- Basic Authentication protects all admin access
+- Private configuration stored in `config.private.json` (never exposed publicly)
+- All admin operations logged for audit purposes
+- Input validation and sanitization on all forms
+
+For detailed admin documentation, see [admin/README.md](admin/README.md).
+
 ### Contributing
 
 #### 🤝 Development Guidelines
@@ -658,12 +703,14 @@ lighthouse https://your-site.com
    - Check mobile responsiveness
    - Test PWA functionality
    - Verify session code system
+   - Test admin interface functionality
 
 3. **Security**
    - Validate all inputs
    - Test security rules
    - Review for potential vulnerabilities
    - Test soft delete functionality
+   - Verify admin authentication
 
 #### 📝 Pull Request Process
 

@@ -1,0 +1,60 @@
+# BMIR RideSwap Admin Protection
+# This file protects the entire /admin directory with Basic Authentication
+
+# Enable Basic Authentication
+AuthType Basic
+AuthName "BMIR RideSwap Admin"
+AuthUserFile /path/outside/webroot/.htpasswd
+Require valid-user
+
+# Extra security hardening
+Options -Indexes
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
+
+# Protect all files in admin directory
+<FilesMatch "\.(json|php|js|css|html)$">
+    Require valid-user
+</FilesMatch>
+
+# Additional protection for sensitive files
+<Files "config.private.json">
+    Require valid-user
+    Order deny,allow
+    Deny from all
+</Files>
+
+# Allow access to admin interface files for authenticated users
+<Files "index.html">
+    Require valid-user
+</Files>
+
+<Files "admin.css">
+    Require valid-user
+</Files>
+
+<Files "admin.js">
+    Require valid-user
+</Files>
+
+# Protect API endpoints
+<Files "api/*.php">
+    Require valid-user
+</Files>
+
+# Prevent access to any backup or temporary files
+<FilesMatch "\.(bak|tmp|temp|old|backup)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com;"
+</IfModule>
+
+# Error handling
+ErrorDocument 401 "Authentication required"
+ErrorDocument 403 "Access forbidden"

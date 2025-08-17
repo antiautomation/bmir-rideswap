@@ -899,7 +899,92 @@ const AppState = {
     driversUnsubscribe: null,
     ridersUnsubscribe: null,
     optimizedQueriesAvailable: false,
-    indexCheckAttempted: false
+    indexCheckAttempted: false,
+    
+    // Event configuration (loaded from Firestore)
+    eventConfig: {
+        eventName: 'BMIR RideSwap',
+        eventLogoUrl: '',
+        eventLogoDarkUrl: '',
+        eventStart: null,
+        eventEnd: null,
+        listingExpirationHours: 12,
+        eventCopy: {
+            homeHero: 'Welcome to BMIR RideSwap - Connect with fellow Burners for rides to and from Black Rock City!',
+            listingHint: 'Be specific about your travel plans and include relevant details.',
+            footerNote: 'BMIR RideSwap - Connecting the Burner community'
+        }
+    }
+};
+
+// Event Configuration Management
+const EventConfigManager = {
+    async loadEventConfig() {
+        try {
+            if (!AppState.db) {
+                console.log('Database not ready, skipping event config load');
+                return;
+            }
+            
+            const appId = window.APP_CONFIG?.appId || AppState.appId;
+            const doc = await window.firebase.getDoc(window.firebase.doc(AppState.db, `artifacts/${appId}/public/data/appConfig`, 'current'));
+            
+            if (doc.exists()) {
+                const data = doc.data();
+                
+                // Update AppState with loaded configuration
+                AppState.eventConfig = {
+                    ...AppState.eventConfig,
+                    ...data
+                };
+                
+                console.log('✅ Event configuration loaded from Firestore');
+                
+                // Update UI elements if they exist
+                this.updateUIWithEventConfig();
+            } else {
+                console.log('No event configuration found in Firestore, using defaults');
+            }
+        } catch (error) {
+            console.error('Error loading event configuration:', error);
+            // Continue with default configuration
+        }
+    },
+    
+    updateUIWithEventConfig() {
+        // Update page title
+        if (AppState.eventConfig.eventName) {
+            document.title = AppState.eventConfig.eventName;
+        }
+        
+        // Update hero text if element exists
+        const heroElement = document.querySelector('.hero-text, .welcome-text, h1');
+        if (heroElement && AppState.eventConfig.eventCopy?.homeHero) {
+            heroElement.textContent = AppState.eventConfig.eventCopy.homeHero;
+        }
+        
+        // Update listing hint if element exists
+        const hintElement = document.querySelector('.listing-hint, .form-hint');
+        if (hintElement && AppState.eventConfig.eventCopy?.listingHint) {
+            hintElement.textContent = AppState.eventConfig.eventCopy.listingHint;
+        }
+        
+        // Update footer note if element exists
+        const footerElement = document.querySelector('.footer-note, .footer-text');
+        if (footerElement && AppState.eventConfig.eventCopy?.footerNote) {
+            footerElement.textContent = AppState.eventConfig.eventCopy.footerNote;
+        }
+        
+        // Update logo if URL is provided
+        if (AppState.eventConfig.eventLogoUrl) {
+            const logoElements = document.querySelectorAll('img[src*="logo"], .logo img');
+            logoElements.forEach(img => {
+                if (img.src.includes('logo')) {
+                    img.src = AppState.eventConfig.eventLogoUrl;
+                }
+            });
+        }
+    }
 };
 
 // Cached DOM elements for better performance
@@ -1490,9 +1575,23 @@ window.FormUtils = FormUtils;
 window.UniversalOnboarding = UniversalOnboarding;
 window.LazyLoader = LazyLoader;
 window.AppState = AppState;
+window.EventConfigManager = EventConfigManager;
 
 console.log('🔧 Exposing components to window...');
 console.log('  - FormUtils available:', typeof window.FormUtils);
+console.log('  - EventConfigManager available:', typeof window.EventConfigManager);
 
+// Load event configuration when database is ready
+const loadEventConfigWhenReady = () => {
+    if (AppState.db) {
+        EventConfigManager.loadEventConfig();
+    } else {
+        // Wait for database to be ready
+        setTimeout(loadEventConfigWhenReady, 100);
+    }
+};
+
+// Start loading event configuration
+loadEventConfigWhenReady();
 
 // App initialization is handled by index.html
