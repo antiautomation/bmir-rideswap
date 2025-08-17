@@ -1308,6 +1308,7 @@
         let sessionUnsubscribe = null;
         let sessionCode = null;
         let hasShownSessionCode = false;
+        let lastUpdateTime = Date.now(); // Initialize with current time for offline status display
 
         // Rate limiting configuration
         const RATE_LIMIT_CONFIG = {
@@ -1690,6 +1691,8 @@
                 mobileShowHiddenToggle.checked = showHiddenEntries;
                 mobileShowHiddenToggle.addEventListener('change', function() {
                     showHiddenEntries = this.checked;
+                    console.log('🔍 Show Hidden Entries toggled:', showHiddenEntries);
+                    
                     // Sync with desktop toggle
                     if (desktopShowHiddenToggle) {
                         desktopShowHiddenToggle.checked = this.checked;
@@ -1703,6 +1706,8 @@
                 desktopShowHiddenToggle.checked = showHiddenEntries;
                 desktopShowHiddenToggle.addEventListener('change', function() {
                     showHiddenEntries = this.checked;
+                    console.log('🔍 Show Hidden Entries toggled:', showHiddenEntries);
+                    
                     // Sync with mobile toggle
                     if (mobileShowHiddenToggle) {
                         mobileShowHiddenToggle.checked = this.checked;
@@ -2380,39 +2385,16 @@
                 });
                 
                 // Enhanced connection monitoring with offline sync
-                const updateConnectionStatus = (online) => {
-                    const statusBar = document.querySelector('.status-bar');
-                    if (statusBar) {
-                        if (online) {
-                            statusBar.classList.remove('offline');
-                            statusBar.textContent = '🔥 BMIR RideSwap - Connect with the Playa Community';
-                            
-                            // Sync pending operations when coming back online
-                            setTimeout(() => {
-                                if (typeof QueryOptimizer !== 'undefined') {
-                                    QueryOptimizer.syncPendingOperations();
-                                }
-                            }, 2000); // Wait 2 seconds for stable connection
-                        } else {
-                            statusBar.classList.add('offline');
-                            statusBar.textContent = '📴 Offline Mode - Your data will sync when connection returns';
-                        }
-                    }
-                };
-                
-                // Enhanced connection monitoring
+                // Note: Connection status is now handled by the checkConnectivity() function
+                // Sync pending operations when coming back online
                 window.addEventListener('online', () => {
                     console.log('🌐 Connection restored');
-                    updateConnectionStatus(true);
+                    setTimeout(() => {
+                        if (typeof QueryOptimizer !== 'undefined') {
+                            QueryOptimizer.syncPendingOperations();
+                        }
+                    }, 2000); // Wait 2 seconds for stable connection
                 });
-                
-                window.addEventListener('offline', () => {
-                    console.log('📴 Connection lost');
-                    updateConnectionStatus(false);
-                });
-                
-                // Initial status
-                updateConnectionStatus(navigator.onLine);
                 
                 // Monitor connection quality for adaptive loading
                 let connectionQuality = 'unknown';
@@ -2544,6 +2526,9 @@
                     const attemptLoad = () => {
                         const unsubscribe = onSnapshot(query, (snapshot) => {
                             console.log(`✅ ${type} data loaded: ${snapshot.docs.length} documents`);
+                            
+                            // Update last update time for offline status display
+                            lastUpdateTime = Date.now();
                             
                             // Cache the data for offline use
                             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -5364,15 +5349,58 @@
         }
         
         // --- Connection Status Support ---
+        let offlineStatusInterval = null;
+        
+        function formatLastUpdateTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${month}/${day} ${hours}:${minutes}`;
+        }
+        
+        function updateOfflineStatus() {
+            if (!statusBar || navigator.onLine) return;
+            
+            const showOfflineMode = statusBar.dataset.showLastUpdate !== 'true';
+            
+            if (showOfflineMode) {
+                statusBar.innerHTML = '📡 Offline Mode, Do Not Refresh! 📡';
+                statusBar.dataset.showLastUpdate = 'true';
+            } else {
+                const lastUpdate = lastUpdateTime ? formatLastUpdateTime(lastUpdateTime) : 'Unknown';
+                statusBar.innerHTML = `📡 Last updated ${lastUpdate} 📡`;
+                statusBar.dataset.showLastUpdate = 'false';
+            }
+        }
+        
+        function startOfflineStatusAlternation() {
+            if (offlineStatusInterval) {
+                clearInterval(offlineStatusInterval);
+            }
+            offlineStatusInterval = setInterval(updateOfflineStatus, 2000);
+            updateOfflineStatus(); // Show initial state immediately
+        }
+        
+        function stopOfflineStatusAlternation() {
+            if (offlineStatusInterval) {
+                clearInterval(offlineStatusInterval);
+                offlineStatusInterval = null;
+            }
+        }
+        
         function checkConnectivity() {
             if (!navigator.onLine) {
                 if (statusBar) {
                     statusBar.className = 'status-bar offline';
-                    statusBar.innerHTML = '📡 Offline Mode, Do Not Refresh! 📡';
+                    startOfflineStatusAlternation();
                 }
             } else {
                 if (statusBar) {
                     statusBar.className = 'status-bar';
+                    stopOfflineStatusAlternation();
                     statusBar.innerHTML = '🟢 Live Updating App, No Refresh Required 🟢';
                 }
             }
@@ -5381,6 +5409,7 @@
         window.addEventListener('online', () => {
             if (statusBar) {
                 statusBar.className = 'status-bar';
+                stopOfflineStatusAlternation();
                 statusBar.innerHTML = '🟢 Live Updating App, No Refresh Required 🟢';
             }
         });
@@ -5388,7 +5417,7 @@
         window.addEventListener('offline', () => {
             if (statusBar) {
                 statusBar.className = 'status-bar offline';
-                statusBar.innerHTML = '📡 Offline Mode, Do Not Refresh! 📡';
+                startOfflineStatusAlternation();
             }
         });
         
