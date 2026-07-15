@@ -331,7 +331,7 @@
                     <div class="info-card">
                         <div class="info-card-icon">📻</div>
                         <div class="info-card-content">
-                            <p class="info-card-text"><a href="https://bmir.org" target="_blank" rel="noopener noreferrer" class="bmir-link">Listen to BMIR 94.5FM</a> and stop by the camp @ 5:30 & Esplanade to use this app at the station.</p>
+                            <p class="info-card-text"><a href="https://bmir.org" target="_blank" rel="noopener noreferrer" class="bmir-link">Listen to BMIR 94.5FM</a> and stop by the camp @ 5:45 & Esplanade to use this app at the station.</p>
                         </div>
                     </div>
                 </div>
@@ -544,36 +544,7 @@
                         </div>
                     </div>
                     
-                    <!-- Second Row: Dropdown Filters -->
-                    <div class="desktop-filters-row">
-                        <div class="form-group">
-                            <label class="form-label">Filters</label>
-                            <div class="filters-stacked">
-                                <select id="day-filter-desktop" class="form-select">
-                                    <option value="all">All Days</option>
-                                    <option value="Sunday">Sunday</option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
-                                </select>
-                                <select id="location-filter-desktop" class="form-select">
-                                    <option value="all">All Locations</option>
-                                </select>
-                                <select id="belongings-filter-desktop" class="form-select">
-                                    <option value="all">All Belongings</option>
-                                    <option value="minimal">Minimal (backpack, small bag)</option>
-                                    <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
-                                    <option value="substantial">Substantial (bike, camping gear, multiple bags)</option>
-                                    <option value="extensive">Extensive (multiple bikes, large camp items)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Third Row: Filter Checkboxes -->
+                    <!-- Second Row: Filter Checkboxes -->
                     <div class="desktop-checkboxes-row">
                         <!-- Show Expired Entries Toggle -->
                         <div class="form-group desktop-checkbox-group">
@@ -600,6 +571,35 @@
                                 <span class="checkmark"></span>
                                 Show by most recent
                             </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Third Row: Dropdown Filters -->
+                    <div class="desktop-filters-row">
+                        <div class="form-group">
+                            <label class="form-label">Filters</label>
+                            <div class="filters-stacked">
+                                <select id="day-filter-desktop" class="form-select">
+                                    <option value="all">All Days</option>
+                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                                <select id="location-filter-desktop" class="form-select">
+                                    <option value="all">All Locations</option>
+                                </select>
+                                <select id="belongings-filter-desktop" class="form-select">
+                                    <option value="all">All Belongings</option>
+                                    <option value="minimal">Minimal (backpack, small bag)</option>
+                                    <option value="standard">Standard (suitcase, cooler, sleeping bag)</option>
+                                    <option value="substantial">Substantial (bike, camping gear, multiple bags)</option>
+                                    <option value="extensive">Extensive (multiple bikes, large camp items)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
@@ -3130,22 +3130,6 @@
             // Parse the entry date properly, ensuring it's treated as local time
             const [year, month, day] = entry.date.split('-').map(Number);
             const entryDate = new Date(year, month - 1, day); // month is 0-indexed
-            const now = new Date();
-            
-            // Debug logging for expiration issues (disabled)
-            // console.log('🔍 Expiration Debug:', {
-            //     entryDate: entryDate.toISOString(),
-            //     now: now.toISOString(),
-            //     entryDateLocal: entryDate.toLocaleDateString(),
-            //     nowLocal: now.toLocaleDateString(),
-            //     isPast: entryDate < now
-            // });
-            
-            // If the entry date is in the past, check if it's flexible time
-            // For flexible time, allow 3 hours after the date
-            if (entryDate < now && entry.timeSlot !== 'Flexible Time') {
-                return new Date(now.getTime() - (1 * 60 * 60 * 1000)); // 1 hour ago
-            }
             
             // If it's "Flexible Time", use the end of the selected day
             if (entry.timeSlot === 'Flexible Time') {
