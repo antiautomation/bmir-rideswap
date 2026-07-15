@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useUnreadTotal } from '../api/messages';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? 'tab-bar-link active' : 'tab-bar-link';
@@ -58,6 +59,8 @@ function ProfileIcon() {
 }
 
 export default function TabBar() {
+  const unread = useUnreadTotal();
+
   return (
     <nav className="tab-bar" aria-label="Primary">
       <NavLink to="/" end className={navLinkClass}>
@@ -73,7 +76,14 @@ export default function TabBar() {
         Matches
       </NavLink>
       <NavLink to="/messages" className={navLinkClass}>
-        <MessagesIcon />
+        <span className="tab-bar-icon-wrap">
+          <MessagesIcon />
+          {unread > 0 && (
+            <span className="unread-badge" aria-label={`${unread} unread messages`}>
+              {unread}
+            </span>
+          )}
+        </span>
         Messages
       </NavLink>
       <NavLink to="/me" className={navLinkClass}>

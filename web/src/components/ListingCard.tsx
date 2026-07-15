@@ -11,6 +11,7 @@ interface ListingCardProps {
   onCancel?: (id: string) => void;
   onDelete?: (id: string) => void;
   onFlag?: (id: string) => void;
+  onMessage?: (listing: Listing) => void;
   /** Detail-page use: render details always expanded, no "More…" toggle. */
   forceExpanded?: boolean;
 }
@@ -22,6 +23,7 @@ export default function ListingCard({
   onCancel,
   onDelete,
   onFlag,
+  onMessage,
   forceExpanded = false,
 }: ListingCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -124,9 +126,11 @@ export default function ListingCard({
       )}
 
       <div className="listing-card-footer">
-        <button type="button" disabled title="Private messaging coming soon">
-          Message
-        </button>
+        {!listing.isMine && !listing.pending && onMessage && (
+          <button type="button" onClick={() => onMessage(listing)}>
+            Message
+          </button>
+        )}
 
         {listing.isMine ? (
           <div className="listing-card-owner-actions">

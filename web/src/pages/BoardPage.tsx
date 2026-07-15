@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
 import FilterBar from '../components/FilterBar';
 import ListingCard from '../components/ListingCard';
+import MessageComposer from '../components/MessageComposer';
 import { cancelListing, deleteListing, flagListing, useListings } from '../api/listings';
+import type { Listing } from '../api/types';
 import { applyFilters, DEFAULT_FILTERS, type FilterState } from '../lib/filters';
 import { useIdSet, useStoredState } from '../lib/prefs';
 
@@ -13,6 +15,7 @@ export default function BoardPage() {
   const [filters, setFilters] = useStoredState<FilterState>('ridefinder-filters-v1', DEFAULT_FILTERS);
   const favorites = useIdSet('ridefinder-favorites-v1');
   const hidden = useIdSet('ridefinder-hidden-v1');
+  const [messageTarget, setMessageTarget] = useState<Listing | null>(null);
 
   const listings = data?.listings ?? [];
 
@@ -83,6 +86,7 @@ export default function BoardPage() {
                   onCancel={listing.isMine ? handleCancel : undefined}
                   onDelete={listing.isMine ? handleDelete : undefined}
                   onFlag={listing.isMine ? undefined : handleFlag}
+                  onMessage={listing.isMine ? undefined : setMessageTarget}
                 />
               ))
             )}
@@ -107,12 +111,17 @@ export default function BoardPage() {
                   onCancel={listing.isMine ? handleCancel : undefined}
                   onDelete={listing.isMine ? handleDelete : undefined}
                   onFlag={listing.isMine ? undefined : handleFlag}
+                  onMessage={listing.isMine ? undefined : setMessageTarget}
                 />
               ))
             )}
           </section>
         )}
       </div>
+
+      {messageTarget && (
+        <MessageComposer listing={messageTarget} onClose={() => setMessageTarget(null)} />
+      )}
     </>
   );
 }

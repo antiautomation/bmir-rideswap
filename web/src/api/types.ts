@@ -67,3 +67,53 @@ export interface CreateListingInput {
 }
 
 export type UpdateListingInput = Partial<Omit<CreateListingInput, 'clientId' | 'type' | 'contact'>>;
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  isMine: boolean;
+  body: string;
+  /** Contact snapshots — present only when the sender chose to share. */
+  sharedEmail: string | null;
+  sharedPhone: string | null;
+  createdAt: string;
+  /** Client-only: optimistic entries queued in the outbox. */
+  pending?: boolean;
+}
+
+export interface ConversationListing {
+  id: string;
+  type: ListingType;
+  direction: Direction;
+  name: string;
+  travelDate: string;
+  cancelledAt: string | null;
+}
+
+export interface ConversationSummary {
+  id: string;
+  listing: ConversationListing;
+  /** True when I started this conversation (vs. it being about my listing). */
+  iAmInitiator: boolean;
+  counterpartName: string;
+  lastMessage: { body: string; createdAt: string; isMine: boolean } | null;
+  unreadCount: number;
+  createdAt: string;
+}
+
+export interface ConversationsResponse {
+  conversations: ConversationSummary[];
+}
+
+export interface ThreadResponse {
+  conversation: { id: string };
+  listing: ConversationListing;
+  counterpartName: string;
+  messages: Message[];
+}
+
+export interface SendMessageInput {
+  clientId: string;
+  body: string;
+  share?: { email?: boolean; phone?: boolean };
+}

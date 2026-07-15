@@ -13,6 +13,7 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/board.css';
 import './styles/forms.css';
+import './styles/messages.css';
 
 const ONE_WEEK_MS = 7 * 24 * 3600 * 1000;
 

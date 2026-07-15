@@ -7,6 +7,7 @@ import { ensureUser, requireUser } from '../auth/middleware.js';
 import { findUserByRecoveryCode } from '../auth/recoveryCodes.js';
 import { issueSessionCookie, revokeAllSessions, revokeCurrentSession } from '../auth/tokens.js';
 import type { SessionUser } from '../auth/tokens.js';
+import { unreadCountFor } from './conversations.js';
 import { db } from '../db/client.js';
 import { users } from '../db/schema.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
@@ -20,7 +21,7 @@ export function toMe(user: SessionUser) {
     digestFrequency: user.digestFrequency,
     recoveryCode: user.recoveryCode,
     isAdmin: user.isAdmin,
-    unreadCount: 0, // unreadCount wired in a later phase
+    unreadCount: 0, // overridden by GET /me; toMe's callers that don't need it keep 0
   };
 }
 
@@ -60,9 +61,9 @@ sessionRoutes.post(
   },
 );
 
-sessionRoutes.get('/me', (c) => {
+sessionRoutes.get('/me', async (c) => {
   const user = requireUser(c);
-  return c.json({ me: toMe(user) });
+  return c.json({ me: { ...toMe(user), unreadCount: await unreadCountFor(user.id) } });
 });
 
 sessionRoutes.patch(

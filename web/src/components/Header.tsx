@@ -1,8 +1,11 @@
 import { NavLink } from 'react-router-dom';
+import { useUnreadTotal } from '../api/messages';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : undefined);
 
 export default function Header() {
+  const unread = useUnreadTotal();
+
   return (
     <header className="header">
       <div className="header-brand">
@@ -23,6 +26,11 @@ export default function Header() {
         </NavLink>
         <NavLink to="/messages" className={navLinkClass}>
           Messages
+          {unread > 0 && (
+            <span className="unread-badge" aria-label={`${unread} unread messages`}>
+              {unread}
+            </span>
+          )}
         </NavLink>
         <NavLink to="/me" className={navLinkClass}>
           You

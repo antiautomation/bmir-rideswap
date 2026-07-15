@@ -46,6 +46,10 @@ export function registerOutboxInvalidation(queryClient: QueryClient): void {
     // A queued write may have created the session for the first time (e.g. the
     // first listing post on this device) — refresh /api/me so recoveryCode etc. show up.
     void queryClient.invalidateQueries({ queryKey: ['me'] });
+    // A queued write may have been a new conversation or a reply — refresh the
+    // inbox and any open thread so they reflect the confirmed server state.
+    void queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    void queryClient.invalidateQueries({ queryKey: ['thread'] });
   });
   onOutboxFailure(() => {
     // The server rejected the write (or we gave up) — clear any stranded

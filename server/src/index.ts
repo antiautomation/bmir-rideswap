@@ -7,6 +7,7 @@ import { HTTPException } from 'hono/http-exception';
 import { sessionMiddleware } from './auth/middleware.js';
 import { pool } from './db/client.js';
 import { runMigrations } from './db/migrate.js';
+import { conversationRoutes } from './routes/conversations.js';
 import { listingRoutes } from './routes/listings.js';
 import { sessionRoutes } from './routes/session.js';
 
@@ -38,6 +39,7 @@ async function main(): Promise<void> {
   app.use('/api/*', sessionMiddleware);
   app.route('/api', sessionRoutes);
   app.route('/api', listingRoutes);
+  app.route('/api', conversationRoutes);
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404));
 

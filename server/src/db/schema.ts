@@ -116,6 +116,7 @@ export const messages = pgTable('messages', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   readAt: timestamp('read_at', { withTimezone: true }),
   emailedAt: timestamp('emailed_at', { withTimezone: true }),
+  clientId: uuid('client_id'),
 });
 
 export const matches = pgTable(
