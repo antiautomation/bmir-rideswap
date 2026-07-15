@@ -1,38 +1,27 @@
-# macOS system files
+# macOS
 .DS_Store
 
-# Configuration files with sensitive data
-config.js
-# Note: config.js.example contains placeholder values and is safe to commit
+# Dependencies
+node_modules/
 
-# Development and testing files
-test-*.js
-serve-local.sh
-*.md
-!README.md
-
-# Build artifacts and temporary files
-production/
+# Build output
 dist/
-build/
-*.tmp
-*.log
+*.tsbuildinfo
 
-# IDE and editor files
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Legacy v1 secrets (kept out of git)
+legacy/config.js
+legacy/distribution/config.js
+
+# Logs & temp
+*.log
+*.tmp
+
+# IDE
 .vscode/
 .idea/
 *.swp
-*.swo
-
-# Node.js (if using build tools)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local

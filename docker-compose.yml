@@ -1,0 +1,16 @@
+# Local development Postgres (optional — you can also point DATABASE_URL at Railway's Postgres)
+# Requires Docker Desktop or OrbStack. Start with: docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ridefinder
+      POSTGRES_PASSWORD: ridefinder
+      POSTGRES_DB: ridefinder
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
