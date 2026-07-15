@@ -9,15 +9,18 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1087.0",
     "@hono/node-server": "^1.14.0",
     "@hono/zod-validator": "^0.7.0",
     "drizzle-orm": "^0.44.0",
     "hono": "^4.7.0",
+    "node-cron": "^4.6.0",
     "pg": "^8.16.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.15.0",
     "drizzle-kit": "^0.31.0",
     "tsx": "^4.19.0",

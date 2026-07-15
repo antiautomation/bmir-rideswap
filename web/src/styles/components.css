@@ -13,11 +13,17 @@
   }
 }
 
+/* Sticky app-top wrapper: StatusBar + Header stick together as one unit. */
+.app-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
 /* Header */
 
 .header {
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 10;
   display: flex;
   align-items: center;

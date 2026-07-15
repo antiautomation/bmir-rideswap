@@ -7,8 +7,10 @@ import { HTTPException } from 'hono/http-exception';
 import { sessionMiddleware } from './auth/middleware.js';
 import { pool } from './db/client.js';
 import { runMigrations } from './db/migrate.js';
+import { startJobs } from './jobs/index.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { listingRoutes } from './routes/listings.js';
+import { magicRoutes } from './routes/magic.js';
 import { sessionRoutes } from './routes/session.js';
 
 const WEB_DIST_ROOT = './web/dist';
@@ -40,6 +42,7 @@ async function main(): Promise<void> {
   app.route('/api', sessionRoutes);
   app.route('/api', listingRoutes);
   app.route('/api', conversationRoutes);
+  app.route('', magicRoutes);
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404));
 
@@ -58,6 +61,8 @@ async function main(): Promise<void> {
   serve({ fetch: app.fetch, port }, (info) => {
     console.log(`listening on port ${info.port}`);
   });
+
+  startJobs();
 }
 
 main();

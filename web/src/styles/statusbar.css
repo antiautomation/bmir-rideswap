@@ -1,0 +1,92 @@
+.status-bar {
+  position: static;
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  padding-top: calc(var(--space-1) + env(safe-area-inset-top));
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-bar-offline {
+  background: var(--wait);
+  color: var(--ink);
+}
+
+.status-bar-syncing {
+  background: #2d3f52;
+  color: var(--dust);
+  font-weight: 500;
+}
+
+.status-bar-retry {
+  min-height: auto;
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.status-bar-retry:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Install prompt */
+
+.install-prompt {
+  position: fixed;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: calc(var(--tab-bar-height) + var(--space-3) + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 768px) {
+  .install-prompt {
+    bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    left: auto;
+    right: var(--space-5);
+    max-width: 420px;
+  }
+}
+
+.install-prompt span {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--dust);
+}
+
+.install-prompt-install {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3);
+}
+
+.install-prompt-dismiss {
+  flex-shrink: 0;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  background: transparent;
+  color: var(--dust-dim);
+  font-weight: 400;
+}
+
+.install-prompt-dismiss:hover {
+  background: var(--line);
+  color: var(--dust);
+}
