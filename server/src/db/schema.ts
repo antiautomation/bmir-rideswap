@@ -84,6 +84,7 @@ export const listings = pgTable('listings', {
   hiddenAt: timestamp('hidden_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  clientId: uuid('client_id'),
 });
 
 export const conversations = pgTable(

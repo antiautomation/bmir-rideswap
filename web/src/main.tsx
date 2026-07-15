@@ -6,9 +6,13 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 import { RouterProvider } from 'react-router-dom';
 
 import { router } from './routes';
+import { registerOutboxInvalidation } from './api/listings';
+import { initOutbox } from './offline/outbox';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
+import './styles/board.css';
+import './styles/forms.css';
 
 const ONE_WEEK_MS = 7 * 24 * 3600 * 1000;
 
@@ -21,6 +25,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+initOutbox();
+registerOutboxInvalidation(queryClient);
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,

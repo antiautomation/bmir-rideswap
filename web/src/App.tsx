@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 
 import Header from './components/Header';
 import TabBar from './components/TabBar';
+import RecoveryCodeNotice from './components/RecoveryCodeNotice';
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
         <Outlet />
       </main>
       <TabBar />
+      <RecoveryCodeNotice />
     </>
   );
 }
