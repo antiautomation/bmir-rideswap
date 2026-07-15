@@ -1,0 +1,30 @@
+:root {
+  --ember: #e4622f; /* brand accent — CTAs, driver rail */
+  --ember-hover: #f07a48;
+  --dusk: #8b5db8; /* rider rail, secondary accent */
+  --ink: #14110f; /* app background */
+  --panel: #211c18; /* card background */
+  --panel-raised: #2a241f;
+  --line: #38302a; /* borders */
+  --dust: #e8e0d5; /* primary text */
+  --dust-dim: #a1968a; /* secondary text */
+  --go: #4caf7d;
+  --wait: #d9a13b;
+  --danger: #d95555;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --tab-bar-height: 56px;
+}
