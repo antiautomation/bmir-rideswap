@@ -7,6 +7,7 @@ import { ensureUser, requireUser } from '../auth/middleware.js';
 import { db } from '../db/client.js';
 import { flags, listings, users } from '../db/schema.js';
 import { allow } from '../lib/rateLimit.js';
+import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
 import { recomputeMatchesForListing } from '../matching/score.js';
 
@@ -176,8 +177,9 @@ listingRoutes.post(
       userUpdates.email = body.contact.email.trim().toLowerCase();
     }
     if (body.contact?.phone) {
-      const cleaned = body.contact.phone.trim().replace(/[^0-9+()\-\s]/g, '');
-      if (cleaned) userUpdates.phone = cleaned;
+      const normalized = normalizePhone(body.contact.phone);
+      if (!normalized) throw new HTTPException(400, { message: 'invalid_phone' });
+      userUpdates.phone = normalized;
     }
     if (currentUser.name === null) {
       userUpdates.name = body.name;

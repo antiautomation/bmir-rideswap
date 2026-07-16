@@ -11,6 +11,7 @@ import { unreadCountFor } from './conversations.js';
 import { db } from '../db/client.js';
 import { users } from '../db/schema.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
+import { normalizePhone } from '../lib/phone.js';
 
 export function toMe(user: SessionUser) {
   return {
@@ -82,8 +83,13 @@ sessionRoutes.patch(
       updates.email = trimmed === '' ? null : trimmed;
     }
     if (data.phone !== undefined) {
-      const cleaned = data.phone.trim().replace(/[^0-9+()\-\s]/g, '');
-      updates.phone = cleaned === '' ? null : cleaned;
+      if (data.phone.trim() === '') {
+        updates.phone = null;
+      } else {
+        const normalized = normalizePhone(data.phone);
+        if (!normalized) throw new HTTPException(400, { message: 'invalid_phone' });
+        updates.phone = normalized;
+      }
     }
     if (data.digestFrequency !== undefined) updates.digestFrequency = data.digestFrequency;
 

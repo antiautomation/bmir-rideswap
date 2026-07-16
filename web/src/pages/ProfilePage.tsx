@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
+import PhoneInput from '../components/PhoneInput';
 import ListingCard from '../components/ListingCard';
 import { api, ApiError } from '../api/client';
 import { cancelListing, deleteListing, useMyListings } from '../api/listings';
@@ -139,13 +140,7 @@ function ContactSection({ me }: { me: Me | null }) {
         </div>
         <div className="field-group">
           <label htmlFor="profile-phone">Phone</label>
-          <input
-            id="profile-phone"
-            type="tel"
-            disabled={!me}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <PhoneInput id="profile-phone" disabled={!me} value={phone} onChange={setPhone} />
         </div>
         <div className="field-group">
           <label htmlFor="profile-digest">Email me about new messages</label>
@@ -251,7 +246,9 @@ export default function ProfilePage() {
         )}
       </section>
 
-      <ContactSection me={me ?? null} />
+      {/* key remounts the form when the session loads/switches, so fields
+          initialize from real profile values instead of a loading-time null. */}
+      <ContactSection key={me?.id ?? 'anon'} me={me ?? null} />
 
       <div className="profile-signout">
         <button type="button" className="btn-danger" onClick={() => void handleSignOut()}>

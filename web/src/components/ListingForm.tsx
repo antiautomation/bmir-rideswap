@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
+import PhoneInput from './PhoneInput';
 import type {
   Belongings,
   CreateListingInput,
@@ -455,13 +456,11 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
 
           <div className="field-group">
             <label htmlFor="field-phone">Phone</label>
-            <input
+            <PhoneInput
               id="field-phone"
-              type="tel"
               value={state.phone}
-              onChange={(e) => set('phone', e.target.value)}
-              aria-describedby={errors.phone ? 'error-phone' : undefined}
-              aria-invalid={Boolean(errors.phone)}
+              onChange={(v) => set('phone', v)}
+              ariaDescribedBy={errors.phone ? 'error-phone' : undefined}
             />
             {errors.phone && (
               <p id="error-phone" className="field-error">

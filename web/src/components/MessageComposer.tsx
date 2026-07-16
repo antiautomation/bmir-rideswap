@@ -5,6 +5,7 @@ import { useMe } from '../api/session';
 import { enqueue } from '../offline/outbox';
 import type { Listing, Me, SendMessageInput } from '../api/types';
 import { directionArrow, formatTravelDate } from '../lib/format';
+import PhoneInput from './PhoneInput';
 import { showToast } from './Toast';
 
 interface MessageComposerProps {
@@ -73,14 +74,9 @@ export function ShareContactFields({
         <span>{me?.phone ? `Phone — ${me.phone}` : 'Phone — add one'}</span>
       </label>
       {sharePhone && !me?.phone && (
-        <input
-          type="tel"
-          className="share-row-input"
-          placeholder="(555) 555-5555"
-          value={newPhone}
-          onChange={(e) => onNewPhoneChange(e.target.value)}
-          aria-label="Phone to share"
-        />
+        <div className="share-row-input">
+          <PhoneInput value={newPhone} onChange={onNewPhoneChange} />
+        </div>
       )}
     </div>
   );
