@@ -35,13 +35,12 @@ export default function FilterBar({ filters, onChange, days }: FilterBarProps) {
 
   return (
     <div className="filter-bar">
-      <div className="filter-bar-row">
-        <div className="segmented" role="group" aria-label="Direction">
+      <div className="filter-row-segs">
+        <div className="seg" role="group" aria-label="Direction">
           {DIRECTION_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
-              className={filters.direction === opt.value ? 'segmented-option active' : 'segmented-option'}
               aria-pressed={filters.direction === opt.value}
               onClick={() => set('direction', opt.value)}
             >
@@ -50,12 +49,11 @@ export default function FilterBar({ filters, onChange, days }: FilterBarProps) {
           ))}
         </div>
 
-        <div className="segmented" role="group" aria-label="Listing type">
+        <div className="seg" role="group" aria-label="Listing type">
           {KIND_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
-              className={filters.kind === opt.value ? 'segmented-option active' : 'segmented-option'}
               aria-pressed={filters.kind === opt.value}
               onClick={() => set('kind', opt.value)}
             >
@@ -65,7 +63,7 @@ export default function FilterBar({ filters, onChange, days }: FilterBarProps) {
         </div>
       </div>
 
-      <div className="filter-bar-row">
+      <div className="filter-grid">
         <select
           aria-label="Travel day"
           value={filters.day}
@@ -100,25 +98,27 @@ export default function FilterBar({ filters, onChange, days }: FilterBarProps) {
         </select>
       </div>
 
-      <details className="filter-bar-more">
-        <summary>More filters</summary>
-        <div className="filter-bar-more-options">
-          <label className="checkbox-field">
-            <input
-              type="checkbox"
-              checked={filters.favoritesOnly}
-              onChange={(e) => set('favoritesOnly', e.target.checked)}
-            />
+      <details className="filter-more">
+        <summary className="btn-ghost">
+          More filters <span className="chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div className="filter-more-panel">
+          <button
+            type="button"
+            className="pill pill-toggle"
+            aria-pressed={filters.favoritesOnly}
+            onClick={() => set('favoritesOnly', !filters.favoritesOnly)}
+          >
             Favorites only
-          </label>
-          <label className="checkbox-field">
-            <input
-              type="checkbox"
-              checked={filters.showExpired}
-              onChange={(e) => set('showExpired', e.target.checked)}
-            />
+          </button>
+          <button
+            type="button"
+            className="pill pill-toggle"
+            aria-pressed={filters.showExpired}
+            onClick={() => set('showExpired', !filters.showExpired)}
+          >
             Show recently expired
-          </label>
+          </button>
         </div>
       </details>
     </div>

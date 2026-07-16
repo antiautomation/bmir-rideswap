@@ -24,8 +24,8 @@ interface ShareContactFieldsProps {
   onNewPhoneChange: (value: string) => void;
 }
 
-/** Shared checkbox UI for opting to share profile contact info in a message.
- *  Used by both the composer (new conversation) and the thread reply bar. */
+/** Shared share-contact UI for opting to include profile contact info in a message.
+ *  Used by both the composer modal (new conversation) and the thread composer. */
 export function ShareContactFields({
   me,
   shareEmail,
@@ -38,24 +38,25 @@ export function ShareContactFields({
   onNewPhoneChange,
 }: ShareContactFieldsProps) {
   return (
-    <div className="share-contact">
-      <span className="form-section-title">Share my contact info</span>
+    <div className="share-fields">
+      <p className="share-fields-label">Share contact info</p>
       <p className="field-hint">
         Off by default. If shared, it appears inside this message only — never on the public
         board.
       </p>
 
-      <label className="checkbox-field">
+      <label className="share-row">
         <input
           type="checkbox"
           checked={shareEmail}
           onChange={(e) => onShareEmailChange(e.target.checked)}
         />
-        {me?.email ? `Share my email (${me.email})` : 'Share my email'}
+        <span>{me?.email ? `Email — ${me.email}` : 'Email — add one'}</span>
       </label>
       {shareEmail && !me?.email && (
         <input
           type="email"
+          className="share-row-input"
           placeholder="you@example.com"
           value={newEmail}
           onChange={(e) => onNewEmailChange(e.target.value)}
@@ -63,17 +64,18 @@ export function ShareContactFields({
         />
       )}
 
-      <label className="checkbox-field">
+      <label className="share-row">
         <input
           type="checkbox"
           checked={sharePhone}
           onChange={(e) => onSharePhoneChange(e.target.checked)}
         />
-        {me?.phone ? `Share my phone (${me.phone})` : 'Share my phone'}
+        <span>{me?.phone ? `Phone — ${me.phone}` : 'Phone — add one'}</span>
       </label>
       {sharePhone && !me?.phone && (
         <input
           type="tel"
+          className="share-row-input"
           placeholder="(555) 555-5555"
           value={newPhone}
           onChange={(e) => onNewPhoneChange(e.target.value)}
@@ -136,7 +138,7 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
         </p>
 
         <form className="composer-form" onSubmit={handleSubmit}>
-          <div className="form-field">
+          <div className="field-group">
             <label htmlFor="composer-body">Your message</label>
             <textarea
               id="composer-body"
@@ -161,11 +163,11 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
             onNewPhoneChange={setNewPhone}
           />
 
-          <div className="composer-actions">
-            <button type="button" className="button-secondary" onClick={onClose}>
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="form-submit">
+            <button type="submit" className="btn">
               Send
             </button>
           </div>

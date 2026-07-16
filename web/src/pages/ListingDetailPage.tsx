@@ -52,8 +52,8 @@ export default function ListingDetailPage() {
 
   return (
     <div className="listing-detail-page">
-      <Link to="/" className="back-link">
-        ← Back to board
+      <Link to="/" className="btn-ghost">
+        ← Board
       </Link>
       <ListingCard
         listing={listing}

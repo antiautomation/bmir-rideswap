@@ -19,12 +19,23 @@ export interface DigestConversation {
   }[];
 }
 
+export interface DigestMatch {
+  listingId: string;
+  myListingName: string;
+  theirName: string;
+  theirType: 'driver' | 'rider';
+  travelDate: string; // YYYY-MM-DD
+  location: string;
+  score: number;
+}
+
 export interface DigestInput {
   appOrigin: string; // e.g. https://ridefinder.site — no trailing slash
   magicToken: string; // raw ml_… token; ALL links in this email use it
   recipientName: string | null;
   conversations: DigestConversation[];
   totalNewMessages: number;
+  newMatches: DigestMatch[];
   activeListings: { id: string; name: string }[];
 }
 
@@ -82,18 +93,34 @@ function listingTypeLabel(listingType: 'driver' | 'rider'): string {
 }
 
 export function renderDigest(input: DigestInput): { subject: string; html: string; text: string } {
-  const { appOrigin, magicToken, recipientName, conversations, totalNewMessages, activeListings } = input;
+  const { appOrigin, magicToken, recipientName, conversations, totalNewMessages, newMatches, activeListings } =
+    input;
 
   const link = (path: string): string => `${appOrigin}/a/${magicToken}?next=${encodeURIComponent(path)}`;
 
   const plural = totalNewMessages === 1 ? '' : 's';
-  let subject = `${totalNewMessages} new message${plural} on RideFinder`;
-  if (conversations.length === 1) {
-    subject += ` from ${conversations[0].counterpartName}`;
+  const matchPlural = newMatches.length === 1 ? '' : 'es';
+  let subject: string;
+  if (totalNewMessages === 0) {
+    subject = `${newMatches.length} new ride match${matchPlural} on RideFinder`;
+  } else {
+    subject = `${totalNewMessages} new message${plural} on RideFinder`;
+    if (conversations.length === 1) {
+      subject += ` from ${conversations[0].counterpartName}`;
+    }
+    if (newMatches.length > 0) {
+      subject += ` · ${newMatches.length} new match${matchPlural}`;
+    }
   }
 
   const greetingName = recipientName ?? 'burner';
   const messageWord = totalNewMessages === 1 ? 'message' : 'messages';
+  const summaryLine =
+    totalNewMessages > 0 && newMatches.length > 0
+      ? `You have ${totalNewMessages} new ${messageWord} and ${newMatches.length} new potential match${matchPlural} waiting.`
+      : totalNewMessages > 0
+        ? `You have ${totalNewMessages} new ${messageWord} waiting.`
+        : `You have ${newMatches.length} new potential ride match${matchPlural}.`;
 
   // ---- HTML ----
 
@@ -140,6 +167,27 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     })
     .join('');
 
+  const matchDate = (d: string): string => {
+    const [y, mo, day] = d.split('-').map(Number);
+    return new Date(y!, mo! - 1, day!).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const matchesSectionHtml =
+    newMatches.length === 0
+      ? ''
+      : `
+        <div style="font-size:15px;font-weight:bold;color:#2a2a2a;margin:4px 0 10px;">✨ New potential matches</div>
+        ${newMatches
+          .map((m) =>
+            card(`
+              <div style="font-size:14px;font-weight:bold;color:#2a2a2a;">${esc(m.theirName)} &middot; ${listingTypeLabel(m.theirType)}</div>
+              <div style="font-size:13px;color:#555;margin-top:2px;">${esc(matchDate(m.travelDate))} &middot; ${esc(m.location)} &middot; matches your &quot;${esc(m.myListingName)}&quot; listing</div>
+              <div style="font-size:12px;color:#999;margin-top:2px;">Match strength ${m.score}/100</div>
+              ${button(link(`/listing/${m.listingId}`), 'View & message →')}
+            `),
+          )
+          .join('')}`;
+
   const cancelListingsHtml = activeListings
     .map(
       (l) =>
@@ -174,12 +222,13 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
           <tr>
             <td style="padding:8px 24px 0;">
               <div style="font-size:15px;color:#2a2a2a;margin-bottom:4px;">Hi ${esc(greetingName)} &mdash;</div>
-              <div style="font-size:14px;color:#555;margin-bottom:18px;">You have ${totalNewMessages} new ${messageWord} waiting.</div>
+              <div style="font-size:14px;color:#555;margin-bottom:18px;">${esc(summaryLine)}</div>
             </td>
           </tr>
           <tr>
             <td style="padding:0 24px;">
               ${conversationCardsHtml}
+              ${matchesSectionHtml}
             </td>
           </tr>
           <tr>
@@ -230,11 +279,24 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     .map((l) => `Cancel listing "${l.name}": ${link(`/listing/${l.id}`)} (opens the listing — tap Cancel there)`)
     .join('\n');
 
+  const matchesText =
+    newMatches.length === 0
+      ? ''
+      : ['✨ New potential matches:']
+          .concat(
+            newMatches.map(
+              (m) =>
+                `── ${m.theirName} · ${listingTypeLabel(m.theirType)} · ${matchDate(m.travelDate)} · ${m.location} (matches "${m.myListingName}", strength ${m.score}/100)\n   View & message: ${link(`/listing/${m.listingId}`)}`,
+            ),
+          )
+          .join('\n') + '\n';
+
   const text = [
     `Hi ${greetingName} —`,
-    `You have ${totalNewMessages} new ${messageWord} waiting.`,
+    summaryLine,
     '',
     conversationsText,
+    matchesText,
     `See all messages: ${link('/messages')}`,
     `View my profile: ${link('/me')}`,
     cancelListingsText,

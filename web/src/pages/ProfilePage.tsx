@@ -62,7 +62,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
           to switch back.
         </p>
       )}
-      <form className="recover-form" onSubmit={(e) => void handleSubmit(e)}>
+      <form className="recover-row" onSubmit={(e) => void handleSubmit(e)}>
         <input
           type="text"
           placeholder="e.g. dusty-camel-8214"
@@ -70,7 +70,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
           onChange={(e) => setCode(e.target.value)}
           aria-label="Recovery code"
         />
-        <button type="submit" disabled={status === 'busy'}>
+        <button type="submit" className="btn-secondary" disabled={status === 'busy'}>
           Recover
         </button>
       </form>
@@ -114,8 +114,8 @@ function ContactSection({ me }: { me: Me | null }) {
     <section className="card profile-section">
       <h2>Contact &amp; notifications</h2>
       {!me && <p className="field-hint">Post a listing or recover a session to manage contact info.</p>}
-      <form className="listing-form" onSubmit={(e) => void handleSave(e)}>
-        <div className="form-field">
+      <form className="form" onSubmit={(e) => void handleSave(e)}>
+        <div className="field-group">
           <label htmlFor="profile-name">Name</label>
           <input
             id="profile-name"
@@ -126,7 +126,7 @@ function ContactSection({ me }: { me: Me | null }) {
             onChange={(e) => setName(e.target.value)}
           />
         </div>
-        <div className="form-field">
+        <div className="field-group">
           <label htmlFor="profile-email">Email</label>
           <input
             id="profile-email"
@@ -137,7 +137,7 @@ function ContactSection({ me }: { me: Me | null }) {
           />
           <p className="field-hint">Used for message notifications. Never displayed publicly.</p>
         </div>
-        <div className="form-field">
+        <div className="field-group">
           <label htmlFor="profile-phone">Phone</label>
           <input
             id="profile-phone"
@@ -147,7 +147,7 @@ function ContactSection({ me }: { me: Me | null }) {
             onChange={(e) => setPhone(e.target.value)}
           />
         </div>
-        <div className="form-field">
+        <div className="field-group">
           <label htmlFor="profile-digest">Email me about new messages</label>
           <select
             id="profile-digest"
@@ -162,7 +162,7 @@ function ContactSection({ me }: { me: Me | null }) {
             ))}
           </select>
         </div>
-        <button type="submit" className="form-submit" disabled={!me || saving}>
+        <button type="submit" className="btn" disabled={!me || saving}>
           Save
         </button>
         {saved && <p className="form-note form-note--success">Saved ✓</p>}
@@ -211,14 +211,20 @@ export default function ProfilePage() {
         {me ? (
           <>
             <p className="field-hint">Your session code</p>
-            <p className="recovery-code-display recovery-code-display--inline">{me.recoveryCode}</p>
-            <button type="button" className="button-secondary" onClick={() => void handleCopy(me.recoveryCode)}>
+            <p className="code-block">{me.recoveryCode}</p>
+            <button
+              type="button"
+              className="btn-secondary btn-block"
+              onClick={() => void handleCopy(me.recoveryCode)}
+            >
               {copied ? 'Copied ✓' : 'Copy code'}
             </button>
             <p className="field-hint">Works on any device — this is your login.</p>
           </>
         ) : (
-          <p>No session yet — post a listing to start one, or recover an existing session below.</p>
+          <p className="field-hint">
+            No session yet — post a listing to start one, or recover an existing session below.
+          </p>
         )}
       </section>
 
@@ -248,7 +254,7 @@ export default function ProfilePage() {
       <ContactSection me={me ?? null} />
 
       <div className="profile-signout">
-        <button type="button" className="button-danger" onClick={() => void handleSignOut()}>
+        <button type="button" className="btn-danger" onClick={() => void handleSignOut()}>
           Sign out
         </button>
       </div>

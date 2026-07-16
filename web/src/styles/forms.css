@@ -1,80 +1,54 @@
-/* Form pages (Post / Edit) */
+/* Forms: field groups, listing form, profile page (see web/DESIGN.md §2/§4). */
+
+/* ---------- Form pages (Post / Edit) ---------- */
 
 .form-page {
   max-width: 640px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.form-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
 }
 
 .form-page-subtext {
-  color: var(--dust-dim);
-  margin-top: calc(var(--space-2) * -1);
-  margin-bottom: var(--space-5);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
 }
 
-/* Listing form */
+/* ---------- Field group primitive ---------- */
+/* label (fs-sm/600, from base.css `label`) + control + optional hint + inline error, gap sp-2 */
 
-.listing-form {
+.field-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--sp-2);
 }
 
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.form-section-title {
-  font-weight: 700;
-  font-size: 0.9375rem;
-  color: var(--dust);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-@media (min-width: 480px) {
-  .form-row {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.form-field label {
-  font-weight: 600;
-  font-size: 0.9375rem;
-  color: var(--dust);
-}
-
-.form-field input,
-.form-field select,
-.form-field textarea {
+.field-group input,
+.field-group select,
+.field-group textarea {
   width: 100%;
 }
 
-.form-field textarea {
-  min-height: 88px;
-  resize: vertical;
+.field-group-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
 }
 
 .field-hint {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--dust-dim);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
 }
 
 .field-error {
-  margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--fs-xs);
   color: var(--danger);
 }
 
@@ -82,215 +56,188 @@
   border-color: var(--danger);
 }
 
-/* Type toggle (create mode: driver vs rider) */
+/* ---------- Form: vertical stack of field groups ---------- */
 
-.type-toggle {
+.form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--sp-5);
 }
 
-@media (min-width: 480px) {
-  .type-toggle {
-    flex-direction: row;
+/* Divided subsection (e.g. contact info) — same rhythm as .form, offset by a hairline */
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--border);
+}
+
+/* Two-column grid for paired short fields (date+time, seats+cargo) */
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 640px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-.type-toggle-option {
-  flex: 1;
-  background: var(--panel);
-  color: var(--dust);
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  padding: var(--space-4);
-  font-weight: 700;
-  font-size: 1rem;
-  min-height: 56px;
-}
+/* Full-width segmented control variant (type toggle, direction) */
 
-.type-toggle-option:hover {
-  background: var(--panel-raised);
-}
-
-.type-toggle-option.active {
-  border-color: var(--ember);
-  background: var(--panel-raised);
-  color: var(--ember);
-}
-
-/* Radio pills (direction) */
-
-.radio-pills {
+.seg-block {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  width: 100%;
 }
 
-.radio-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--dust-dim);
-  font-weight: 600;
-  cursor: pointer;
+.seg-block > button {
+  flex: 1;
 }
 
-.radio-pill:hover {
-  background: var(--panel-raised);
-}
+/* ---------- Submit / utility buttons ---------- */
 
-.radio-pill.active {
-  border-color: var(--ember);
-  color: var(--ember);
-  background: var(--panel-raised);
-}
-
-.radio-pill input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.contact-section {
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line);
+.btn-block {
+  width: 100%;
 }
 
 .form-submit {
   width: 100%;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 768px) {
   .form-submit {
     width: auto;
-    align-self: flex-start;
+    align-self: flex-end;
   }
 }
 
 .form-note {
-  margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
 }
 
 .form-note--success {
-  color: var(--go);
+  color: var(--ok);
 }
 
 .form-note--error {
   color: var(--danger);
 }
 
-/* Recovery code display */
+/* ---------- Recovery / session code block (RecoveryCodeNotice + ProfilePage) ---------- */
 
-.recovery-code-display {
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 1.75rem;
+.code-block {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xl);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--ember);
-  background: var(--panel-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
   text-align: center;
   word-break: break-word;
-  margin: var(--space-3) 0;
-}
-
-.recovery-code-display--inline {
-  font-size: 1.375rem;
-  text-align: left;
-  padding: var(--space-3) var(--space-4);
-}
-
-/* Bottom-sheet / modal overlay */
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 0;
-}
-
-@media (min-width: 768px) {
-  .modal-overlay {
-    align-items: center;
-    padding: var(--space-5);
-  }
-}
-
-.modal-sheet {
-  width: 100%;
-  max-width: 480px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
-  padding: var(--space-5) var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-@media (min-width: 768px) {
-  .modal-sheet {
-    border-radius: var(--radius);
-  }
 }
 
 .modal-body-text {
-  color: var(--dust-dim);
-  font-size: 0.9375rem;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
 }
 
-/* Profile page */
+/* base.css's .modal-sheet supplies the container chrome only (bg/border/shadow/padding);
+   give its direct children (heading, text, form, buttons) vertical rhythm here. */
+.modal-sheet > * + * {
+  margin-top: var(--sp-4);
+}
+
+/* ---------- Profile page ---------- */
 
 .profile-page {
   max-width: 640px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--sp-5);
 }
 
 .profile-section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--sp-3);
 }
 
-.profile-section h2 {
-  margin-bottom: 0;
-}
-
-.recover-form {
+.recover-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--sp-2);
 }
 
-.recover-form input {
-  flex: 1 1 200px;
+.recover-row input {
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-signout {
   display: flex;
   justify-content: center;
-  padding-top: var(--space-3);
+  padding-top: var(--sp-2);
+}
+
+/* ---------- Admin (spartan, admin-only) ---------- */
+
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+.admin-row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-row input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-flag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding-block: var(--sp-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-flag-row:last-child {
+  border-bottom: none;
+}
+
+.admin-flag-row .pill {
+  margin-left: var(--sp-2);
+}
+
+.admin-flag-reason {
+  font-size: var(--fs-xs);
+}
+
+.admin-email-row {
+  font-size: var(--fs-xs);
+  padding-block: var(--sp-1);
 }

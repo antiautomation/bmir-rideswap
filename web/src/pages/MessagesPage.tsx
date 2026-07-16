@@ -26,7 +26,7 @@ export default function MessagesPage() {
 
       {isError && <p className="board-stale-notice">Showing saved conversations — reconnecting…</p>}
 
-      <ul className="inbox-list">
+      <ul className="card inbox-list">
         {conversations.map((c) => {
           const cancelled = Boolean(c.listing.cancelledAt);
           const unread = c.unreadCount > 0;
@@ -41,21 +41,19 @@ export default function MessagesPage() {
                 to={`/messages/${c.id}`}
                 className={cancelled ? 'inbox-row inbox-row--cancelled' : 'inbox-row'}
               >
-                <span className="inbox-unread-dot" data-visible={unread} aria-hidden="true" />
-                <div className="inbox-row-main">
-                  <div className="inbox-row-top">
-                    <span className={unread ? 'inbox-row-name unread' : 'inbox-row-name'}>
-                      {c.counterpartName}
-                    </span>
-                    <span className="inbox-row-time">{when}</span>
-                  </div>
-                  <div className="inbox-row-chip">
+                <span className="inbox-dot" data-visible={unread} aria-hidden="true" />
+                <div className="inbox-main">
+                  <span className={unread ? 'inbox-name unread' : 'inbox-name'}>
+                    {c.counterpartName}
+                  </span>
+                  <span className="inbox-context">
                     {c.listing.type === 'driver' ? '🚗' : '🎒'} {directionArrow(c.listing.direction)} ·{' '}
                     {formatTravelDate(c.listing.travelDate)}
                     {cancelled && ' · (cancelled)'}
-                  </div>
-                  <div className="inbox-row-preview">{previewText}</div>
+                  </span>
+                  <span className="inbox-preview">{previewText}</span>
                 </div>
+                <span className="inbox-time">{when}</span>
               </Link>
             </li>
           );

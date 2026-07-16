@@ -55,13 +55,13 @@ export default function BoardPage() {
       <FilterBar filters={filters} onChange={setFilters} days={days} />
 
       {isError && listings.length > 0 && (
-        <p className="board-stale-notice">Showing saved listings — reconnecting…</p>
+        <p className="board-notice">Showing saved listings — reconnecting…</p>
       )}
 
       {isError && listings.length === 0 && (
         <div className="board-error">
           <p>Couldn&rsquo;t load the ride board.</p>
-          <button type="button" onClick={() => void refetch()}>
+          <button type="button" className="btn-secondary" onClick={() => void refetch()}>
             Retry
           </button>
         </div>
@@ -70,7 +70,9 @@ export default function BoardPage() {
       <div className={showDrivers && showRiders ? 'board-columns' : 'board-columns board-columns--single'}>
         {showDrivers && (
           <section className="board-column board-column--drivers">
-            <h2 className="board-column-title">🚗 Drivers offering rides ({drivers.length})</h2>
+            <h2 className="board-column-title">
+              🚗 Drivers offering rides <span className="pill">{drivers.length}</span>
+            </h2>
             {drivers.length === 0 ? (
               <EmptyState
                 title="No drivers yet for these filters"
@@ -95,7 +97,9 @@ export default function BoardPage() {
 
         {showRiders && (
           <section className="board-column board-column--riders">
-            <h2 className="board-column-title">🎒 Riders looking for rides ({riders.length})</h2>
+            <h2 className="board-column-title">
+              🎒 Riders looking for rides <span className="pill">{riders.length}</span>
+            </h2>
             {riders.length === 0 ? (
               <EmptyState
                 title="No riders yet for these filters"

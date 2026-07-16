@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import type {
   Belongings,
   CreateListingInput,
@@ -127,6 +127,7 @@ type FieldErrors = Partial<Record<keyof FormState, string>>;
 export default function ListingForm({ mode, initialType, initial, needsContact, onSubmit }: ListingFormProps) {
   const [state, setState] = useState<FormState>(() => buildInitialState(mode, initialType, initial));
   const [errors, setErrors] = useState<FieldErrors>({});
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   const today = todayLocalDate();
   const isDriver = state.type === 'driver';
@@ -186,6 +187,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
         type: state.type,
         ...shared,
         ...(contact ? { contact } : {}),
+        ...(honeypotRef.current?.value ? { website: honeypotRef.current.value } : {}),
       };
       onSubmit(input);
     } else {
@@ -195,58 +197,60 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
   }
 
   return (
-    <form className="listing-form" onSubmit={handleSubmit} noValidate>
+    <form className="form" onSubmit={handleSubmit} noValidate>
+      {/* Honeypot: invisible to humans; bots that fill it get silently discarded server-side. */}
+      <input
+        ref={honeypotRef}
+        type="text"
+        name="website"
+        className="visually-hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+        autoComplete="off"
+      />
       {mode === 'create' && (
-        <div className="form-section">
-          <span className="form-section-title">What are you posting?</span>
-          <div className="type-toggle" role="group" aria-label="Listing type">
+        <div className="field-group">
+          <span className="field-group-label">What are you posting?</span>
+          <div className="seg seg-block" role="group" aria-label="Listing type">
             <button
               type="button"
-              className={isDriver ? 'type-toggle-option active' : 'type-toggle-option'}
               aria-pressed={isDriver}
               onClick={() => set('type', 'driver')}
             >
-              🚗 Offering a ride (driver)
+              🚗 Driver
             </button>
             <button
               type="button"
-              className={!isDriver ? 'type-toggle-option active' : 'type-toggle-option'}
               aria-pressed={!isDriver}
               onClick={() => set('type', 'rider')}
             >
-              🎒 Need a ride (rider)
+              🎒 Rider
             </button>
           </div>
         </div>
       )}
 
-      <div className="form-section">
-        <span className="form-section-title">Direction</span>
-        <div className="radio-pills" role="radiogroup" aria-label="Direction">
-          <label className={state.direction === 'to_brc' ? 'radio-pill active' : 'radio-pill'}>
-            <input
-              type="radio"
-              name="direction"
-              value="to_brc"
-              checked={state.direction === 'to_brc'}
-              onChange={() => set('direction', 'to_brc')}
-            />
+      <div className="field-group">
+        <span className="field-group-label">Direction</span>
+        <div className="seg seg-block" role="group" aria-label="Direction">
+          <button
+            type="button"
+            aria-pressed={state.direction === 'to_brc'}
+            onClick={() => set('direction', 'to_brc')}
+          >
             Going to BRC
-          </label>
-          <label className={state.direction === 'from_brc' ? 'radio-pill active' : 'radio-pill'}>
-            <input
-              type="radio"
-              name="direction"
-              value="from_brc"
-              checked={state.direction === 'from_brc'}
-              onChange={() => set('direction', 'from_brc')}
-            />
+          </button>
+          <button
+            type="button"
+            aria-pressed={state.direction === 'from_brc'}
+            onClick={() => set('direction', 'from_brc')}
+          >
             Leaving BRC
-          </label>
+          </button>
         </div>
       </div>
 
-      <div className="form-field">
+      <div className="field-group">
         <label htmlFor="field-name">Your name (or playa name)</label>
         <input
           id="field-name"
@@ -265,9 +269,8 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
         )}
       </div>
 
-      <div className="form-field">
+      <div className="field-group">
         <label htmlFor="field-location">Where from / to?</label>
-        <p className="field-hint">City you&rsquo;re driving from (to BRC) or heading to (from BRC)</p>
         <input
           id="field-location"
           type="text"
@@ -284,6 +287,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
             <option key={city} value={city} />
           ))}
         </datalist>
+        <p className="field-hint">City you&rsquo;re driving from (to BRC) or heading to (from BRC)</p>
         {errors.location && (
           <p id="error-location" className="field-error">
             {errors.location}
@@ -291,8 +295,8 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
         )}
       </div>
 
-      <div className="form-row">
-        <div className="form-field">
+      <div className="form-grid-2">
+        <div className="field-group">
           <label htmlFor="field-date">Date</label>
           <input
             id="field-date"
@@ -312,7 +316,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
           )}
         </div>
 
-        <div className="form-field">
+        <div className="field-group">
           <label htmlFor="field-time">Time</label>
           <select id="field-time" value={state.timeSlot} onChange={(e) => set('timeSlot', e.target.value)}>
             {TIME_SLOTS.map((slot) => (
@@ -325,8 +329,8 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
       </div>
 
       {isDriver ? (
-        <div className="form-row">
-          <div className="form-field">
+        <div className="form-grid-2">
+          <div className="field-group">
             <label htmlFor="field-seats">Seats available</label>
             <select
               id="field-seats"
@@ -341,7 +345,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
             </select>
           </div>
 
-          <div className="form-field">
+          <div className="field-group">
             <label htmlFor="field-cargo">Cargo space</label>
             <select
               id="field-cargo"
@@ -357,7 +361,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
           </div>
         </div>
       ) : (
-        <div className="form-field">
+        <div className="field-group">
           <label htmlFor="field-rider-stuff">How much stuff are you bringing?</label>
           <select
             id="field-rider-stuff"
@@ -374,7 +378,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
       )}
 
       {isDriver && (
-        <div className="form-field">
+        <div className="field-group">
           <label htmlFor="field-route">Route details</label>
           <textarea
             id="field-route"
@@ -387,11 +391,10 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
         </div>
       )}
 
-      <div className="form-field">
+      <div className="field-group">
         <label htmlFor="field-camp">
           Camp info{state.direction === 'from_brc' ? ' (required)' : ''}
         </label>
-        <p className="field-hint">Camp name &amp; rough address — helps rides find you for exodus</p>
         <textarea
           id="field-camp"
           maxLength={1000}
@@ -402,6 +405,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
           aria-describedby={errors.campInfo ? 'error-camp' : undefined}
           aria-invalid={Boolean(errors.campInfo)}
         />
+        <p className="field-hint">Camp name &amp; rough address — helps rides find you for exodus</p>
         {errors.campInfo && (
           <p id="error-camp" className="field-error">
             {errors.campInfo}
@@ -409,7 +413,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
         )}
       </div>
 
-      <div className="form-field">
+      <div className="field-group">
         <label htmlFor="field-details">Details</label>
         <textarea
           id="field-details"
@@ -422,14 +426,17 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
       </div>
 
       {mode === 'create' && needsContact && (
-        <div className="form-section contact-section">
-          <span className="form-section-title">Contact info</span>
-          <p className="field-hint">
-            How should ride matches reach you? At least one required. <strong>Never shown publicly</strong>{' '}
-            — only shared if you choose to share it in a message.
-          </p>
+        <div className="form-section">
+          <div className="field-group">
+            <span className="field-group-label">Contact info</span>
+            <p className="field-hint">
+              How should ride matches reach you? At least one required.{' '}
+              <strong>Never shown publicly</strong> — only shared if you choose to share it in a
+              message.
+            </p>
+          </div>
 
-          <div className="form-field">
+          <div className="field-group">
             <label htmlFor="field-email">Email</label>
             <input
               id="field-email"
@@ -446,7 +453,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
             )}
           </div>
 
-          <div className="form-field">
+          <div className="field-group">
             <label htmlFor="field-phone">Phone</label>
             <input
               id="field-phone"
@@ -465,7 +472,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
         </div>
       )}
 
-      <button type="submit" className="form-submit">
+      <button type="submit" className="btn form-submit">
         {mode === 'create' ? 'Post listing' : 'Save changes'}
       </button>
     </form>

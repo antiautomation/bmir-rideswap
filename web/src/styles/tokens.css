@@ -1,30 +1,84 @@
+/* RideFinder "High Desert Night" — single source of truth (see web/DESIGN.md) */
 :root {
-  --ember: #e4622f; /* brand accent — CTAs, driver rail */
-  --ember-hover: #f07a48;
-  --dusk: #8b5db8; /* rider rail, secondary accent */
-  --ink: #14110f; /* app background */
-  --panel: #211c18; /* card background */
-  --panel-raised: #2a241f;
-  --line: #38302a; /* borders */
-  --dust: #e8e0d5; /* primary text */
-  --dust-dim: #a1968a; /* secondary text */
-  --go: #4caf7d;
-  --wait: #d9a13b;
-  --danger: #d95555;
+  /* Color */
+  --bg: #121110;
+  --surface: #1c1a18;
+  --surface-2: #26231f;
+  --surface-3: #312d27;
+  --border: #3a352e;
+  --border-strong: #4c463d;
+  --text: #f2ede4;
+  --text-dim: #b5aa9c;
+  --ember: #ff6b35;
+  --ember-press: #e0592a;
+  --ember-soft: rgba(255, 107, 53, 0.15);
+  --on-ember: #1a0d06;
+  --violet: #a78bfa;
+  --violet-soft: rgba(167, 139, 250, 0.15);
+  --ok: #57c785;
+  --warn: #f0b429;
+  --warn-soft: rgba(240, 180, 41, 0.15);
+  --on-warn: #1a1204;
+  --danger: #ef6461;
+  --danger-soft: rgba(239, 100, 97, 0.12);
 
-  --radius: 10px;
-  --radius-sm: 6px;
-
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
-
+  /* Type */
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
 
-  --tab-bar-height: 56px;
+  /* Space */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 48px;
+
+  /* Radius / shadow / motion / metrics */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-full: 999px;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --t-fast: 120ms ease-out;
+  --t-med: 200ms ease-out;
+  --control-h: 44px;
+  --tab-bar-height: 60px;
+
+  /* ---- Legacy aliases (older stylesheets reference these; new code uses tokens above) ---- */
+  --ink: var(--bg);
+  --panel: var(--surface);
+  --panel-raised: var(--surface-2);
+  --line: var(--border);
+  --dust: var(--text);
+  --dust-dim: var(--text-dim);
+  --dusk: var(--violet);
+  --go: var(--ok);
+  --wait: var(--warn);
+  --ember-hover: var(--ember-press);
+  --radius: var(--r-md);
+  --radius-sm: var(--r-sm);
+  --space-1: var(--sp-1);
+  --space-2: var(--sp-2);
+  --space-3: var(--sp-3);
+  --space-4: var(--sp-4);
+  --space-5: var(--sp-6);
+  --space-6: var(--sp-7);
+  --space-7: var(--sp-8);
+  --space-8: 64px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --control-h: 40px;
+  }
 }

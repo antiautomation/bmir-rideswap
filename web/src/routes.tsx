@@ -9,6 +9,7 @@ import MatchesPage from './pages/MatchesPage';
 import MessagesPage from './pages/MessagesPage';
 import ThreadPage from './pages/ThreadPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
       { path: 'messages', element: <MessagesPage /> },
       { path: 'messages/:convId', element: <ThreadPage /> },
       { path: 'me', element: <ProfilePage /> },
+      { path: 'admin', element: <AdminPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

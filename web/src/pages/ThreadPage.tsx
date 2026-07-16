@@ -37,20 +37,20 @@ function MessageBubble({ message }: { message: Message }) {
         <p className="bubble-body">{message.body}</p>
 
         {(message.sharedEmail || message.sharedPhone) && (
-          <div className="bubble-contact">
-            <p className="bubble-contact-title">📇 Shared contact:</p>
+          <div className="contact-block">
+            <p className="contact-block-title">📇 Shared contact</p>
             {message.sharedEmail && <a href={`mailto:${message.sharedEmail}`}>{message.sharedEmail}</a>}
             {message.sharedPhone && (
-              <span className="bubble-contact-phone">
-                <a href={`sms:${message.sharedPhone}`}>{message.sharedPhone}</a>
+              <div className="contact-block-phone">
+                <span>{message.sharedPhone}</span>
+                <a href={`sms:${message.sharedPhone}`}>Text</a>
                 <a href={`tel:${message.sharedPhone}`}>Call</a>
-              </span>
+              </div>
             )}
           </div>
         )}
-
-        <p className="bubble-meta">{message.pending ? '⏱ sending…' : timeAgo(message.createdAt)}</p>
       </div>
+      <p className="bubble-meta">{message.pending ? '⏱ sending…' : timeAgo(message.createdAt)}</p>
     </div>
   );
 }
@@ -85,21 +85,19 @@ export default function ThreadPage() {
     const status = error instanceof ApiError ? error.status : null;
     if (status === 403 || status === 404) {
       return (
-        <div className="thread-page">
+        <div className="thread-fallback">
           <EmptyState
             title="Conversation not found"
             hint="It may have been removed, or it isn't yours."
           />
-          <p>
-            <Link to="/messages" className="back-link">
-              ← Messages
-            </Link>
-          </p>
+          <Link to="/messages" className="btn-ghost">
+            ← Messages
+          </Link>
         </div>
       );
     }
     return (
-      <div className="thread-page">
+      <div className="thread-fallback">
         <EmptyState
           title="Couldn't load this conversation"
           hint="Check your connection and try again."
@@ -148,9 +146,9 @@ export default function ThreadPage() {
   let lastKey = '';
 
   return (
-    <div className="thread-page">
+    <div className="thread">
       <div className="thread-header">
-        <Link to="/messages" className="back-link">
+        <Link to="/messages" className="btn-ghost">
           ← Messages
         </Link>
         <h1 className="thread-counterpart">{data.counterpartName}</h1>
@@ -161,27 +159,29 @@ export default function ThreadPage() {
         </Link>
       </div>
 
-      <div className="thread-messages" ref={listRef}>
-        {messages.map((m) => {
-          const key = dayKey(m.createdAt);
-          const showDivider = key !== lastKey;
-          lastKey = key;
-          return (
-            <div key={m.id}>
-              {showDivider && (
-                <div className="day-divider">
-                  <span>{dayLabel(m.createdAt)}</span>
-                </div>
-              )}
-              <MessageBubble message={m} />
-            </div>
-          );
-        })}
+      <div className="thread-scroll" ref={listRef}>
+        <div className="thread-messages">
+          {messages.map((m) => {
+            const key = dayKey(m.createdAt);
+            const showDivider = key !== lastKey;
+            lastKey = key;
+            return (
+              <div key={m.id}>
+                {showDivider && (
+                  <div className="day-divider">
+                    <span>{dayLabel(m.createdAt)}</span>
+                  </div>
+                )}
+                <MessageBubble message={m} />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <form className="reply-bar" onSubmit={handleSend}>
+      <form className="composer" onSubmit={handleSend}>
         <textarea
-          className="reply-textarea"
+          className="composer-textarea"
           placeholder="Write a reply…"
           maxLength={2000}
           required
@@ -189,28 +189,36 @@ export default function ThreadPage() {
           onChange={(e) => setBody(e.target.value)}
         />
 
-        <details
-          className="reply-share-disclosure"
-          open={showShare}
-          onToggle={(e) => setShowShare(e.currentTarget.open)}
-        >
-          <summary>+ share contact</summary>
-          <ShareContactFields
-            me={me}
-            shareEmail={shareEmail}
-            sharePhone={sharePhone}
-            onShareEmailChange={setShareEmail}
-            onSharePhoneChange={setSharePhone}
-            newEmail={newEmail}
-            onNewEmailChange={setNewEmail}
-            newPhone={newPhone}
-            onNewPhoneChange={setNewPhone}
-          />
-        </details>
+        {showShare && (
+          <div className="composer-share">
+            <ShareContactFields
+              me={me}
+              shareEmail={shareEmail}
+              sharePhone={sharePhone}
+              onShareEmailChange={setShareEmail}
+              onSharePhoneChange={setSharePhone}
+              newEmail={newEmail}
+              onNewEmailChange={setNewEmail}
+              newPhone={newPhone}
+              onNewPhoneChange={setNewPhone}
+            />
+          </div>
+        )}
 
-        <button type="submit" className="reply-send">
-          Send
-        </button>
+        <div className="composer-row">
+          <button
+            type="button"
+            className="btn-ghost"
+            aria-expanded={showShare}
+            onClick={() => setShowShare((v) => !v)}
+          >
+            {showShare ? '− Contact' : '+ Contact'}
+          </button>
+          <span className="composer-row-spacer" />
+          <button type="submit" className="btn">
+            Send
+          </button>
+        </div>
       </form>
     </div>
   );

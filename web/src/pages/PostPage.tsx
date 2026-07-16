@@ -24,10 +24,12 @@ export default function PostPage() {
 
   return (
     <div className="form-page">
-      <h1>Post a ride</h1>
-      <p className="form-page-subtext">
-        No account needed — posting creates your private session automatically.
-      </p>
+      <div className="form-page-header">
+        <h1>Post a ride</h1>
+        <p className="form-page-subtext">
+          No account needed — posting creates your private session automatically.
+        </p>
+      </div>
       <ListingForm
         mode="create"
         initialType={parseType(searchParams.get('type'))}

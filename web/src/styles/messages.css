@@ -1,104 +1,6 @@
-/* Inbox (Messages list) */
+/* Messaging: inbox, composer share-fields, thread, toast (see web/DESIGN.md §4). */
 
-.inbox-page {
-  max-width: 640px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.inbox-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.inbox-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  min-height: 44px;
-  color: var(--dust);
-}
-
-.inbox-row:hover {
-  background: var(--panel-raised);
-  text-decoration: none;
-}
-
-.inbox-row--cancelled {
-  opacity: 0.6;
-}
-
-.inbox-unread-dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  margin-top: 6px;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.inbox-unread-dot[data-visible='true'] {
-  background: var(--ember);
-}
-
-.inbox-row-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.inbox-row-top {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-
-.inbox-row-name {
-  flex: 1;
-  min-width: 0;
-  color: var(--dust);
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inbox-row-name.unread {
-  font-weight: 700;
-}
-
-.inbox-row-time {
-  flex: none;
-  color: var(--dust-dim);
-  font-size: 0.8125rem;
-}
-
-.inbox-row-chip {
-  color: var(--dust-dim);
-  font-size: 0.8125rem;
-}
-
-.inbox-row-preview {
-  color: var(--dust-dim);
-  font-size: 0.9375rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Unread badges (Header / TabBar) */
+/* ---------- Unread badges (Header / TabBar — classes consumed by those components) ---------- */
 
 .unread-badge {
   display: inline-flex;
@@ -107,10 +9,10 @@
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  margin-left: var(--space-1);
-  border-radius: 999px;
+  margin-left: var(--sp-1);
+  border-radius: var(--r-full);
   background: var(--ember);
-  color: var(--ink);
+  color: var(--on-ember);
   font-size: 0.6875rem;
   font-weight: 700;
   line-height: 1;
@@ -128,225 +30,371 @@
   margin-left: 0;
 }
 
-/* Message composer */
+/* ---------- Inbox (Messages list) ---------- */
+
+.inbox-page {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.inbox-list {
+  list-style: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+.inbox-list li:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.inbox-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: start;
+  gap: var(--sp-3);
+  min-height: 64px;
+  padding: var(--sp-3);
+  color: var(--text);
+  border-radius: var(--r-md);
+}
+
+.inbox-row:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+
+.inbox-row--cancelled {
+  opacity: 0.65;
+}
+
+.inbox-dot {
+  grid-column: 1;
+  justify-self: center;
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+  border-radius: var(--r-full);
+  background: transparent;
+}
+
+.inbox-dot[data-visible='true'] {
+  background: var(--ember);
+}
+
+.inbox-main {
+  grid-column: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inbox-name {
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-name.unread {
+  font-weight: 700;
+}
+
+.inbox-context {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.inbox-preview {
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-time {
+  grid-column: 3;
+  align-self: start;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+
+/* ---------- Share contact fields (shared by MessageComposer modal + ThreadPage composer) ---------- */
+
+.share-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.share-fields-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.share-row input[type='checkbox'] {
+  flex-shrink: 0;
+}
+
+.share-row-input {
+  width: calc(100% - 20px - var(--sp-3));
+  margin-left: calc(20px + var(--sp-3));
+}
+
+/* ---------- Message composer (modal, new conversation) ---------- */
 
 .composer-listing-summary {
-  color: var(--dust-dim);
-  margin-top: calc(var(--space-2) * -1);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
 }
 
 .composer-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--sp-5);
 }
 
-.composer-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
+/* .modal-actions already carries margin-top from base.css; inside a gapped flex
+   column that would double up the spacing, so neutralize it here. */
+.composer-form .modal-actions {
+  margin-top: 0;
 }
 
-.share-contact {
+/* ---------- Thread page ---------- */
+
+/* Height = 100dvh minus the shell chrome around .app-main's content box, measured from the
+   live shell: header 56px + .app-main padding (20px top / 84px bottom incl. tab-bar-height on
+   mobile, 24px top / 24px bottom on desktop) = 160px mobile / 104px desktop. Doesn't account for
+   StatusBar (offline/syncing banner, ~32px+) since that's conditional and components.css is out
+   of scope here — .thread-scroll keeps min-height:0 so that rare case just costs a bit of page
+   scroll instead of breaking layout. */
+.thread {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line);
-}
-
-.share-contact input {
   width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  gap: var(--sp-3);
+  height: calc(100dvh - 160px);
+  min-height: 0;
 }
 
-/* Thread page */
+@media (min-width: 768px) {
+  .thread {
+    height: calc(100dvh - 104px);
+  }
+}
 
-.thread-page {
+.thread-fallback {
   max-width: 640px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--sp-3);
 }
 
 .thread-header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--line);
-}
-
-.thread-counterpart {
-  margin: 0;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .thread-listing-link {
-  color: var(--dust-dim);
-  font-size: 0.9375rem;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.thread-listing-link:hover {
+  color: var(--text);
+}
+
+.thread-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .thread-messages {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) 0;
-  min-height: 40vh;
-  max-height: 60vh;
-  overflow-y: auto;
+  gap: var(--sp-1);
+  padding: var(--sp-3) 0;
+  margin-top: auto;
 }
 
 .day-divider {
   display: flex;
-  justify-content: center;
-  margin: var(--space-3) 0;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-weight: 600;
 }
 
-.day-divider span {
-  color: var(--dust-dim);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.day-divider::before,
+.day-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .bubble-row {
   display: flex;
-  margin-bottom: var(--space-2);
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
 }
 
 .bubble-row--mine {
-  justify-content: flex-end;
+  align-self: flex-end;
+  align-items: flex-end;
 }
 
 .bubble-row--theirs {
-  justify-content: flex-start;
+  align-self: flex-start;
+  align-items: flex-start;
 }
 
 .bubble {
-  max-width: 78%;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  max-width: min(78%, 560px);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
 }
 
 .bubble--mine {
-  background: color-mix(in srgb, var(--ember) 25%, var(--panel));
-  border: 1px solid var(--ember);
-  border-bottom-right-radius: var(--radius-sm);
+  background: var(--ember-soft);
+  border-bottom-right-radius: 4px;
 }
 
 .bubble--theirs {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-bottom-left-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border-bottom-left-radius: 4px;
 }
 
 .bubble-body {
-  margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .bubble-meta {
-  margin: 0;
-  color: var(--dust-dim);
-  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
 }
 
-.bubble-contact {
-  background: var(--panel-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
+.contact-block {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
 }
 
-.bubble-contact-title {
-  margin: 0;
+.contact-block-title {
+  font-size: var(--fs-xs);
   font-weight: 600;
-  font-size: 0.8125rem;
-  color: var(--dust);
+  color: var(--text-dim);
 }
 
-.bubble-contact-phone {
-  display: flex;
-  gap: var(--space-3);
-}
-
-/* Reply bar */
-
-.reply-bar {
-  position: sticky;
-  bottom: var(--tab-bar-height);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-3);
-  background: var(--ink);
-  border-top: 1px solid var(--line);
-}
-
-@media (min-width: 768px) {
-  .reply-bar {
-    bottom: 0;
-  }
-}
-
-.reply-textarea {
-  width: 100%;
-  min-height: 4.5em;
-  resize: vertical;
-}
-
-.reply-share-disclosure summary {
-  cursor: pointer;
-  color: var(--dust-dim);
-  font-weight: 600;
-  font-size: 0.875rem;
-  min-height: 44px;
+.contact-block-phone {
   display: flex;
   align-items: center;
-  list-style: none;
+  gap: var(--sp-3);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
 }
 
-.reply-share-disclosure summary::-webkit-details-marker {
-  display: none;
+.contact-block-phone a {
+  font-weight: 600;
 }
 
-.reply-share-disclosure[open] summary {
-  color: var(--dust);
+/* Composer bar — one bordered unit docked at the bottom of .thread */
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-2);
 }
 
-.reply-send {
-  align-self: flex-end;
+.composer-textarea {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  min-height: 44px;
+  max-height: 8rem;
+  padding: var(--sp-2);
+  resize: none;
 }
 
-/* Toast */
+.composer-share {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+
+.composer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+
+.composer-row-spacer {
+  flex: 1;
+}
+
+/* ---------- Toast ---------- */
 
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tab-bar-height) + var(--space-4));
+  bottom: calc(var(--tab-bar-height) + var(--sp-4));
   transform: translateX(-50%);
   z-index: 60;
-  background: var(--panel-raised);
-  color: var(--dust);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3) var(--space-4);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  max-width: calc(100vw - var(--space-5) * 2);
+  max-width: calc(100vw - var(--sp-5) * 2);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--surface-3);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-sm);
   text-align: center;
 }
 
 @media (min-width: 768px) {
   .toast {
-    bottom: var(--space-5);
+    bottom: var(--sp-5);
   }
 }

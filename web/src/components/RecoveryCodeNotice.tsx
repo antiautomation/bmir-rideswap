@@ -32,8 +32,8 @@ export default function RecoveryCodeNotice() {
     <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="recovery-code-title">
       <div className="modal-sheet">
         <h2 id="recovery-code-title">Save your session code</h2>
-        <p className="recovery-code-display">{code}</p>
-        <button type="button" className="button-secondary" onClick={() => void handleCopy()}>
+        <p className="code-block">{code}</p>
+        <button type="button" className="btn-secondary btn-block" onClick={() => void handleCopy()}>
           {copied ? 'Copied ✓' : 'Copy code'}
         </button>
         <p className="modal-body-text">
@@ -41,7 +41,7 @@ export default function RecoveryCodeNotice() {
           Recover) to pick up your listings and messages there. Screenshot it or write it on your
           arm.
         </p>
-        <button type="button" className="form-submit" onClick={() => setAcknowledged(true)}>
+        <button type="button" className="btn btn-block" onClick={() => setAcknowledged(true)}>
           I saved it
         </button>
       </div>

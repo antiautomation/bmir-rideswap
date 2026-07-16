@@ -10,7 +10,9 @@ import { runMigrations } from './db/migrate.js';
 import { startJobs } from './jobs/index.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { listingRoutes } from './routes/listings.js';
+import { adminRoutes, webhookRoutes } from './routes/admin.js';
 import { magicRoutes } from './routes/magic.js';
+import { matchRoutes } from './routes/matches.js';
 import { sessionRoutes } from './routes/session.js';
 
 const WEB_DIST_ROOT = './web/dist';
@@ -42,6 +44,9 @@ async function main(): Promise<void> {
   app.route('/api', sessionRoutes);
   app.route('/api', listingRoutes);
   app.route('/api', conversationRoutes);
+  app.route('/api', matchRoutes);
+  app.route('/api', adminRoutes);
+  app.route('/api', webhookRoutes);
   app.route('', magicRoutes);
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404));

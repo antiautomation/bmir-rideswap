@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { pruneExpiredTokens } from '../auth/tokens.js';
+import { pruneDeadMatches } from '../matching/score.js';
 import { runDigestTick } from './digests.js';
 
 export function startJobs(): void {
@@ -12,6 +13,7 @@ export function startJobs(): void {
   });
   cron.schedule('0 4 * * *', () => {
     pruneExpiredTokens().catch((err) => console.error('token prune failed', err));
+    pruneDeadMatches().catch((err) => console.error('match prune failed', err));
   });
   console.log('jobs started: digest tick (1m), token prune (daily)');
 }

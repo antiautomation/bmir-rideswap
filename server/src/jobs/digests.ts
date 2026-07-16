@@ -1,9 +1,9 @@
-import { aliasedTable, and, asc, eq, inArray, isNull, ne, or } from 'drizzle-orm';
+import { aliasedTable, and, asc, eq, gt, inArray, isNull, ne, or } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
-import { conversations, listings, messages, users } from '../db/schema.js';
+import { conversations, listings, matches, messages, users } from '../db/schema.js';
 import { mintMagicToken } from '../auth/magic.js';
 import { sendEmail } from '../email/ses.js';
-import { renderDigest, type DigestConversation } from '../email/templates.js';
+import { renderDigest, type DigestConversation, type DigestMatch } from '../email/templates.js';
 
 const DIGEST_LOCK_KEY = 727002;
 const HOUR_MS = 3600 * 1000;
@@ -48,7 +48,30 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
     .orderBy(asc(messages.createdAt))
     .limit(100);
 
-  if (unsent.length === 0) return;
+  const driverListing = aliasedTable(listings, 'driver_listing');
+  const riderListing = aliasedTable(listings, 'rider_listing');
+  const liveSide = (side: typeof driverListing) =>
+    and(isNull(side.cancelledAt), isNull(side.deletedAt), isNull(side.hiddenAt), gt(side.expiresAt, new Date()));
+  const unnotifiedMatches = await db
+    .select({ match: matches, driver: driverListing, rider: riderListing })
+    .from(matches)
+    .innerJoin(driverListing, eq(matches.driverListingId, driverListing.id))
+    .innerJoin(riderListing, eq(matches.riderListingId, riderListing.id))
+    .where(
+      and(
+        or(
+          and(eq(driverListing.userId, user.id), isNull(matches.notifiedDriverAt)),
+          and(eq(riderListing.userId, user.id), isNull(matches.notifiedRiderAt)),
+        ),
+        liveSide(driverListing),
+        liveSide(riderListing),
+      ),
+    )
+    .limit(20);
+  unnotifiedMatches.sort((a, b) => b.match.score - a.match.score);
+  const topMatches = unnotifiedMatches.slice(0, 5);
+
+  if (unsent.length === 0 && topMatches.length === 0) return;
 
   const byConversation = new Map<string, DigestConversation>();
   for (const m of unsent) {
@@ -78,6 +101,21 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
     .where(and(eq(listings.userId, user.id), isNull(listings.deletedAt), isNull(listings.cancelledAt)))
     .limit(10);
 
+  const newMatches: DigestMatch[] = topMatches.map(({ match, driver, rider }) => {
+    const mineIsDriver = driver.userId === user.id;
+    const mine = mineIsDriver ? driver : rider;
+    const theirs = mineIsDriver ? rider : driver;
+    return {
+      listingId: theirs.id,
+      myListingName: mine.name,
+      theirName: theirs.name,
+      theirType: theirs.type,
+      travelDate: theirs.travelDate,
+      location: theirs.locationRaw,
+      score: match.score,
+    };
+  });
+
   const magicToken = await mintMagicToken(user.id);
   const rendered = renderDigest({
     appOrigin,
@@ -85,6 +123,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
     recipientName: user.name,
     conversations: Array.from(byConversation.values()),
     totalNewMessages: unsent.length,
+    newMatches,
     activeListings,
   });
 
@@ -100,10 +139,24 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
   // Suppressed recipients still get marked: retrying every tick forever helps no one.
   void result;
   const now = new Date();
-  await db
-    .update(messages)
-    .set({ emailedAt: now })
-    .where(inArray(messages.id, unsent.map((m) => m.messageId)));
+  if (unsent.length > 0) {
+    await db
+      .update(messages)
+      .set({ emailedAt: now })
+      .where(inArray(messages.id, unsent.map((m) => m.messageId)));
+  }
+  for (const { match, driver } of topMatches) {
+    const mineIsDriver = driver.userId === user.id;
+    await db
+      .update(matches)
+      .set(mineIsDriver ? { notifiedDriverAt: now } : { notifiedRiderAt: now })
+      .where(
+        and(
+          eq(matches.driverListingId, match.driverListingId),
+          eq(matches.riderListingId, match.riderListingId),
+        ),
+      );
+  }
   await db.update(users).set({ lastDigestAt: now }).where(eq(users.id, user.id));
 }
 

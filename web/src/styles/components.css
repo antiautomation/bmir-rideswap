@@ -1,15 +1,15 @@
 /* App shell */
 
 .app-main {
-  max-width: 1100px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: var(--space-5) var(--space-4);
-  padding-bottom: calc(var(--tab-bar-height) + var(--space-5));
+  padding: var(--sp-5) var(--sp-4);
+  padding-bottom: calc(var(--tab-bar-height) + var(--sp-6) + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 768px) {
   .app-main {
-    padding-bottom: var(--space-6);
+    padding: var(--sp-6);
   }
 }
 
@@ -28,10 +28,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--ink);
-  border-bottom: 1px solid var(--line);
+  gap: var(--sp-4);
+  height: 56px;
+  padding-inline: var(--sp-4);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
 }
 
 .header-brand {
@@ -143,12 +145,12 @@
   stroke: currentColor;
 }
 
-/* Board page */
+/* Board page — layout only; card/filter styles live in board.css */
 
 .board-columns {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-5);
+  gap: var(--sp-6);
 }
 
 @media (min-width: 1024px) {
@@ -160,21 +162,16 @@
 .board-column {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--sp-3);
 }
 
 .board-column-title {
-  font-size: 1.0625rem;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-lg);
   font-weight: 700;
-  color: var(--dust);
-}
-
-.board-column--drivers .board-column-title {
-  color: var(--ember);
-}
-
-.board-column--riders .board-column-title {
-  color: var(--dusk);
+  color: var(--text);
 }
 
 /* Empty state */

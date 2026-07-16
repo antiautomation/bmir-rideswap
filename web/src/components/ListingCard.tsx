@@ -12,8 +12,13 @@ interface ListingCardProps {
   onDelete?: (id: string) => void;
   onFlag?: (id: string) => void;
   onMessage?: (listing: Listing) => void;
-  /** Detail-page use: render details always expanded, no "More…" toggle. */
+  /** Detail-page use: render details always expanded, no toggle. */
   forceExpanded?: boolean;
+}
+
+/** "1 seat" / "3 seats" — never bare "1 seats". */
+function seatsLabel(seats: number): string {
+  return `${seats} ${seats === 1 ? 'seat' : 'seats'}`;
 }
 
 export default function ListingCard({
@@ -46,17 +51,19 @@ export default function ListingCard({
 
   return (
     <article
-      className={`listing-card ${isDriver ? 'listing-card--driver' : 'listing-card--rider'}`}
+      className={`card listing-card ${isDriver ? 'listing-card--driver' : 'listing-card--rider'}`}
     >
-      <div className="listing-card-row listing-card-row--top">
-        <span className={`pill pill--type ${isDriver ? 'pill--ember' : 'pill--dusk'}`}>
+      <div className="listing-card-header">
+        <span className={`pill ${isDriver ? 'pill-driver' : 'pill-rider'}`}>
           {isDriver ? '🚗 Driver' : '🎒 Rider'}
         </span>
-        <span className="listing-card-direction">{directionArrow(listing.direction)}</span>
+        <span className="listing-route">
+          {directionArrow(listing.direction)} · {formatTravelDate(listing.travelDate)}
+        </span>
         <span className="listing-card-spacer" />
         <button
           type="button"
-          className="favorite-toggle"
+          className="icon-btn"
           aria-pressed={isFavorite}
           aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           onClick={() => onToggleFavorite(listing.id)}
@@ -65,25 +72,17 @@ export default function ListingCard({
         </button>
       </div>
 
-      <div className="listing-card-row">
+      <div className="listing-card-identity">
         <span className="listing-card-name">{listing.name}</span>
         <span className="listing-card-location">· {listing.location}</span>
       </div>
 
-      <div className="listing-card-row listing-card-row--meta">
-        <span>
-          {formatTravelDate(listing.travelDate)} · {formatTimeSlot(listing.timeSlot)}
-        </span>
-        {expired && <span className="pill pill--wait">Expired</span>}
-        {listing.pending && <span className="pill pill--wait">Waiting to sync</span>}
-        {listing.cancelledAt && <span className="pill pill--dim">Cancelled</span>}
-      </div>
-
-      <div className="listing-card-row listing-card-row--pills">
+      <div className="listing-card-meta">
+        <span>{formatTimeSlot(listing.timeSlot)}</span>
         {isDriver ? (
           <>
             {listing.passengerSpace !== null && (
-              <span className="pill">{listing.passengerSpace} seats</span>
+              <span className="pill">{seatsLabel(listing.passengerSpace)}</span>
             )}
             {listing.cargoSpace !== null && (
               <span className="pill">{belongingsLabel(listing.cargoSpace)}</span>
@@ -94,73 +93,82 @@ export default function ListingCard({
             <span className="pill">{belongingsLabel(listing.riderStuff)}</span>
           )
         )}
+        {listing.pending && <span className="pill pill-warn">Waiting to sync</span>}
+        {expired && <span className="pill pill-warn">Expired</span>}
+        {listing.cancelledAt && <span className="pill pill-dim">Cancelled</span>}
       </div>
 
       {hasMore && (
-        <div className="listing-card-details">
-          {showDetails ? (
-            <>
+        <div className="listing-details-wrap">
+          {!forceExpanded && (
+            <button
+              type="button"
+              className="btn-ghost listing-details-toggle"
+              aria-expanded={showDetails}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              Details <span className="chevron" aria-hidden="true">▾</span>
+            </button>
+          )}
+          {showDetails && (
+            <div className="listing-details">
               {listing.details && <p>{listing.details}</p>}
-              {listing.campInfo && (
-                <p>
-                  <strong>Camp:</strong> {listing.campInfo}
-                </p>
-              )}
               {listing.routeDetails && (
                 <p>
                   <strong>Route:</strong> {listing.routeDetails}
                 </p>
               )}
-              {!forceExpanded && (
-                <button type="button" className="link-button" onClick={() => setExpanded(false)}>
-                  Less…
-                </button>
+              {listing.campInfo && (
+                <p>
+                  <strong>Camp:</strong> {listing.campInfo}
+                </p>
               )}
-            </>
-          ) : (
-            <button type="button" className="link-button" onClick={() => setExpanded(true)}>
-              More…
-            </button>
+            </div>
           )}
         </div>
       )}
 
-      <div className="listing-card-footer">
-        {!listing.isMine && !listing.pending && onMessage && (
-          <button type="button" onClick={() => onMessage(listing)}>
-            Message
-          </button>
-        )}
-
-        {listing.isMine ? (
-          <div className="listing-card-owner-actions">
-            <Link to={`/listing/${listing.id}/edit`} className="button-like">
-              Edit
-            </Link>
-            {onCancel && !listing.cancelledAt && (
-              <button type="button" className="button-secondary" onClick={handleCancel}>
-                Cancel listing
-              </button>
-            )}
-            {onDelete && (
-              <button type="button" className="button-danger" onClick={handleDelete}>
-                Delete
-              </button>
-            )}
-          </div>
-        ) : (
-          onFlag && (
-            <details className="overflow-menu">
-              <summary aria-label="More options">⋯</summary>
-              <div className="overflow-menu-popover">
-                <button type="button" onClick={() => onFlag(listing.id)}>
-                  Report listing
+      {!listing.pending && (
+        <div className="card-footer">
+          {listing.isMine ? (
+            <>
+              <Link to={`/listing/${listing.id}/edit`} className="btn-secondary">
+                Edit
+              </Link>
+              {onCancel && !listing.cancelledAt && (
+                <button type="button" className="btn-secondary" onClick={handleCancel}>
+                  Cancel listing
                 </button>
-              </div>
-            </details>
-          )
-        )}
-      </div>
+              )}
+              {onDelete && (
+                <button type="button" className="btn-danger push-right" onClick={handleDelete}>
+                  Delete
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {onMessage && (
+                <button type="button" className="btn" onClick={() => onMessage(listing)}>
+                  Message
+                </button>
+              )}
+              {onFlag && (
+                <details className="listing-card-menu push-right">
+                  <summary className="icon-btn" aria-label="More options">
+                    ⋯
+                  </summary>
+                  <div className="listing-menu">
+                    <button type="button" onClick={() => onFlag(listing.id)}>
+                      Report listing
+                    </button>
+                  </div>
+                </details>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </article>
   );
 }

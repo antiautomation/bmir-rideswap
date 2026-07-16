@@ -1,0 +1,100 @@
+/* Matches page. Composes .card/.pill/.btn primitives from base.css (see web/DESIGN.md) —
+   only layout, the score badge, and page-specific text styles live here. */
+
+.matches-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  margin-top: var(--sp-1);
+}
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  max-width: 640px;
+  margin: var(--sp-5) auto 0;
+}
+
+/* 640px already fits inside any mobile viewport, but make the constraint explicit:
+   cards go edge-to-edge (within .app-main's own padding) below that breakpoint. */
+@media (max-width: 640px) {
+  .matches-list {
+    max-width: 100%;
+  }
+}
+
+/* ---------- Card ---------- */
+
+.match-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.match-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.match-card-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.match-name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.match-route {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.match-context {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+
+/* ---------- Score badge ---------- */
+
+.match-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-full);
+  border: 2px solid var(--text-dim);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.match-score--ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.match-score--ember {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+.match-score--dim {
+  border-color: var(--text-dim);
+  color: var(--text-dim);
+}
+
+/* ---------- Reason pills ---------- */
+
+.match-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}

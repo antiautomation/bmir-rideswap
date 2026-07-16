@@ -64,6 +64,8 @@ export interface CreateListingInput {
   routeDetails?: string;
   riderStuff?: Belongings;
   contact?: { email?: string; phone?: string };
+  /** Honeypot — never filled by humans; the server discards submissions that set it. */
+  website?: string;
 }
 
 export type UpdateListingInput = Partial<Omit<CreateListingInput, 'clientId' | 'type' | 'contact'>>;
@@ -116,4 +118,27 @@ export interface SendMessageInput {
   clientId: string;
   body: string;
   share?: { email?: boolean; phone?: boolean };
+}
+
+export interface MatchReasons {
+  date: number;
+  location: number;
+  capacity: number;
+  time: number;
+  fresh: number;
+}
+
+export interface Match {
+  driverListingId: string;
+  riderListingId: string;
+  score: number;
+  reasons: MatchReasons;
+  computedAt: string;
+  myListing: { id: string; type: ListingType; name: string; travelDate: string };
+  /** The counterpart's full public listing. */
+  listing: Listing;
+}
+
+export interface MatchesResponse {
+  matches: Match[];
 }

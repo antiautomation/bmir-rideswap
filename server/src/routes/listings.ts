@@ -8,6 +8,7 @@ import { db } from '../db/client.js';
 import { flags, listings, users } from '../db/schema.js';
 import { allow } from '../lib/rateLimit.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
+import { recomputeMatchesForListing } from '../matching/score.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -59,6 +60,8 @@ const createSchema = z
     cargoSpace: belongingsSchema.optional(),
     routeDetails: z.string().max(1000).optional(),
     riderStuff: belongingsSchema.optional(),
+    // Honeypot: humans never see this field; bots that fill it get a fake success.
+    website: z.string().optional(),
     contact: z
       .object({
         email: z.string().email().max(120).optional(),
@@ -152,6 +155,10 @@ listingRoutes.post(
     const user = await ensureUser(c);
     const body = c.req.valid('json');
 
+    if (body.website) {
+      return c.json({ listing: null }, 201);
+    }
+
     // Step 1: idempotency replay by clientId.
     const existingRows = await db.select().from(listings).where(eq(listings.clientId, body.clientId)).limit(1);
     const existing = existingRows[0];
@@ -231,6 +238,7 @@ listingRoutes.post(
 
     try {
       const inserted = await db.insert(listings).values(values).returning();
+      await recomputeMatchesForListing(inserted[0]!);
       return c.json({ listing: toListingDto(inserted[0]!, currentUser.id) }, 201);
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -294,6 +302,7 @@ listingRoutes.patch(
     }
 
     const updated = await db.update(listings).set(updates).where(eq(listings.id, id)).returning();
+    await recomputeMatchesForListing(updated[0]!);
     return c.json({ listing: toListingDto(updated[0]!, user.id) });
   },
 );
@@ -317,6 +326,7 @@ listingRoutes.post('/listings/:id/cancel', async (c) => {
       .where(eq(listings.id, id))
       .returning();
     result = updated[0]!;
+    await recomputeMatchesForListing(result);
   }
   return c.json({ listing: toListingDto(result, user.id) });
 });
@@ -331,7 +341,8 @@ listingRoutes.delete('/listings/:id', async (c) => {
   if (!row || row.deletedAt) throw new HTTPException(404, { message: 'not_found' });
   if (row.userId !== user.id && !user.isAdmin) throw new HTTPException(403, { message: 'forbidden' });
 
-  await db.update(listings).set({ deletedAt: new Date() }).where(eq(listings.id, id));
+  const deleted = await db.update(listings).set({ deletedAt: new Date() }).where(eq(listings.id, id)).returning();
+  if (deleted[0]) await recomputeMatchesForListing(deleted[0]);
   return c.body(null, 204);
 });
 
