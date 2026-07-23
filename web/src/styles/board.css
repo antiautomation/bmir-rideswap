@@ -295,3 +295,62 @@
 .listing-detail-page > .btn-ghost {
   align-self: flex-start;
 }
+
+/* ---------- Matches teaser ---------- */
+
+.matches-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--ember-soft);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  color: var(--ember);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.matches-teaser:hover {
+  text-decoration: none;
+  border-color: var(--ember);
+}
+
+.matches-teaser-cta {
+  white-space: nowrap;
+}
+
+/* ---------- First-visit welcome ---------- */
+
+.welcome-card {
+  position: relative;
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.welcome-card h2 {
+  padding-right: var(--sp-7);
+  text-wrap: balance;
+}
+
+.welcome-card p {
+  font-size: var(--fs-sm);
+  max-width: 60ch;
+}
+
+.welcome-card-close {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+}
+
+.welcome-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}

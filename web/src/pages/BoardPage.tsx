@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
 import FilterBar from '../components/FilterBar';
+import MatchesTeaser from '../components/MatchesTeaser';
+import WelcomeCard from '../components/WelcomeCard';
 import ListingCard from '../components/ListingCard';
 import MessageComposer from '../components/MessageComposer';
 import { cancelListing, deleteListing, flagListing, useListings } from '../api/listings';
@@ -53,6 +55,9 @@ export default function BoardPage() {
     <>
       <h1 className="visually-hidden">Ride board</h1>
       <FilterBar filters={filters} onChange={setFilters} days={days} />
+
+      <WelcomeCard />
+      <MatchesTeaser />
 
       {isError && listings.length > 0 && (
         <p className="board-notice">Showing saved listings — reconnecting…</p>

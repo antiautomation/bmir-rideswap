@@ -32,7 +32,8 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
       senderName: sender.name,
       listingName: listings.name,
       listingType: listings.type,
-      listingId: listings.id,
+      listingOwnerId: listings.userId,
+      listingDate: listings.travelDate,
     })
     .from(messages)
     .innerJoin(conversations, eq(messages.conversationId, conversations.id))
@@ -73,15 +74,28 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
 
   if (unsent.length === 0 && topMatches.length === 0) return;
 
+  const friendlyDate = (d: string): string => {
+    const [y, mo, day] = d.split('-').map(Number);
+    return new Date(y!, mo! - 1, day!).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   const byConversation = new Map<string, DigestConversation>();
   for (const m of unsent) {
     let group = byConversation.get(m.conversationId);
     if (!group) {
+      const kind = m.listingType === 'driver' ? '🚗 ride offer' : '🎒 ride request';
+      const context =
+        m.listingOwnerId === user.id
+          ? `your ${kind} · ${friendlyDate(m.listingDate)}`
+          : `${m.listingName}'s ${kind} · ${friendlyDate(m.listingDate)}`;
       group = {
         conversationId: m.conversationId,
         counterpartName: m.senderName ?? 'A burner',
-        listingName: m.listingName,
-        listingType: m.listingType,
+        context,
         messages: [],
       };
       byConversation.set(m.conversationId, group);

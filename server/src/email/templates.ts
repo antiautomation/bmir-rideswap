@@ -8,8 +8,8 @@
 export interface DigestConversation {
   conversationId: string;
   counterpartName: string;
-  listingName: string;
-  listingType: 'driver' | 'rider';
+  /** Prebuilt, e.g. 'your 🚗 ride offer · Sun, Aug 30' or "Alice's 🎒 ride request · Sat, Aug 29". */
+  context: string;
   messages: {
     senderName: string;
     body: string;
@@ -128,7 +128,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     .map((conv) => {
       const headerHtml = `
         <div style="font-size:15px;font-weight:bold;color:#2a2a2a;margin-bottom:10px;">
-          ${esc(conv.counterpartName)} &middot; about &quot;${esc(conv.listingName)}&quot; (${listingTypeLabel(conv.listingType)})
+          ${esc(conv.counterpartName)} &middot; about ${esc(conv.context)}
         </div>`;
 
       const messagesHtml = conv.messages
@@ -258,7 +258,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
   const conversationsText = conversations
     .map((conv) => {
       const lines: string[] = [];
-      lines.push(`── ${conv.counterpartName} · about "${conv.listingName}" (${listingTypeLabel(conv.listingType)})`);
+      lines.push(`── ${conv.counterpartName} · about ${conv.context}`);
       for (const m of conv.messages) {
         lines.push(`${m.senderName}: ${m.body}`);
         lines.push(`  (${formatTimestamp(m.createdAt)})`);
