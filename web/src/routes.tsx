@@ -10,6 +10,7 @@ import MessagesPage from './pages/MessagesPage';
 import ThreadPage from './pages/ThreadPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import PrivacyPage from './pages/PrivacyPage';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: 'messages/:convId', element: <ThreadPage /> },
       { path: 'me', element: <ProfilePage /> },
       { path: 'admin', element: <AdminPage /> },
+      { path: 'privacy', element: <PrivacyPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

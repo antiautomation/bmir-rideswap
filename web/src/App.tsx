@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 
 import Header from './components/Header';
 import TabBar from './components/TabBar';
+import Footer from './components/Footer';
 import RecoveryCodeNotice from './components/RecoveryCodeNotice';
 import ToastHost from './components/Toast';
 import StatusBar from './components/StatusBar';
@@ -16,6 +17,7 @@ export default function App() {
       </div>
       <main className="app-main">
         <Outlet />
+        <Footer />
       </main>
       <InstallPrompt />
       <TabBar />
