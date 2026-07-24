@@ -191,7 +191,7 @@
   max-width: 640px;
   margin: 0 auto;
   gap: var(--sp-3);
-  height: calc(100dvh - 160px);
+  height: calc(100dvh - 160px - env(safe-area-inset-bottom));
   min-height: 0;
 }
 
@@ -284,6 +284,8 @@
   max-width: min(78%, 560px);
   padding: var(--sp-3) var(--sp-4);
   border-radius: var(--r-lg);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .bubble--mine {
@@ -340,7 +342,8 @@
 .composer {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -379,7 +382,7 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tab-bar-height) + var(--sp-4));
+  bottom: calc(var(--tab-bar-height) + var(--sp-4) + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 60;
   max-width: calc(100vw - var(--sp-5) * 2);
@@ -397,4 +400,25 @@
   .toast {
     bottom: var(--sp-5);
   }
+}
+
+/* Mobile-audit fixes: long-name wrapping + touch targets (see workflow wf_dab75f3d) */
+.thread-counterpart {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.share-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.contact-block a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.thread-scroll {
+  overscroll-behavior: contain;
 }

@@ -14,6 +14,13 @@
 }
 
 /* Sticky app-top wrapper: StatusBar + Header stick together as one unit. */
+.app-top::before {
+  content: '';
+  display: block;
+  height: env(safe-area-inset-top);
+  background: var(--bg);
+}
+
 .app-top {
   position: sticky;
   top: 0;
@@ -106,7 +113,7 @@
   bottom: 0;
   z-index: 10;
   display: flex;
-  height: var(--tab-bar-height);
+  height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--panel);
   border-top: 1px solid var(--line);

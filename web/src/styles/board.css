@@ -55,7 +55,7 @@
 
 /* Checkbox-style filters restyled as pressable pills (32px touch target, not the 24px display pill). */
 .pill-toggle {
-  min-height: 32px;
+  min-height: 40px;
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
 
@@ -114,6 +114,7 @@
 }
 
 .board-column {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
@@ -188,12 +189,16 @@
 }
 
 .listing-card-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--fs-md);
   font-weight: 700;
   color: var(--text);
 }
 
 .listing-card-location {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--fs-sm);
   color: var(--text-dim);
 }

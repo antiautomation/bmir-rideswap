@@ -7,7 +7,7 @@
   justify-content: center;
   gap: var(--space-3);
   padding: var(--space-1) var(--space-3);
-  padding-top: calc(var(--space-1) + env(safe-area-inset-top));
+  padding-top: var(--space-1);
   font-size: 0.8125rem;
   font-weight: 600;
   text-align: center;
@@ -25,7 +25,8 @@
 }
 
 .status-bar-retry {
-  min-height: auto;
+  min-height: 40px;
+  margin-block: -6px;
   padding: var(--space-1) var(--space-2);
   background: transparent;
   color: inherit;
@@ -89,4 +90,14 @@
 .install-prompt-dismiss:hover {
   background: var(--line);
   color: var(--dust);
+}
+
+/* Mobile-audit fixes: install-prompt buttons meet the 40px target */
+.install-prompt-install,
+.install-prompt-dismiss {
+  min-height: 40px;
+}
+
+.install-prompt-dismiss {
+  min-width: 40px;
 }

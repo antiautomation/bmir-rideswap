@@ -50,6 +50,12 @@ p {
   overflow-wrap: break-word;
 }
 
+h1,
+h2,
+h3 {
+  overflow-wrap: anywhere;
+}
+
 a {
   color: var(--ember);
   text-decoration: none;
@@ -184,7 +190,15 @@ textarea {
   border-radius: var(--r-md);
   padding-inline: var(--sp-4);
   min-height: var(--control-h);
+  /* Controls may never force their container wider than the viewport —
+     textareas/inputs have intrinsic widths (cols/size) that must lose to layout. */
+  max-width: 100%;
+  min-width: 0;
   transition: border-color var(--t-fast);
+}
+
+textarea {
+  width: 100%;
 }
 
 input:hover,
@@ -232,6 +246,8 @@ label {
 /* ---------- Segmented control ---------- */
 .seg {
   display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-full);
@@ -243,7 +259,7 @@ label {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  height: calc(var(--control-h) - 8px);
+  height: calc(var(--control-h) - 6px);
   padding-inline: var(--sp-4);
   border-radius: var(--r-full);
   font-size: var(--fs-sm);
@@ -302,6 +318,7 @@ label {
 
 /* ---------- Card ---------- */
 .card {
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -311,6 +328,7 @@ label {
 
 .card-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-2);
   margin-top: var(--sp-3);

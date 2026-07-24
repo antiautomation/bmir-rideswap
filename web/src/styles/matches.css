@@ -98,3 +98,9 @@
   flex-wrap: wrap;
   gap: var(--sp-1);
 }
+
+/* Mobile-audit fix: long names wrap instead of stretching the card */
+.match-card-identity > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
