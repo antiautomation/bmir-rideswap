@@ -48,6 +48,15 @@ export default function AboutPage() {
         shared car is a head start. By the time you reach the Gate you&rsquo;ve already practiced.
       </p>
       <p>
+        The other push came from watching the end of the burn. For years, the way people found a
+        ride out of Black Rock City was a DJ reading pleas over the air on BMIR and a whiteboard
+        at the station&rsquo;s camp slowly filling up with names and marker dust. It worked, mostly,
+        the way things work out there — barely, beautifully, at the last possible minute. But we
+        have the internet now, most of the year anyway. Seemed like we might as well use it to
+        take some of the scramble out of that, in both directions: getting to the dust, and
+        getting home from it.
+      </p>
+      <p>
         So this board is the version I always wanted: free, no accounts, no ads, and your contact
         info stays private until you decide to share it with one specific person. Post a ride,
         find a match, meet your first friend of the burn before you leave your driveway.
