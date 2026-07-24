@@ -309,7 +309,7 @@
   justify-content: space-between;
   gap: var(--sp-3);
   margin-top: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--ember-soft);
   border: 1px solid transparent;
   border-radius: var(--r-md);
@@ -332,9 +332,10 @@
 .welcome-card {
   position: relative;
   margin-top: var(--sp-4);
+  padding: var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: var(--sp-3);
 }
 
 .welcome-card h2 {
@@ -344,6 +345,7 @@
 
 .welcome-card p {
   font-size: var(--fs-sm);
+  line-height: 1.65;
   max-width: 60ch;
 }
 
@@ -356,6 +358,6 @@
 .welcome-card-actions {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-2);
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
 }

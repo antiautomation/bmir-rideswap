@@ -281,6 +281,11 @@
 
 .privacy-page .privacy-callout {
   border-left: 3px solid var(--warn);
+  padding: var(--sp-5);
+}
+
+.privacy-page .privacy-callout p {
+  line-height: 1.65;
 }
 
 .privacy-page .privacy-callout p,

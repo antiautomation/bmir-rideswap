@@ -4,8 +4,11 @@ export default function Footer() {
   return (
     <footer className="site-footer">
       <p>
-        Built with 🔥 by <strong>Wavy Davy</strong> &amp; the <strong>BMIR 94.5 FM</strong> family —
-        a free community service, by burners, for burners.
+        Built with 🔥 by <strong>Wavy Davy</strong>, part of the{' '}
+        <a href="https://bmir.org/" target="_blank" rel="noopener noreferrer">
+          <strong>BMIR 94.5 FM</strong>
+        </a>{' '}
+        family — a free community service, by burners, for burners.
       </p>
       <p>
         Not affiliated with the Burning Man Project or Black Rock City LLC. Ride at your own
