@@ -88,14 +88,34 @@ avatarRoutes.post('/me/avatar', async (c) => {
     throw new HTTPException(413, { message: 'too_large' });
   }
 
-  const body = await c.req.parseBody();
-  const file = body['avatar'];
-  if (!(file instanceof File)) throw new HTTPException(400, { message: 'invalid' });
-  if (file.size > MAX_UPLOAD_BYTES) throw new HTTPException(413, { message: 'too_large' });
+  /* Preferred path: raw image bytes as the request body. Multipart is kept for
+     compatibility but Safari mangles FormData bodies on service-worker-controlled
+     pages (boundary mismatch → undici parse crash), so the web client no longer
+     sends it. sharp identifies the format from magic bytes; the declared
+     content-type is irrelevant. */
+  const contentType = c.req.header('content-type') ?? '';
+  let input: Buffer;
+  if (contentType.startsWith('multipart/form-data')) {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.parseBody();
+    } catch {
+      throw new HTTPException(400, { message: 'bad_form_data' });
+    }
+    const file = body['avatar'];
+    if (!(file instanceof File)) throw new HTTPException(400, { message: 'invalid' });
+    if (file.size > MAX_UPLOAD_BYTES) throw new HTTPException(413, { message: 'too_large' });
+    input = Buffer.from(await file.arrayBuffer());
+  } else {
+    const raw = await c.req.arrayBuffer();
+    if (raw.byteLength === 0) throw new HTTPException(400, { message: 'invalid' });
+    if (raw.byteLength > MAX_UPLOAD_BYTES) throw new HTTPException(413, { message: 'too_large' });
+    input = Buffer.from(raw);
+  }
 
   let processed: { full: Buffer; thumb: Buffer };
   try {
-    processed = await processAvatar(Buffer.from(await file.arrayBuffer()));
+    processed = await processAvatar(input);
   } catch {
     throw new HTTPException(400, { message: 'invalid_image' });
   }

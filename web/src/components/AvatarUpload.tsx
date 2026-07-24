@@ -61,11 +61,12 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
     setUploading(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append('avatar', pendingFile);
+      /* Raw bytes, not FormData: Safari corrupts multipart bodies sent from
+         service-worker-controlled pages (empty/mismatched boundary at the server). */
       const res = await fetch('/api/me/avatar', {
         method: 'POST',
-        body: formData,
+        body: pendingFile,
+        headers: { 'Content-Type': pendingFile.type || 'application/octet-stream' },
         credentials: 'same-origin',
       });
       if (!res.ok) {
