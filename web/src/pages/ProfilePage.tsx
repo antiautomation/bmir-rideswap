@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import AvatarUpload from '../components/AvatarUpload';
 import EmptyState from '../components/EmptyState';
 import PhoneInput from '../components/PhoneInput';
 import ListingCard from '../components/ListingCard';
@@ -221,6 +222,11 @@ export default function ProfilePage() {
             No session yet — post a listing to start one, or recover an existing session below.
           </p>
         )}
+      </section>
+
+      <section className="card profile-section">
+        <h2>Profile photo</h2>
+        <AvatarUpload key={me?.id ?? 'anon'} me={me ?? null} />
       </section>
 
       <RecoverSessionSection me={me ?? null} />

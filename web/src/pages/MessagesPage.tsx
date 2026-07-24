@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
 import { useConversations } from '../api/messages';
 import { directionArrow, formatTravelDate, timeAgo } from '../lib/format';
@@ -39,9 +40,27 @@ export default function MessagesPage() {
             <li key={c.id}>
               <Link
                 to={`/messages/${c.id}`}
-                className={cancelled ? 'inbox-row inbox-row--cancelled' : 'inbox-row'}
+                className={
+                  cancelled
+                    ? 'inbox-row inbox-row--cancelled'
+                    : c.counterpartAvatarVersion
+                      ? 'inbox-row inbox-row--avatar'
+                      : 'inbox-row'
+                }
               >
-                <span className="inbox-dot" data-visible={unread} aria-hidden="true" />
+                {c.counterpartAvatarVersion ? (
+                  <span className="inbox-avatar-slot">
+                    <Avatar
+                      thumbSrc={`/api/conversations/${c.id}/avatar-thumb?v=${c.counterpartAvatarVersion}`}
+                      fullSrc={`/api/conversations/${c.id}/avatar?v=${c.counterpartAvatarVersion}`}
+                      name={c.counterpartName}
+                      size={40}
+                    />
+                    <span className="inbox-dot inbox-dot--overlay" data-visible={unread} aria-hidden="true" />
+                  </span>
+                ) : (
+                  <span className="inbox-dot" data-visible={unread} aria-hidden="true" />
+                )}
                 <div className="inbox-main">
                   <span className={unread ? 'inbox-name unread' : 'inbox-name'}>
                     {c.counterpartName}

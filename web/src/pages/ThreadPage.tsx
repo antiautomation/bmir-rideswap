@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
 import { ShareContactFields } from '../components/MessageComposer';
 import { showToast } from '../components/Toast';
@@ -151,6 +152,14 @@ export default function ThreadPage() {
         <Link to="/messages" className="btn-ghost">
           ← Messages
         </Link>
+        {data.counterpartAvatarVersion && (
+          <Avatar
+            thumbSrc={`/api/conversations/${convId}/avatar-thumb?v=${data.counterpartAvatarVersion}`}
+            fullSrc={`/api/conversations/${convId}/avatar?v=${data.counterpartAvatarVersion}`}
+            name={data.counterpartName}
+            size={48}
+          />
+        )}
         <h1 className="thread-counterpart">{data.counterpartName}</h1>
         <Link to={`/listing/${data.listing.id}`} className="thread-listing-link">
           {data.listing.type === 'driver' ? '🚗' : '🎒'} {directionArrow(data.listing.direction)} ·{' '}

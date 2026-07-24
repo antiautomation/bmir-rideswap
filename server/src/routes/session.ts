@@ -22,6 +22,7 @@ export function toMe(user: SessionUser) {
     digestFrequency: user.digestFrequency,
     recoveryCode: user.recoveryCode,
     isAdmin: user.isAdmin,
+    avatarVersion: user.avatarUpdatedAt?.getTime() ?? null,
     unreadCount: 0, // overridden by GET /me; toMe's callers that don't need it keep 0
   };
 }

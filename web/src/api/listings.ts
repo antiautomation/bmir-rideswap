@@ -91,6 +91,7 @@ export function createListing(queryClient: QueryClient, input: CreateListingInpu
     createdAt: now,
     updatedAt: now,
     isMine: true,
+    avatarVersion: null,
     pending: true,
   };
 

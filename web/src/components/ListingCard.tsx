@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Avatar from './Avatar';
 import type { Listing } from '../api/types';
 import { isExpired } from '../lib/expiry';
 import { belongingsLabel, directionArrow, formatTimeSlot, formatTravelDate } from '../lib/format';
@@ -73,6 +74,14 @@ export default function ListingCard({
       </div>
 
       <div className="listing-card-identity">
+        {listing.avatarVersion && !listing.pending && (
+          <Avatar
+            thumbSrc={`/api/listings/${listing.id}/avatar-thumb?v=${listing.avatarVersion}`}
+            fullSrc={`/api/listings/${listing.id}/avatar?v=${listing.avatarVersion}`}
+            name={listing.name}
+            size={40}
+          />
+        )}
         <span className="listing-card-name">{listing.name}</span>
         <span className="listing-card-location">· {listing.location}</span>
       </div>

@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { requireUser } from '../auth/middleware.js';
 import { db } from '../db/client.js';
-import { listings, matches } from '../db/schema.js';
+import { listings, matches, users } from '../db/schema.js';
 import type { MatchReasons } from '../matching/score.js';
 import { toListingDto } from './listings.js';
 
@@ -19,7 +19,7 @@ function liveListingFilter(now: Date) {
   );
 }
 
-function toMatchDto(match: MatchRow, mine: ListingRow, theirs: ListingRow, viewerId: string) {
+function toMatchDto(match: MatchRow, mine: ListingRow, theirs: ListingRow, viewerId: string, theirAvatarVersion: number | null) {
   return {
     driverListingId: match.driverListingId,
     riderListingId: match.riderListingId,
@@ -27,7 +27,7 @@ function toMatchDto(match: MatchRow, mine: ListingRow, theirs: ListingRow, viewe
     reasons: match.reasons as MatchReasons,
     computedAt: match.computedAt.toISOString(),
     myListing: { id: mine.id, type: mine.type, name: mine.name, travelDate: mine.travelDate },
-    listing: toListingDto(theirs, viewerId),
+    listing: toListingDto(theirs, viewerId, theirAvatarVersion),
   };
 }
 
@@ -52,12 +52,20 @@ async function matchesForListings(myListings: ListingRow[], viewerId: string) {
     .from(listings)
     .where(and(inArray(listings.id, counterpartIds), liveListingFilter(now)));
   const counterparts = new Map(counterpartRows.map((l) => [l.id, l]));
+  const ownerIds = [...new Set(counterpartRows.map((l) => l.userId))];
+  const avatarRows = ownerIds.length
+    ? await db
+        .select({ id: users.id, at: users.avatarUpdatedAt })
+        .from(users)
+        .where(inArray(users.id, ownerIds))
+    : [];
+  const avatarByOwner = new Map(avatarRows.map((r) => [r.id, r.at?.getTime() ?? null]));
 
   const out = [];
   for (const m of rows) {
     const mine = byId.get(m.driverListingId) ?? byId.get(m.riderListingId);
     const theirs = counterparts.get(byId.has(m.driverListingId) ? m.riderListingId : m.driverListingId);
-    if (mine && theirs) out.push(toMatchDto(m, mine, theirs, viewerId));
+    if (mine && theirs) out.push(toMatchDto(m, mine, theirs, viewerId, avatarByOwner.get(theirs.userId) ?? null));
   }
   return out;
 }

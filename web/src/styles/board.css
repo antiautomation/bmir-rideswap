@@ -184,8 +184,8 @@
 .listing-card-identity {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sp-1);
+  align-items: center;
+  gap: var(--sp-2);
 }
 
 .listing-card-name {

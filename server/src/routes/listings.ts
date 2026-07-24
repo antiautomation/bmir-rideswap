@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
-import { and, asc, count, desc, eq, gt, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
@@ -17,7 +17,11 @@ function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
-export function toListingDto(row: typeof listings.$inferSelect, viewerId: string | null) {
+export function toListingDto(
+  row: typeof listings.$inferSelect,
+  viewerId: string | null,
+  avatarVersion: number | null = null,
+) {
   return {
     id: row.id,
     type: row.type,
@@ -37,6 +41,7 @@ export function toListingDto(row: typeof listings.$inferSelect, viewerId: string
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     isMine: viewerId !== null && row.userId === viewerId,
+    avatarVersion,
   };
 }
 
@@ -103,6 +108,16 @@ const flagSchema = z.object({
   reason: z.string().max(300).optional(),
 });
 
+async function avatarVersionsFor(userIds: string[]): Promise<Map<string, number>> {
+  const unique = [...new Set(userIds)];
+  if (unique.length === 0) return new Map();
+  const rows = await db
+    .select({ id: users.id, at: users.avatarUpdatedAt })
+    .from(users)
+    .where(and(inArray(users.id, unique), isNotNull(users.avatarUpdatedAt)));
+  return new Map(rows.map((r) => [r.id, r.at!.getTime()]));
+}
+
 function isUniqueViolation(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: unknown }).code === '23505';
 }
@@ -125,8 +140,9 @@ listingRoutes.get('/listings', async (c) => {
     )
     .orderBy(asc(listings.travelDate), desc(listings.createdAt))
     .limit(500);
+  const avatarVersions = await avatarVersionsFor(rows.map((r) => r.userId));
   return c.json({
-    listings: rows.map((r) => toListingDto(r, viewerId)),
+    listings: rows.map((r) => toListingDto(r, viewerId, avatarVersions.get(r.userId) ?? null)),
     serverTime: new Date().toISOString(),
   });
 });
@@ -144,7 +160,8 @@ listingRoutes.get('/listings/:id', async (c) => {
   if ((row.deletedAt || row.hiddenAt) && !isOwnerOrAdmin) {
     throw new HTTPException(404, { message: 'not_found' });
   }
-  return c.json({ listing: toListingDto(row, viewer?.id ?? null) });
+  const avatarVersions = await avatarVersionsFor([row.userId]);
+  return c.json({ listing: toListingDto(row, viewer?.id ?? null, avatarVersions.get(row.userId) ?? null) });
 });
 
 listingRoutes.post(
@@ -356,7 +373,8 @@ listingRoutes.get('/my/listings', async (c) => {
     .where(and(eq(listings.userId, user.id), isNull(listings.deletedAt)))
     .orderBy(desc(listings.createdAt))
     .limit(100);
-  return c.json({ listings: rows.map((r) => toListingDto(r, user.id)) });
+  const myVersion = user.avatarUpdatedAt?.getTime() ?? null;
+  return c.json({ listings: rows.map((r) => toListingDto(r, user.id, myVersion)) });
 });
 
 listingRoutes.post(

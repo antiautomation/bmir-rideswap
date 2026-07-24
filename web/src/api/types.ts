@@ -29,6 +29,9 @@ export interface Listing {
   createdAt: string;
   updatedAt: string;
   isMine: boolean;
+  /** Epoch-ms version of the owner's profile photo, or null if none. Thumb URL:
+   *  /api/listings/{id}/avatar-thumb?v={avatarVersion} */
+  avatarVersion: number | null;
   /** Client-only: present on optimistic entries queued in the outbox. */
   pending?: boolean;
 }
@@ -46,6 +49,7 @@ export interface Me {
   digestFrequency: DigestFrequency;
   recoveryCode: string;
   isAdmin: boolean;
+  avatarVersion: number | null;
   unreadCount: number;
 }
 
@@ -98,6 +102,7 @@ export interface ConversationSummary {
   /** True when I started this conversation (vs. it being about my listing). */
   iAmInitiator: boolean;
   counterpartName: string;
+  counterpartAvatarVersion: number | null;
   lastMessage: { body: string; createdAt: string; isMine: boolean } | null;
   unreadCount: number;
   createdAt: string;
@@ -111,6 +116,7 @@ export interface ThreadResponse {
   conversation: { id: string };
   listing: ConversationListing;
   counterpartName: string;
+  counterpartAvatarVersion: number | null;
   messages: Message[];
 }
 

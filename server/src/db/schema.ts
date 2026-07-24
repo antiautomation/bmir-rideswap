@@ -18,6 +18,10 @@ export const citext = customType<{ data: string }>({
   dataType: () => 'citext',
 });
 
+export const bytea = customType<{ data: Buffer }>({
+  dataType: () => 'bytea',
+});
+
 export const listingTypeEnum = pgEnum('listing_type', ['driver', 'rider']);
 export const directionEnum = pgEnum('direction', ['to_brc', 'from_brc']);
 export const belongingsEnum = pgEnum('belongings', ['minimal', 'standard', 'substantial', 'extensive']);
@@ -33,6 +37,9 @@ export const users = pgTable('users', {
   lastDigestAt: timestamp('last_digest_at', { withTimezone: true }),
   isAdmin: boolean('is_admin').notNull().default(false),
   bannedAt: timestamp('banned_at', { withTimezone: true }),
+  avatarFull: bytea('avatar_full'),
+  avatarThumb: bytea('avatar_thumb'),
+  avatarUpdatedAt: timestamp('avatar_updated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
 });

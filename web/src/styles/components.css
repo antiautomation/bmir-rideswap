@@ -296,3 +296,120 @@
 .privacy-page .privacy-callout h2 {
   margin-bottom: var(--sp-2);
 }
+
+/* ---------- Avatar ---------- */
+.avatar {
+  flex-shrink: 0;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.avatar-btn {
+  flex-shrink: 0;
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.avatar-btn:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+
+.avatar-lightbox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--sp-5);
+  max-width: min(90vw, 560px);
+  text-align: center;
+}
+
+.avatar-lightbox-close {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+}
+
+.avatar-lightbox-status {
+  color: var(--text-dim);
+  padding: var(--sp-5) 0;
+}
+
+.avatar-lightbox-img {
+  max-width: min(80vw, 512px);
+  border-radius: var(--r-full);
+}
+
+.avatar-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-dim);
+  padding: var(--sp-3) 0;
+}
+
+.avatar-lock span[aria-hidden] {
+  font-size: var(--fs-2xl);
+}
+
+/* ---------- Avatar upload (ProfilePage) ---------- */
+.avatar-upload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.avatar-upload-preview-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  text-align: center;
+}
+
+.avatar-preview {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--r-full);
+  border: 2px solid var(--border);
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.avatar-upload-current {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.avatar-upload-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.avatar-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}

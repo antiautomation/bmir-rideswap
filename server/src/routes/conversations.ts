@@ -237,9 +237,10 @@ conversationRoutes.get('/conversations', async (c) => {
   );
   const counterpartRows =
     counterpartUserIds.length > 0
-      ? await db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, counterpartUserIds))
+      ? await db.select({ id: users.id, name: users.name, avatarAt: users.avatarUpdatedAt }).from(users).where(inArray(users.id, counterpartUserIds))
       : [];
   const counterpartNameById = new Map(counterpartRows.map((u) => [u.id, u.name]));
+  const counterpartAvatarById = new Map(counterpartRows.map((u) => [u.id, u.avatarAt?.getTime() ?? null]));
 
   const summaries = rows
     .map((r) => {
@@ -255,6 +256,7 @@ conversationRoutes.get('/conversations', async (c) => {
           listing: toConversationListingDto(r.listing),
           iAmInitiator,
           counterpartName,
+          counterpartAvatarVersion: counterpartAvatarById.get(counterpartUserId) ?? null,
           lastMessage: last ? { body: last.body, createdAt: last.createdAt.toISOString(), isMine: last.isMine } : null,
           unreadCount: unreadByConv.get(r.conversation.id) ?? 0,
           createdAt: r.conversation.createdAt.toISOString(),
@@ -297,16 +299,18 @@ conversationRoutes.get('/conversations/:id', async (c) => {
   const iAmInitiator = conversation.initiatorUserId === user.id;
   const counterpartUserId = iAmInitiator ? listing.userId : conversation.initiatorUserId;
   const counterpartRows = await db
-    .select({ id: users.id, name: users.name })
+    .select({ id: users.id, name: users.name, avatarAt: users.avatarUpdatedAt })
     .from(users)
     .where(eq(users.id, counterpartUserId))
     .limit(1);
   const counterpartName = counterpartRows[0]?.name ?? (iAmInitiator ? listing.name : null) ?? 'Burner';
+  const counterpartAvatarVersion = counterpartRows[0]?.avatarAt?.getTime() ?? null;
 
   return c.json({
     conversation: { id: conversation.id },
     listing: toConversationListingDto(listing),
     counterpartName,
+    counterpartAvatarVersion,
     messages: messageRows.map((m) => toMessageDto(m, user.id)),
   });
 });
