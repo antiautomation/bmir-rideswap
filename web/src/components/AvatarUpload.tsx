@@ -5,6 +5,39 @@ import type { Me } from '../api/types';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
+/* The server (sharp) reads JPEG/PNG/WebP/GIF/TIFF/AVIF but not HEIC (its
+   prebuilt libvips omits libheif). Safari on Apple hardware CAN decode HEIC,
+   and Apple devices are where HEICs come from — so convert in the browser:
+   decode → canvas (capped at 2048px; the server only needs 512) → JPEG. */
+function isHeic(file: File): boolean {
+  return /image\/hei[cf]/.test(file.type) || /\.hei[cf]$/i.test(file.name);
+}
+
+async function heicToJpeg(file: File): Promise<File | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, 2048 / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.9),
+    );
+    if (!blob) return null;
+    return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 interface AvatarUploadProps {
   me: Me | null;
 }
@@ -31,8 +64,8 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
     fileInputRef.current?.click();
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>): void {
-    const file = e.target.files?.[0];
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+    let file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
 
@@ -42,6 +75,15 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
     if (file.size > MAX_BYTES) {
       setError('That image is over 10 MB — pick a smaller one');
       return;
+    }
+
+    if (isHeic(file)) {
+      const converted = await heicToJpeg(file);
+      if (!converted) {
+        setError("This browser can't read HEIC photos — export it as JPG or PNG and try again");
+        return;
+      }
+      file = converted;
     }
 
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -123,7 +165,7 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
         type="file"
         accept="image/*"
         className="visually-hidden"
-        onChange={handleFileSelect}
+        onChange={(e) => void handleFileSelect(e)}
         aria-label="Choose a profile photo"
       />
 
