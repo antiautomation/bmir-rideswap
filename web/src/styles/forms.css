@@ -192,28 +192,296 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
-  max-width: 720px;
+  max-width: 1100px;
   margin-inline: auto;
 }
 
-.admin-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--sp-2);
-  font-size: var(--fs-sm);
+/* Tab bar — the .seg primitive already scrolls horizontally when it overflows, so 8 tabs
+   degrade gracefully on 320px screens instead of wrapping or forcing page scroll. */
+.admin-tabs {
+  width: 100%;
 }
+
+/* ---------- Shared row/toolbar primitives ---------- */
 
 .admin-row {
   display: flex;
   gap: var(--sp-2);
   align-items: center;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .admin-row input {
   flex: 1;
   min-width: 200px;
 }
+
+.admin-toolbar {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar > * {
+  min-width: 0;
+}
+
+.admin-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-ban-input {
+  min-width: 180px;
+}
+
+.admin-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.admin-error {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* ---------- KPI cards (Overview + Metrics totals) ---------- */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sp-2);
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  text-align: left;
+  min-height: 40px;
+  transition: border-color var(--t-fast);
+}
+
+button.admin-stat:hover {
+  border-color: var(--ember);
+}
+
+.admin-stat--static {
+  cursor: default;
+}
+
+.admin-stat--static:hover {
+  border-color: var(--border);
+}
+
+.admin-stat-value {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.admin-stat-label {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+
+/* ---------- Tables (Users, Listings, Metrics side tables) ---------- */
+
+.admin-table-wrap {
+  overflow-x: auto;
+  margin-inline: calc(var(--sp-4) * -1);
+  padding-inline: var(--sp-4);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table-row {
+  cursor: pointer;
+}
+
+.admin-table-row:hover td {
+  background: var(--surface-2);
+}
+
+.admin-table--compact th,
+.admin-table--compact td {
+  padding: var(--sp-1) var(--sp-2);
+}
+
+.admin-actions {
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+/* ---------- Inline "link" buttons (drill-in from tables/threads into Users tab) ---------- */
+
+.admin-inline-link {
+  padding: 0;
+  height: auto;
+  min-height: 0;
+  color: var(--ember);
+  font-weight: 600;
+  display: inline;
+}
+
+.admin-inline-link:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+/* ---------- User profile card ---------- */
+
+.admin-profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.admin-dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+.admin-dl dt {
+  color: var(--text-dim);
+}
+
+.admin-dl dd {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* ---------- Listing rows (user detail + reused shape) ---------- */
+
+.admin-listing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding-block: var(--sp-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-listing-row:last-child {
+  border-bottom: none;
+}
+
+.admin-listing-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.admin-listing-info .pill {
+  margin-right: var(--sp-1);
+}
+
+/* ---------- Conversations (security-review view) ---------- */
+
+.admin-conversation {
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--sp-3);
+}
+
+.admin-conversation:last-child {
+  border-bottom: none;
+}
+
+.admin-conversation summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.admin-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.admin-msg-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.admin-msg {
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  min-width: 0;
+}
+
+.admin-msg--mine {
+  background: var(--ember-soft);
+}
+
+.admin-msg-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  margin-bottom: var(--sp-1);
+}
+
+.admin-msg-body {
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.admin-shared {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Flags tab ---------- */
 
 .admin-flag-row {
   display: flex;
@@ -233,13 +501,97 @@
   margin-left: var(--sp-2);
 }
 
+.admin-flag-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .admin-flag-reason {
   font-size: var(--fs-xs);
 }
 
+/* ---------- Metrics charts ---------- */
+
+.admin-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.admin-chart-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: var(--sp-2);
+  align-items: center;
+  font-size: var(--fs-xs);
+}
+
+.admin-chart-label {
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.admin-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-bar-track {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  height: 8px;
+  overflow: hidden;
+}
+
+.admin-bar-fill {
+  height: 100%;
+  border-radius: var(--r-sm);
+  transition: width var(--t-med);
+}
+
+.admin-chart-value {
+  grid-column: 1 / -1;
+  color: var(--text-dim);
+}
+
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 900px) {
+  .admin-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---------- Settings tab ---------- */
+
+.admin-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .admin-settings-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.admin-settings-grid input {
+  width: 100%;
+}
+
+/* ---------- Emails tab ---------- */
+
 .admin-email-row {
   font-size: var(--fs-xs);
   padding-block: var(--sp-1);
+  overflow-wrap: anywhere;
 }
 
 /* ---------- International phone input ---------- */
@@ -258,14 +610,4 @@
 .phone-input input {
   flex: 1;
   min-width: 0;
-}
-
-/* Mobile-audit fixes: admin rows must wrap long content */
-.admin-flag-row > div {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.admin-email-row {
-  overflow-wrap: anywhere;
 }

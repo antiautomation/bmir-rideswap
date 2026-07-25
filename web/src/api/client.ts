@@ -22,7 +22,7 @@ function notify(ok: boolean): void {
 }
 
 export interface ApiOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
 }
@@ -50,6 +50,12 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
       if (parsed.error) code = parsed.error;
     } catch {
       /* non-JSON error body */
+    }
+    // Server-side ban: surface the full-page banned screen (App listens).
+    // Not for /session/recover — typing a banned (or docs-example) recovery
+    // code should fail inline there, not brand THIS session as banned.
+    if (res.status === 403 && code === 'banned' && !path.includes('/session/recover')) {
+      window.dispatchEvent(new Event('rs:banned'));
     }
     throw new ApiError(res.status, code);
   }

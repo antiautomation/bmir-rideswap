@@ -8,6 +8,8 @@ import { sessionMiddleware } from './auth/middleware.js';
 import { pool } from './db/client.js';
 import { runMigrations } from './db/migrate.js';
 import { startJobs } from './jobs/index.js';
+import { clientIp } from './lib/rateLimit.js';
+import { recordVisit, startGeoWorker } from './lib/visits.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { listingRoutes } from './routes/listings.js';
 import { adminRoutes, webhookRoutes } from './routes/admin.js';
@@ -41,6 +43,37 @@ async function main(): Promise<void> {
 
   app.get('/healthz', (c) => c.json({ ok: true, version: 2 }));
 
+  // Pageview capture: SPA document GETs only (not API, assets, magic links, or
+  // health checks). Fire-and-forget; never blocks or fails the request.
+  app.use('*', async (c, next) => {
+    if (c.req.method === 'GET') {
+      const path = c.req.path;
+      const isDoc =
+        !path.startsWith('/api') &&
+        !path.startsWith('/a/') &&
+        !path.startsWith('/assets') &&
+        path !== '/healthz' &&
+        !path.includes('.') &&
+        (c.req.header('accept') ?? '').includes('text/html');
+      if (isDoc) {
+        let ownHost: string | null = null;
+        try {
+          ownHost = new URL(c.req.url).hostname.toLowerCase();
+        } catch {
+          /* leave null */
+        }
+        recordVisit({
+          ip: clientIp(c),
+          path,
+          referrer: c.req.header('referer') ?? null,
+          hadSession: (c.req.header('cookie') ?? '').includes('rs_session='),
+          ownHost,
+        }).catch(() => {});
+      }
+    }
+    await next();
+  });
+
   app.use('/api/*', sessionMiddleware);
   app.route('/api', sessionRoutes);
   app.route('/api', listingRoutes);
@@ -70,6 +103,7 @@ async function main(): Promise<void> {
   });
 
   startJobs();
+  startGeoWorker();
 }
 
 main();

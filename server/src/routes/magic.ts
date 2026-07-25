@@ -3,13 +3,14 @@ import { mintMagicToken, resolveMagicToken, sanitizeNextPath } from '../auth/mag
 import { issueSessionCookie } from '../auth/tokens.js';
 import { requireAdmin } from '../auth/middleware.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
+import { rateLimit } from '../lib/settings.js';
 
 export const magicRoutes = new Hono();
 
 // Magic-link exchange. Deliberately side-effect-free beyond issuing a session
 // cookie: email prefetchers hitting this URL cause no state changes.
 magicRoutes.get('/a/:token', async (c) => {
-  if (!allow(`magic:${clientIp(c)}`, 30, 3600_000)) {
+  if (!allow(`magic:${clientIp(c)}`, rateLimit('magicLinksPerHour'), 3600_000)) {
     return c.redirect('/?link=expired', 302);
   }
   const user = await resolveMagicToken(c.req.param('token'));

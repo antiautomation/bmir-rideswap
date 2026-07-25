@@ -7,6 +7,7 @@ import { db } from '../db/client.js';
 import { conversations, listings, messages, users } from '../db/schema.js';
 import { MAX_UPLOAD_BYTES, processAvatar } from '../lib/avatar.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
+import { rateLimit } from '../lib/settings.js';
 
 type UserRow = typeof users.$inferSelect;
 
@@ -79,7 +80,7 @@ export const avatarRoutes = new Hono();
 
 avatarRoutes.post('/me/avatar', async (c) => {
   const user = requireUser(c);
-  if (!allow(`avatar:${clientIp(c)}`, 10, 3600_000)) {
+  if (!allow(`avatar:${clientIp(c)}`, rateLimit('avatarUploadsPerHour'), 3600_000)) {
     throw new HTTPException(429, { message: 'rate_limited' });
   }
 

@@ -8,6 +8,7 @@ import type { SessionUser } from '../auth/tokens.js';
 import { db } from '../db/client.js';
 import { conversations, listings, messages, users } from '../db/schema.js';
 import { allow } from '../lib/rateLimit.js';
+import { rateLimit } from '../lib/settings.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -135,7 +136,7 @@ conversationRoutes.post(
     if (!listing || listing.deletedAt || listing.hiddenAt) throw new HTTPException(404, { message: 'not_found' });
     if (listing.userId === user.id) throw new HTTPException(400, { message: 'own_listing' });
 
-    if (!allow(`msg:${user.id}`, 20, 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
+    if (!allow(`msg:${user.id}`, rateLimit('messagesPerHour'), 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
     if (!allow(`msgburst:${user.id}`, 1, 5_000)) throw new HTTPException(429, { message: 'slow_down' });
 
     let conversation = await findConversation(listingId, user.id);
@@ -146,7 +147,7 @@ conversationRoutes.post(
         .select({ n: count() })
         .from(conversations)
         .where(and(eq(conversations.initiatorUserId, user.id), gt(conversations.createdAt, hourAgo)));
-      if (capRows[0]!.n >= 5) throw new HTTPException(429, { message: 'conversation_limit' });
+      if (capRows[0]!.n >= rateLimit('newConversationsPerHour')) throw new HTTPException(429, { message: 'conversation_limit' });
 
       try {
         const inserted = await db
@@ -345,7 +346,7 @@ conversationRoutes.post(
       return c.json({ message: toMessageDto(existing, user.id) }, 200);
     }
 
-    if (!allow(`msg:${user.id}`, 20, 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
+    if (!allow(`msg:${user.id}`, rateLimit('messagesPerHour'), 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
     if (!allow(`msgburst:${user.id}`, 1, 5_000)) throw new HTTPException(429, { message: 'slow_down' });
 
     const shareSnap = snapshotShare(user, body.share);

@@ -7,6 +7,7 @@ import { ensureUser, requireUser } from '../auth/middleware.js';
 import { db } from '../db/client.js';
 import { flags, listings, users } from '../db/schema.js';
 import { allow } from '../lib/rateLimit.js';
+import { rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
 import { recomputeMatchesForListing } from '../matching/score.js';
@@ -386,7 +387,7 @@ listingRoutes.post(
     const id = c.req.param('id');
     const user = await ensureUser(c);
     if (!isUuid(id)) throw new HTTPException(404, { message: 'not_found' });
-    if (!allow(`flag:${user.id}`, 10, 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
+    if (!allow(`flag:${user.id}`, rateLimit('listingFlagsPerHour'), 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
 
     const rows = await db.select().from(listings).where(eq(listings.id, id)).limit(1);
     const row = rows[0];

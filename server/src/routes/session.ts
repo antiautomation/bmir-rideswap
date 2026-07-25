@@ -11,6 +11,7 @@ import { unreadCountFor } from './conversations.js';
 import { db } from '../db/client.js';
 import { users } from '../db/schema.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
+import { rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 
 export function toMe(user: SessionUser) {
@@ -51,7 +52,7 @@ sessionRoutes.post(
     if (!result.success) return c.json({ error: 'invalid' }, 400);
   }),
   async (c) => {
-    if (!allow(`recover:${clientIp(c)}`, 5, 3600_000)) {
+    if (!allow(`recover:${clientIp(c)}`, rateLimit('recoveriesPerHour'), 3600_000)) {
       throw new HTTPException(429, { message: 'rate_limited' });
     }
     const { code } = c.req.valid('json');

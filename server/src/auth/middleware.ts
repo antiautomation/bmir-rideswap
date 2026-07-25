@@ -4,6 +4,7 @@ import type { Context } from 'hono';
 import { createAnonUser } from './recoveryCodes.js';
 import { issueSessionCookie, resolveSessionUser, type SessionUser } from './tokens.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
+import { rateLimit } from '../lib/settings.js';
 
 declare module 'hono' {
   interface ContextVariableMap {
@@ -37,7 +38,7 @@ export async function ensureUser(c: Context): Promise<SessionUser> {
     if (existing.bannedAt) throw new HTTPException(403, { message: 'banned' });
     return existing;
   }
-  if (!allow(`anon:${clientIp(c)}`, 10, 3600_000)) {
+  if (!allow(`anon:${clientIp(c)}`, rateLimit('anonSessionsPerHour'), 3600_000)) {
     throw new HTTPException(429, { message: 'rate_limited' });
   }
   const user = await createAnonUser();

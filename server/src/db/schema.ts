@@ -175,3 +175,28 @@ export const emailSuppressions = pgTable('email_suppressions', {
   reason: text('reason').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Server-side usage metrics. IPs are stored only as salted hashes; geo lives in
+// a separate cache keyed by the same hash so raw addresses never touch disk.
+export const visits = pgTable('visits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  day: date('day').notNull(),
+  ipHash: text('ip_hash').notNull(),
+  path: text('path').notNull().default('/'),
+  referrerHost: text('referrer_host'),
+  hadSession: boolean('had_session').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const ipGeo = pgTable('ip_geo', {
+  ipHash: text('ip_hash').primaryKey(),
+  region: text('region'),
+  country: text('country'),
+  lookedUpAt: timestamp('looked_up_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
