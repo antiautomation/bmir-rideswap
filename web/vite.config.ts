@@ -60,9 +60,12 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Honour PORT so more than one dev server can run side by side.
+    port: Number(process.env.PORT) || 5173,
     proxy: {
       '/api': 'http://localhost:3000',
       '^/a/': 'http://localhost:3000',
+      '^/u/': 'http://localhost:3000',
       '/healthz': 'http://localhost:3000',
     },
   },

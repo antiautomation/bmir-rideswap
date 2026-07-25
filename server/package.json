@@ -8,7 +8,9 @@
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
     "seed:demo": "tsx scripts/seed-demo.ts",
-    "backfill:geo": "tsx scripts/backfill-geo.ts"
+    "backfill:geo": "tsx scripts/backfill-geo.ts",
+    "import:contacts": "tsx scripts/import-legacy-contacts.ts",
+    "admin:revoke": "tsx scripts/revoke-admin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1087.0",

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import AvatarUpload from '../components/AvatarUpload';
+import { EmailSignInLinkForm, EmailTakenNotice } from '../components/EmailSignInLink';
 import EmptyState from '../components/EmptyState';
 import PhoneInput from '../components/PhoneInput';
 import ListingCard from '../components/ListingCard';
@@ -83,6 +84,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
       {status === 'rate_limited' && (
         <p className="form-note form-note--error">Too many attempts — try again in an hour</p>
       )}
+      <EmailSignInLinkForm />
     </section>
   );
 }
@@ -95,10 +97,12 @@ function ContactSection({ me }: { me: Me | null }) {
   const [digestFrequency, setDigestFrequency] = useState<DigestFrequency>(me?.digestFrequency ?? 'hourly');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [emailTaken, setEmailTaken] = useState<string | null>(null);
 
   async function handleSave(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setSaving(true);
+    setEmailTaken(null);
     try {
       await api('/api/me', {
         method: 'PATCH',
@@ -107,6 +111,14 @@ function ContactSection({ me }: { me: Me | null }) {
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      // The address is on someone else's account — keep every field as typed and
+      // offer the way into that account instead.
+      if (err instanceof ApiError && err.status === 409 && err.code === 'email_taken') {
+        setEmailTaken(email.trim());
+      } else {
+        throw err;
+      }
     } finally {
       setSaving(false);
     }
@@ -138,6 +150,7 @@ function ContactSection({ me }: { me: Me | null }) {
             onChange={(e) => setEmail(e.target.value)}
           />
           <p className="field-hint">Used for message notifications. Never displayed publicly.</p>
+          {emailTaken && <EmailTakenNotice key={emailTaken} email={emailTaken} />}
         </div>
         <div className="field-group">
           <label htmlFor="profile-phone">Phone</label>

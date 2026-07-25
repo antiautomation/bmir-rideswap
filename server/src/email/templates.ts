@@ -1,9 +1,11 @@
 // Digest-email renderer for RideFinder.
 //
-// Old-school email HTML: a single 600px-max centered table, inline styles
-// only, light background with #e4622f accents. Every user-provided string
-// is HTML-escaped. All in-app links go through a magic-link token so the
-// reader lands logged-in on the right page.
+// Page chrome and primitives live in ./layout.ts. Every user-provided string is
+// HTML-escaped. All in-app links go through a magic-link token so the reader
+// lands logged-in on the right page — unlike the invite email, which carries no
+// tokens at all because invites get forwarded to friends.
+
+import { BRAND, button, card, esc, escBody, formatTimestamp, listingTypeLabel, shell } from './layout.js';
 
 export interface DigestConversation {
   conversationId: string;
@@ -37,59 +39,6 @@ export interface DigestInput {
   totalNewMessages: number;
   newMatches: DigestMatch[];
   activeListings: { id: string; name: string }[];
-}
-
-const BRAND = '#e4622f';
-
-function esc(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function escBody(s: string): string {
-  return esc(s).replace(/\n/g, '<br>');
-}
-
-function formatTimestamp(d: Date): string {
-  return (
-    d.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone: 'America/Los_Angeles',
-    }) + ' PT'
-  );
-}
-
-function button(href: string, label: string): string {
-  return `
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:12px 0 4px;">
-      <tr>
-        <td align="center" bgcolor="${BRAND}" style="border-radius:10px;">
-          <a href="${esc(href)}" target="_blank" style="display:inline-block;padding:10px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">${esc(label)}</a>
-        </td>
-      </tr>
-    </table>`;
-}
-
-function card(innerHtml: string): string {
-  return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #eee0d5;border-radius:10px;margin:0 0 16px;">
-      <tr>
-        <td style="padding:16px;">
-          ${innerHtml}
-        </td>
-      </tr>
-    </table>`;
-}
-
-function listingTypeLabel(listingType: 'driver' | 'rider'): string {
-  return listingType === 'driver' ? '🚗 ride offer' : '🎒 ride request';
 }
 
 export function renderDigest(input: DigestInput): { subject: string; html: string; text: string } {
@@ -195,30 +144,9 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     )
     .join('');
 
-  const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
-<title>${esc(subject)}</title>
-<style>
-  :root { color-scheme: light; supported-color-schemes: light; }
-  body { margin:0; padding:0; background:#faf6f0; }
-</style>
-</head>
-<body style="margin:0;padding:0;background:#faf6f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#faf6f0;">
-    <tr>
-      <td align="center" style="padding:24px 12px;">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;">
-          <tr>
-            <td style="padding:24px 24px 8px;">
-              <div style="font-size:22px;font-weight:bold;color:${BRAND};">RideFinder</div>
-              <div style="font-size:13px;color:#999;margin-top:2px;">rides to &amp; from Black Rock City</div>
-            </td>
-          </tr>
+  const html = shell({
+    title: subject,
+    bodyHtml: `
           <tr>
             <td style="padding:8px 24px 0;">
               <div style="font-size:15px;color:#2a2a2a;margin-bottom:4px;">Hi ${esc(greetingName)} &mdash;</div>
@@ -230,28 +158,16 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
               ${conversationCardsHtml}
               ${matchesSectionHtml}
             </td>
-          </tr>
-          <tr>
-            <td style="padding:8px 24px 24px;">
-              <hr style="border:none;border-top:1px solid #eee0d5;margin:8px 0 16px;">
-              <div style="font-size:12px;color:#999;line-height:1.6;">
+          </tr>`,
+    footerHtml: `
                 <div>
                   <a href="${esc(link('/messages'))}" style="color:${BRAND};">See all messages</a>
                   &middot;
                   <a href="${esc(link('/me'))}" style="color:${BRAND};">View my profile</a>
                 </div>
                 ${cancelListingsHtml}
-                <div style="margin-top:10px;">You're getting this because you posted on RideFinder. Change email frequency or unsubscribe from your profile: <a href="${esc(link('/me'))}" style="color:${BRAND};">Email settings</a>.</div>
-                <div style="margin-top:10px;">RideFinder &middot; matching@ridefinder.site</div>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+                <div style="margin-top:10px;">You're getting this because you posted on RideFinder. Change email frequency or unsubscribe from your profile: <a href="${esc(link('/me'))}" style="color:${BRAND};">Email settings</a>.</div>`,
+  });
 
   // ---- TEXT ----
 

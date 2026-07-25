@@ -83,8 +83,10 @@ export default function HelpPage() {
         <p>
           Not if you have your recovery code — enter it under <em>You → Sign in with a recovery
           code</em>. No code? Any RideFinder email in your inbox contains a sign-in link that
-          restores your session too. If you have neither, the old listings are unreachable —
-          post fresh, and screenshot the code this time.
+          restores your session too — and if your email is on your profile you don&rsquo;t need
+          one at all: use <em>Or get a sign-in link by email</em> on the <em>You</em> page and
+          we&rsquo;ll send you a fresh link. If you have neither, the old listings are
+          unreachable — post fresh, and screenshot the code this time.
         </p>
       </QA>
       <QA q="Can I use RideFinder on my phone and laptop at the same time?">
@@ -99,6 +101,13 @@ export default function HelpPage() {
           Every email we send contains a personal magic link that signs you in without a
           password. Links expire after 30 days and only work for your account. Don&rsquo;t
           forward RideFinder emails — the link inside is a working key to your session.
+        </p>
+      </QA>
+      <QA q="Can two accounts share one email address?">
+        <p>
+          No — an email belongs to one account. If you try to use an address that&rsquo;s already
+          on another account, we&rsquo;ll offer to email you a sign-in link to get back into that
+          one instead. Handy when you&rsquo;ve accidentally made a second account.
         </p>
       </QA>
 

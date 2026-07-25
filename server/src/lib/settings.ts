@@ -15,6 +15,7 @@ export const RATE_LIMIT_DEFAULTS = {
   anonSessionsPerHour: 10,
   recoveriesPerHour: 5,
   magicLinksPerHour: 30,
+  emailLoginLinksPerHour: 5,
 } as const;
 
 export type RateLimitKey = keyof typeof RATE_LIMIT_DEFAULTS;

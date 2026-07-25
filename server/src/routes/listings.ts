@@ -12,6 +12,7 @@ import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
 import { geocodeLocation } from '../lib/cities.js';
 import { recomputeMatchesForListing } from '../matching/score.js';
+import { emailTakenByOther } from './session.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -203,9 +204,19 @@ listingRoutes.post(
     if (currentUser.name === null) {
       userUpdates.name = body.name;
     }
+    if (typeof userUpdates.email === 'string' && (await emailTakenByOther(userUpdates.email, currentUser.id))) {
+      throw new HTTPException(409, { message: 'email_taken' });
+    }
     if (Object.keys(userUpdates).length > 0) {
-      const rows = await db.update(users).set(userUpdates).where(eq(users.id, currentUser.id)).returning();
-      currentUser = rows[0]!;
+      try {
+        const rows = await db.update(users).set(userUpdates).where(eq(users.id, currentUser.id)).returning();
+        currentUser = rows[0]!;
+      } catch (err) {
+        if ((err as { code?: string }).code === '23505') {
+          throw new HTTPException(409, { message: 'email_taken' });
+        }
+        throw err;
+      }
     }
     if (!currentUser.email && !currentUser.phone) {
       throw new HTTPException(400, { message: 'contact_required' });

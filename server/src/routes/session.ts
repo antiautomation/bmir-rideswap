@@ -1,18 +1,30 @@
 import { zValidator } from '@hono/zod-validator';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 import { ensureUser, requireUser } from '../auth/middleware.js';
+import { mintMagicToken } from '../auth/magic.js';
 import { findUserByRecoveryCode } from '../auth/recoveryCodes.js';
 import { issueSessionCookie, revokeAllSessions, revokeCurrentSession } from '../auth/tokens.js';
 import type { SessionUser } from '../auth/tokens.js';
 import { unreadCountFor } from './conversations.js';
 import { db } from '../db/client.js';
 import { users } from '../db/schema.js';
+import { sendEmail } from '../email/ses.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
 import { rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
+
+/** One account per email: true when another user already owns this address. */
+export async function emailTakenByOther(email: string, selfId: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(sql`lower(${users.email}) = ${email.toLowerCase()}`, ne(users.id, selfId)))
+    .limit(1);
+  return rows.length > 0;
+}
 
 export function toMe(user: SessionUser) {
   return {
@@ -83,6 +95,9 @@ sessionRoutes.patch(
     if (data.email !== undefined) {
       const trimmed = data.email.trim().toLowerCase();
       updates.email = trimmed === '' ? null : trimmed;
+      if (updates.email && (await emailTakenByOther(updates.email, user.id))) {
+        throw new HTTPException(409, { message: 'email_taken' });
+      }
     }
     if (data.phone !== undefined) {
       if (data.phone.trim() === '') {
@@ -97,10 +112,57 @@ sessionRoutes.patch(
 
     let updated = user;
     if (Object.keys(updates).length > 0) {
-      const rows = await db.update(users).set(updates).where(eq(users.id, user.id)).returning();
-      updated = rows[0]!;
+      try {
+        const rows = await db.update(users).set(updates).where(eq(users.id, user.id)).returning();
+        updated = rows[0]!;
+      } catch (err) {
+        // Unique-index race: two sessions claiming the same email simultaneously.
+        if ((err as { code?: string }).code === '23505') {
+          throw new HTTPException(409, { message: 'email_taken' });
+        }
+        throw err;
+      }
     }
     return c.json({ me: toMe(updated) });
+  },
+);
+
+/* "Send me a magic login link": email-based way back into the account that owns
+   an address. Always answers ok — the response never reveals whether an account
+   exists (enumeration-safe); the email itself only goes to the owner. */
+sessionRoutes.post(
+  '/session/email-link',
+  zValidator('json', z.object({ email: z.string().email().max(120) }), (result, c) => {
+    if (!result.success) return c.json({ error: 'invalid' }, 400);
+  }),
+  async (c) => {
+    if (!allow(`emaillink:${clientIp(c)}`, rateLimit('emailLoginLinksPerHour'), 3600_000)) {
+      throw new HTTPException(429, { message: 'rate_limited' });
+    }
+    const email = c.req.valid('json').email.trim().toLowerCase();
+    // Per-address cap regardless of account existence — nobody's inbox gets hammered.
+    if (allow(`emaillink-to:${email}`, 3, 3600_000)) {
+      const rows = await db
+        .select()
+        .from(users)
+        .where(sql`lower(${users.email}) = ${email}`)
+        .limit(1);
+      const user = rows[0];
+      if (user && !user.bannedAt) {
+        const appOrigin = process.env.APP_ORIGIN ?? 'http://localhost:3000';
+        const link = `${appOrigin}/a/${await mintMagicToken(user.id)}`;
+        const hello = user.name ? `Hey ${user.name},` : 'Hey,';
+        await sendEmail({
+          userId: user.id,
+          to: email,
+          kind: 'login_link',
+          subject: 'Your RideFinder sign-in link',
+          text: `${hello}\n\nHere's your sign-in link for RideFinder:\n\n${link}\n\nIt signs you straight into your account — no password needed — and works for 30 days. If you didn't ask for this, you can ignore it; nobody can get in without this email.\n\n— RideFinder · rides to & from Black Rock City`,
+          html: `<p>${hello}</p><p>Here's your sign-in link for RideFinder:</p><p><a href="${link}">Sign in to RideFinder</a></p><p>It signs you straight into your account — no password needed — and works for 30 days. If you didn't ask for this, you can ignore it; nobody can get in without this email.</p><p>— RideFinder · rides to &amp; from Black Rock City</p>`,
+        });
+      }
+    }
+    return c.json({ ok: true });
   },
 );
 

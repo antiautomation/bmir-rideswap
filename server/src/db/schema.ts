@@ -3,6 +3,7 @@ import {
   customType,
   date,
   doublePrecision,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -216,3 +217,113 @@ export const appSettings = pgTable('app_settings', {
   value: jsonb('value').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+/* ---------- Outreach: contacts, lists, campaigns ---------- */
+
+/** Provenance facts a source knew about a contact. Free-form by design. */
+export interface ContactMeta {
+  /** v1 import: which side of the 2025 board they posted on. */
+  segment?: 'driver' | 'rider' | 'both';
+  driverListings?: number;
+  riderListings?: number;
+  /** 'to_brc' | 'from_brc' | 'both' */
+  directions?: string | null;
+  topLocation?: string | null;
+  lastTravelDate?: string | null;
+  hadPhone?: boolean;
+  /** v1 import: every listing for this address was soft-deleted by its owner. */
+  allDeleted?: boolean;
+}
+
+// Any address we might send bulk mail to, whatever its origin. Deliberately NOT
+// users: being on a list grants no account. Unsubscribe state lives here rather
+// than per-list, so opting out is global in one action.
+export const contacts = pgTable(
+  'contacts',
+  {
+    email: citext('email').primaryKey(),
+    name: text('name'),
+    /** Set when this address belongs to a v2 account. */
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    /** 'v1_firestore' | 'paste' | 'users' | 'manual' */
+    source: text('source').notNull().default('manual'),
+    meta: jsonb('meta').$type<ContactMeta>().notNull().default({}),
+    /** Single-purpose capability: stops bulk mail to this address. No session. */
+    unsubscribeToken: text('unsubscribe_token').notNull().unique(),
+    unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+    excludedAt: timestamp('excluded_at', { withTimezone: true }),
+    excludeReason: text('exclude_reason'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('contacts_user_idx').on(table.userId)],
+);
+
+export const contactLists = pgTable('contact_lists', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  /** 'static' — membership as imported; 'dynamic' — recomputed from `query`. */
+  kind: text('kind').notNull().default('static'),
+  /** Dynamic lists only: a key in lib/audiences.ts. */
+  query: text('query'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  refreshedAt: timestamp('refreshed_at', { withTimezone: true }),
+});
+
+export const contactListMembers = pgTable(
+  'contact_list_members',
+  {
+    listId: uuid('list_id')
+      .notNull()
+      .references(() => contactLists.id, { onDelete: 'cascade' }),
+    email: citext('email')
+      .notNull()
+      .references(() => contacts.email, { onDelete: 'cascade' }),
+    addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.listId, table.email] })],
+);
+
+export const campaigns = pgTable('campaigns', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  subject: text('subject').notNull(),
+  listId: uuid('list_id')
+    .notNull()
+    .references(() => contactLists.id, { onDelete: 'restrict' }),
+  /** 'invite' | 'announcement' */
+  template: text('template').notNull().default('announcement'),
+  headline: text('headline'),
+  intro: text('intro'),
+  ctaLabel: text('cta_label'),
+  ctaPath: text('cta_path'),
+  /** 'draft' | 'sending' | 'paused' | 'done' | 'cancelled' */
+  status: text('status').notNull().default('draft'),
+  throttlePerMinute: integer('throttle_per_minute').notNull().default(20),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+});
+
+// One row per (campaign, recipient), materialised when the campaign starts. The
+// sender only ever touches rows still marked 'pending', so a mid-send restart
+// never double-mails anyone.
+export const campaignSends = pgTable(
+  'campaign_sends',
+  {
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaigns.id, { onDelete: 'cascade' }),
+    email: citext('email').notNull(),
+    /** 'pending' | 'sent' | 'suppressed' | 'unsubscribed' | 'failed' */
+    status: text('status').notNull().default('pending'),
+    sesMessageId: text('ses_message_id'),
+    error: text('error'),
+    attempts: integer('attempts').notNull().default(0),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+  },
+  (table) => [primaryKey({ columns: [table.campaignId, table.email] })],
+);

@@ -5,10 +5,11 @@ import { api, ApiError } from '../api/client';
 import { useMe } from '../api/session';
 import type { Direction, ListingType } from '../api/types';
 import EmptyState from '../components/EmptyState';
+import AdminOutreachTab from './AdminOutreachTab';
 
 /* ---------- Types (mirror server/src/routes/admin.ts response shapes) ---------- */
 
-type AdminTab = 'overview' | 'users' | 'listings' | 'messages' | 'flags' | 'metrics' | 'emails' | 'settings';
+type AdminTab = 'overview' | 'users' | 'listings' | 'messages' | 'flags' | 'metrics' | 'emails' | 'outreach' | 'settings';
 type ListingStateFilter = 'all' | 'active' | 'hidden' | 'cancelled' | 'deleted' | 'expired';
 
 interface Overview {
@@ -154,6 +155,7 @@ interface RateLimits {
   anonSessionsPerHour: number;
   recoveriesPerHour: number;
   magicLinksPerHour: number;
+  emailLoginLinksPerHour: number;
 }
 
 interface SettingsResponse {
@@ -297,6 +299,7 @@ const TABS: { id: AdminTab; label: string }[] = [
   { id: 'flags', label: 'Flags' },
   { id: 'metrics', label: 'Metrics' },
   { id: 'emails', label: 'Emails' },
+  { id: 'outreach', label: 'Outreach' },
   { id: 'settings', label: 'Settings' },
 ];
 
@@ -1159,6 +1162,7 @@ const RATE_LIMIT_FIELDS: { key: keyof RateLimits; label: string }[] = [
   { key: 'anonSessionsPerHour', label: 'New sessions per IP per hour' },
   { key: 'recoveriesPerHour', label: 'Recovery attempts per IP per hour' },
   { key: 'magicLinksPerHour', label: 'Email-link sign-ins per IP per hour' },
+  { key: 'emailLoginLinksPerHour', label: 'Email sign-in links per IP per hour' },
 ];
 
 function SettingsTab() {
@@ -1299,6 +1303,7 @@ export default function AdminPage() {
       {activeTab === 'flags' && <FlagsTab onViewUser={goToUser} />}
       {activeTab === 'metrics' && <MetricsTab />}
       {activeTab === 'emails' && <EmailsTab />}
+      {activeTab === 'outreach' && <AdminOutreachTab />}
       {activeTab === 'settings' && <SettingsTab />}
     </div>
   );

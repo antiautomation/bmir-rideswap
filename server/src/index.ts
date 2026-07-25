@@ -15,10 +15,12 @@ import { cityRoutes } from './routes/cities.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { listingRoutes } from './routes/listings.js';
 import { adminRoutes, webhookRoutes } from './routes/admin.js';
+import { adminOutreachRoutes } from './routes/adminOutreach.js';
 import { avatarRoutes } from './routes/avatar.js';
 import { magicRoutes } from './routes/magic.js';
 import { matchRoutes } from './routes/matches.js';
 import { sessionRoutes } from './routes/session.js';
+import { unsubscribeRoutes } from './routes/unsubscribe.js';
 
 const WEB_DIST_ROOT = './web/dist';
 const WEB_INDEX_HTML = `${WEB_DIST_ROOT}/index.html`;
@@ -60,6 +62,7 @@ async function main(): Promise<void> {
       const isDoc =
         !path.startsWith('/api') &&
         !path.startsWith('/a/') &&
+        !path.startsWith('/u/') &&
         !path.startsWith('/assets') &&
         path !== '/healthz' &&
         !path.includes('.') &&
@@ -91,8 +94,10 @@ async function main(): Promise<void> {
   app.route('/api', matchRoutes);
   app.route('/api', avatarRoutes);
   app.route('/api', adminRoutes);
+  app.route('/api', adminOutreachRoutes);
   app.route('/api', webhookRoutes);
   app.route('', magicRoutes);
+  app.route('', unsubscribeRoutes);
 
   app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404));
 

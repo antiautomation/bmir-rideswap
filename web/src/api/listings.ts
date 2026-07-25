@@ -69,8 +69,12 @@ function endOfDayIso(dateStr: string): string {
 
 /** Appends an optimistic pending listing to the board + my-listings caches, then
  *  queues the real POST. Confirmation is implicit: the card appears with a
- *  "Waiting to sync" pill until the outbox replays it. */
-export function createListing(queryClient: QueryClient, input: CreateListingInput): void {
+ *  "Waiting to sync" pill until the outbox replays it. Resolves when that flush
+ *  pass ends, so callers can react to a server rejection (see PostPage). */
+export function createListing(
+  queryClient: QueryClient,
+  input: CreateListingInput,
+): Promise<void> {
   const now = new Date().toISOString();
   const optimistic: Listing = {
     id: `pending-${input.clientId}`,
@@ -105,7 +109,7 @@ export function createListing(queryClient: QueryClient, input: CreateListingInpu
     return { listings: [...old.listings, optimistic] };
   });
 
-  void enqueue({ label: 'post listing', method: 'POST', path: '/api/listings', body: input });
+  return enqueue({ label: 'post listing', method: 'POST', path: '/api/listings', body: input });
 }
 
 function mergeListing(listing: Listing, input: UpdateListingInput, updatedAt: string): Listing {

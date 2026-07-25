@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
+import { EmailTakenNotice } from './EmailSignInLink';
 import LocationAutocomplete from './LocationAutocomplete';
 import PhoneInput from './PhoneInput';
 import type {
@@ -15,6 +16,9 @@ interface ListingFormProps {
   initialType?: ListingType;
   initial?: Listing;
   needsContact: boolean;
+  /** Contact email the server rejected as belonging to another account (409
+   *  email_taken). The form stays mounted, so nothing the user typed is lost. */
+  emailTaken?: string | null;
   onSubmit: (input: CreateListingInput | UpdateListingInput) => void;
 }
 
@@ -107,7 +111,14 @@ function buildInitialState(mode: 'create' | 'edit', initialType?: ListingType, i
 
 type FieldErrors = Partial<Record<keyof FormState, string>>;
 
-export default function ListingForm({ mode, initialType, initial, needsContact, onSubmit }: ListingFormProps) {
+export default function ListingForm({
+  mode,
+  initialType,
+  initial,
+  needsContact,
+  emailTaken,
+  onSubmit,
+}: ListingFormProps) {
   const [state, setState] = useState<FormState>(() => buildInitialState(mode, initialType, initial));
   const [errors, setErrors] = useState<FieldErrors>({});
   const honeypotRef = useRef<HTMLInputElement>(null);
@@ -426,6 +437,7 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
                 {errors.email}
               </p>
             )}
+            {emailTaken && <EmailTakenNotice key={emailTaken} email={emailTaken} />}
           </div>
 
           <div className="field-group">

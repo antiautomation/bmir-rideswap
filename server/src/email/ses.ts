@@ -26,6 +26,20 @@ export interface OutgoingEmail {
   subject: string;
   html: string;
   text: string;
+  /**
+   * Extra MIME headers. Bulk mail needs `List-Unsubscribe` /
+   * `List-Unsubscribe-Post` so Gmail and friends render a native unsubscribe
+   * control instead of teaching people to hit "report spam".
+   */
+  headers?: { name: string; value: string }[];
+}
+
+/** RFC 8058 one-click unsubscribe headers for a bulk send. */
+export function unsubscribeHeaders(unsubscribeUrl: string): { name: string; value: string }[] {
+  return [
+    { name: 'List-Unsubscribe', value: `<${unsubscribeUrl}>, <mailto:matching@ridefinder.site?subject=unsubscribe>` },
+    { name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' },
+  ];
 }
 
 export async function sendEmail(mail: OutgoingEmail): Promise<{ sent: boolean; messageId: string | null }> {
@@ -47,6 +61,7 @@ export async function sendEmail(mail: OutgoingEmail): Promise<{ sent: boolean; m
           Simple: {
             Subject: { Data: mail.subject },
             Body: { Html: { Data: mail.html }, Text: { Data: mail.text } },
+            ...(mail.headers?.length ? { Headers: mail.headers.map((h) => ({ Name: h.name, Value: h.value })) } : {}),
           },
         },
       }),
