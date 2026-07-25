@@ -10,6 +10,7 @@ import { allow } from '../lib/rateLimit.js';
 import { rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
+import { geocodeLocation } from '../lib/cities.js';
 import { recomputeMatchesForListing } from '../matching/score.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -234,6 +235,7 @@ listingRoutes.post(
 
     // Step 4: insert.
     const locationNorm = normalizeLocation(body.location);
+    const origin = await geocodeLocation(locationNorm);
     const expiresAt = computeExpiresAt(body.travelDate, body.timeSlot);
     const isDriver = body.type === 'driver';
 
@@ -244,6 +246,8 @@ listingRoutes.post(
       name: body.name,
       locationRaw: body.location,
       locationNorm,
+      originLat: origin?.lat ?? null,
+      originLng: origin?.lng ?? null,
       travelDate: body.travelDate,
       timeSlot: body.timeSlot,
       details: body.details ?? null,
@@ -314,6 +318,9 @@ listingRoutes.patch(
     if (body.location !== undefined) {
       updates.locationRaw = body.location;
       updates.locationNorm = normalizeLocation(body.location);
+      const origin = await geocodeLocation(updates.locationNorm);
+      updates.originLat = origin?.lat ?? null;
+      updates.originLng = origin?.lng ?? null;
     }
     if (body.travelDate !== undefined || body.timeSlot !== undefined) {
       updates.travelDate = mergedTravelDate;

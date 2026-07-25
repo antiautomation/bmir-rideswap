@@ -2,11 +2,13 @@ import {
   boolean,
   customType,
   date,
+  doublePrecision,
   integer,
   jsonb,
   pgEnum,
   pgTable,
   primaryKey,
+  serial,
   smallint,
   text,
   timestamp,
@@ -85,6 +87,8 @@ export const listings = pgTable('listings', {
   cargoSpace: belongingsEnum('cargo_space'),
   routeDetails: text('route_details'),
   riderStuff: belongingsEnum('rider_stuff'),
+  originLat: doublePrecision('origin_lat'),
+  originLng: doublePrecision('origin_lng'),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -193,6 +197,18 @@ export const ipGeo = pgTable('ip_geo', {
   region: text('region'),
   country: text('country'),
   lookedUpAt: timestamp('looked_up_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// GeoNames US+CA cities (pop >15k) — typeahead + listing geocoding.
+export const cities = pgTable('cities', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  state: text('state').notNull(),
+  country: text('country').notNull(),
+  nameNorm: text('name_norm').notNull(),
+  lat: doublePrecision('lat').notNull(),
+  lng: doublePrecision('lng').notNull(),
+  population: integer('population').notNull(),
 });
 
 export const appSettings = pgTable('app_settings', {

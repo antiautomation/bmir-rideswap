@@ -16,6 +16,37 @@ export interface MatchReasons {
   capacity: number;
   time: number;
   fresh: number;
+  /** Present when location credit came from corridor proximity rather than
+   *  name similarity: extra driving miles to pick this rider up en route. */
+  detourMi?: number;
+}
+
+// Black Rock City (the Man). Both directions share the same corridor geometry:
+// picking someone up on the way out costs the same extra miles as dropping
+// them off on the way home.
+const BRC = { lat: 40.7864, lng: -119.2065 };
+
+const EARTH_RADIUS_MI = 3958.8;
+
+function haversineMiles(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_MI * Math.asin(Math.sqrt(h));
+}
+
+/** Corridor location credit: how many extra miles the driver adds by routing
+ *  through the rider's city. Great-circle triangle — an approximation of road
+ *  distance, but detour deltas track real routes closely enough for scoring.
+ *  Never beats an exact city match (30); comfortably beats weak name fuzz. */
+function corridorPoints(detourMi: number): number {
+  if (detourMi <= 15) return 26;
+  if (detourMi <= 40) return 22;
+  if (detourMi <= 80) return 15;
+  if (detourMi <= 150) return 8;
+  return 0;
 }
 
 function dateDeltaDays(a: string, b: string): number {
@@ -43,6 +74,7 @@ export function scorePair(
   const date = delta === 0 ? 40 : delta <= 1 ? 25 : 12;
 
   let location: number;
+  let detourMi: number | undefined;
   if (driver.locationNorm === rider.locationNorm) {
     location = 30;
   } else if (
@@ -50,7 +82,23 @@ export function scorePair(
   ) {
     location = 15;
   } else {
-    location = Math.max(0, Math.round(locationSimilarity * 30));
+    const nameScore = Math.max(0, Math.round(locationSimilarity * 30));
+    let corridorScore = 0;
+    if (
+      driver.originLat != null &&
+      driver.originLng != null &&
+      rider.originLat != null &&
+      rider.originLng != null
+    ) {
+      const direct = haversineMiles(driver.originLat, driver.originLng, BRC.lat, BRC.lng);
+      const viaRider =
+        haversineMiles(driver.originLat, driver.originLng, rider.originLat, rider.originLng) +
+        haversineMiles(rider.originLat, rider.originLng, BRC.lat, BRC.lng);
+      const detour = Math.max(0, viaRider - direct);
+      corridorScore = corridorPoints(detour);
+      if (corridorScore > nameScore) detourMi = Math.round(detour);
+    }
+    location = Math.max(nameScore, corridorScore);
   }
 
   const fit = cargo - stuff;
@@ -68,7 +116,9 @@ export function scorePair(
 
   const score = date + location + capacity + time + fresh;
   if (score < MIN_SCORE) return null;
-  return { score, reasons: { date, location, capacity, time, fresh } };
+  const reasons: MatchReasons = { date, location, capacity, time, fresh };
+  if (detourMi !== undefined) reasons.detourMi = detourMi;
+  return { score, reasons };
 }
 
 function isLive(l: ListingRow, now: number): boolean {

@@ -154,8 +154,10 @@ export default function HelpPage() {
           Every driver listing is scored against every rider listing (0–100) on four things:
           how close the travel dates are, how similar the departure locations look, whether
           seats and gear fit, and how well the time windows overlap. Fresh listings get a small
-          boost. Scores recompute automatically whenever listings change — there&rsquo;s no
-          button to press.
+          boost. Rides can also match when a rider&rsquo;s city sits along the driver&rsquo;s route
+          to or from Black Rock City — say a Tucson driver and a Phoenix rider — which shows up as
+          &ldquo;on the way&rdquo; on the match. Scores recompute automatically whenever listings
+          change — there&rsquo;s no button to press.
         </p>
       </QA>
       <QA q="What do the little tags on a match mean?">

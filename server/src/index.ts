@@ -10,6 +10,8 @@ import { runMigrations } from './db/migrate.js';
 import { startJobs } from './jobs/index.js';
 import { clientIp } from './lib/rateLimit.js';
 import { recordVisit, startGeoWorker } from './lib/visits.js';
+import { ensureCitiesLoaded } from './lib/cities.js';
+import { cityRoutes } from './routes/cities.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { listingRoutes } from './routes/listings.js';
 import { adminRoutes, webhookRoutes } from './routes/admin.js';
@@ -35,6 +37,13 @@ async function main(): Promise<void> {
   } catch (err) {
     console.error('migration failed', err);
     process.exit(1);
+  }
+
+  try {
+    await ensureCitiesLoaded();
+  } catch (err) {
+    // Typeahead/corridor matching degrade gracefully without cities; don't block boot.
+    console.error('city load failed', err);
   }
 
   const indexHtml = await loadIndexHtml();
@@ -75,6 +84,7 @@ async function main(): Promise<void> {
   });
 
   app.use('/api/*', sessionMiddleware);
+  app.route('/api', cityRoutes);
   app.route('/api', sessionRoutes);
   app.route('/api', listingRoutes);
   app.route('/api', conversationRoutes);

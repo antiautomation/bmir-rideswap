@@ -132,6 +132,21 @@ export interface MatchReasons {
   capacity: number;
   time: number;
   fresh: number;
+  /** Present when the rider sits along the driver's route to/from BRC — the corridor
+   *  detour in miles. When set, it stands in for the plain location credit. */
+  detourMi?: number;
+}
+
+export interface City {
+  label: string; // "Berkeley, CA"
+  name: string;
+  state: string;
+  lat: number;
+  lng: number;
+}
+
+export interface CitiesResponse {
+  cities: City[];
 }
 
 export interface Match {

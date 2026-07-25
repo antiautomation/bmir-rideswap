@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
+import LocationAutocomplete from './LocationAutocomplete';
 import PhoneInput from './PhoneInput';
 import type {
   Belongings,
@@ -33,25 +34,6 @@ interface FormState {
   email: string;
   phone: string;
 }
-
-const CITY_OPTIONS = [
-  'San Francisco CA',
-  'Oakland CA',
-  'Berkeley CA',
-  'Sacramento CA',
-  'Los Angeles CA',
-  'San Diego CA',
-  'Reno NV',
-  'Las Vegas NV',
-  'Truckee CA',
-  'Portland OR',
-  'Eugene OR',
-  'Seattle WA',
-  'Salt Lake City UT',
-  'Boise ID',
-  'Denver CO',
-  'Phoenix AZ',
-];
 
 const MAX_DATE = '2026-12-31';
 
@@ -272,23 +254,15 @@ export default function ListingForm({ mode, initialType, initial, needsContact, 
 
       <div className="field-group">
         <label htmlFor="field-location">Where from / to?</label>
-        <input
+        <LocationAutocomplete
           id="field-location"
-          type="text"
           required
           maxLength={80}
-          list="city-options"
           value={state.location}
-          onChange={(e) => set('location', e.target.value)}
-          aria-describedby={errors.location ? 'error-location' : undefined}
-          aria-invalid={Boolean(errors.location)}
+          onChange={(v) => set('location', v)}
+          ariaDescribedBy={errors.location ? 'error-location' : undefined}
+          ariaInvalid={Boolean(errors.location)}
         />
-        <datalist id="city-options">
-          {CITY_OPTIONS.map((city) => (
-            <option key={city} value={city} />
-          ))}
-        </datalist>
-        <p className="field-hint">City you&rsquo;re driving from (to BRC) or heading to (from BRC)</p>
         {errors.location && (
           <p id="error-location" className="field-error">
             {errors.location}

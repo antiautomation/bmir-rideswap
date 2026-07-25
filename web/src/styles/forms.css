@@ -56,6 +56,51 @@
   border-color: var(--danger);
 }
 
+/* ---------- Location autocomplete (LocationAutocomplete) ---------- */
+/* Anchor for the absolutely-positioned suggestion list; input still fills width
+   via the .field-group input rule above. */
+.loc-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.loc-suggest {
+  position: absolute;
+  top: calc(var(--control-h) + var(--sp-1));
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: var(--sp-1);
+  list-style: none;
+  max-width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+}
+
+.loc-suggest-option {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.loc-suggest-option[aria-selected='true'],
+.loc-suggest-option:hover {
+  background: var(--surface-3);
+}
+
 /* ---------- Form: vertical stack of field groups ---------- */
 
 .form {

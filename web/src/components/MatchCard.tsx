@@ -21,7 +21,10 @@ function reasonPills(reasons: MatchReasons): string[] {
   else if (reasons.date >= 25) pills.push('📅 1 day apart');
   else if (reasons.date >= 12) pills.push('📅 2 days apart');
 
-  if (reasons.location >= 30) pills.push('📍 Same area');
+  // The corridor detour IS the location credit — when present it replaces the
+  // plain location pill rather than showing alongside it.
+  if (typeof reasons.detourMi === 'number') pills.push(`🛣️ on the way (+${reasons.detourMi} mi)`);
+  else if (reasons.location >= 30) pills.push('📍 Same area');
   else if (reasons.location >= 15) pills.push('📍 Nearby');
 
   if (reasons.capacity >= 15) pills.push('🎒 Perfect gear fit');
