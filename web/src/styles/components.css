@@ -244,10 +244,11 @@
   text-decoration: none;
 }
 
-/* ---------- Privacy + About pages (long-form article layout) ---------- */
+/* ---------- Privacy / About / Help pages (long-form article layout) ---------- */
 
 .privacy-page,
-.about-page {
+.about-page,
+.help-page {
   max-width: 680px;
   margin: 0 auto;
   display: flex;
@@ -256,12 +257,14 @@
 }
 
 .privacy-page > .btn-ghost,
-.about-page > .btn-ghost {
+.about-page > .btn-ghost,
+.help-page > .btn-ghost {
   align-self: flex-start;
 }
 
 .privacy-page h2,
-.about-page h2 {
+.about-page h2,
+.help-page h2 {
   margin-top: var(--sp-4);
 }
 
@@ -270,7 +273,8 @@
 }
 
 .privacy-page ul,
-.about-page ul {
+.about-page ul,
+.help-page ol {
   margin: 0;
   padding-left: var(--sp-6);
   display: flex;
@@ -281,7 +285,9 @@
 
 .privacy-page p,
 .about-page p,
-.about-page li {
+.about-page li,
+.help-page p,
+.help-page li {
   color: var(--text-dim);
 }
 
@@ -473,4 +479,71 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
+}
+
+/* ---------- Help page ---------- */
+
+.help-steps li {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.help-steps li + li {
+  margin-top: var(--sp-3);
+}
+
+.help-qa {
+  border-bottom: 1px solid var(--border);
+}
+
+.help-qa > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: 48px;
+  padding: var(--sp-3) 0;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.help-qa > summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-qa > summary:hover {
+  color: var(--ember);
+}
+
+.help-qa[open] > summary .chevron {
+  transform: rotate(180deg);
+}
+
+.help-qa > summary .chevron {
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+
+.help-qa-body {
+  padding: 0 0 var(--sp-4);
+}
+
+.help-qa-body p {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.help-qa-body p + p {
+  margin-top: var(--sp-2);
+}
+
+.help-page code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+  font-size: 0.875em;
 }

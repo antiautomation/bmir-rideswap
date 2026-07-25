@@ -15,6 +15,7 @@ export default function Footer() {
         judgment. Leave no trace.
       </p>
       <nav className="site-footer-links" aria-label="Footer">
+        <Link to="/help">Help</Link>
         <Link to="/about">About</Link>
         <Link to="/privacy">Privacy Policy</Link>
         <a href="mailto:matching@ridefinder.site">Contact</a>

@@ -12,6 +12,7 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import PrivacyPage from './pages/PrivacyPage';
 import AboutPage from './pages/AboutPage';
+import HelpPage from './pages/HelpPage';
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: 'admin', element: <AdminPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'about', element: <AboutPage /> },
+      { path: 'help', element: <HelpPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
