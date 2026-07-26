@@ -176,9 +176,18 @@ adminRoutes.get('/admin/users', async (c) => {
   requireAdmin(c);
   const q = (c.req.query('q') ?? '').trim();
   const limit = Math.min(Number(c.req.query('limit') ?? '100') || 100, 200);
-  const where = q
+  const includeUnvalidated = c.req.query('includeUnvalidated') === '1';
+  const searchCond = q
     ? or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`), eq(users.recoveryCode, q.toLowerCase()))
     : undefined;
+  // "Unvalidated" = sessions that never completed anything: no email (posting
+  // requires one), no listings, no messages. Usually failed/abandoned attempts.
+  const validatedCond = includeUnvalidated
+    ? undefined
+    : sql`(${users.email} IS NOT NULL
+        OR EXISTS (SELECT 1 FROM listings vl WHERE vl.user_id = ${users.id})
+        OR EXISTS (SELECT 1 FROM messages vm WHERE vm.sender_user_id = ${users.id}))`;
+  const where = searchCond && validatedCond ? and(searchCond, validatedCond) : (searchCond ?? validatedCond);
   const rows = await db
     .select({
       id: users.id,

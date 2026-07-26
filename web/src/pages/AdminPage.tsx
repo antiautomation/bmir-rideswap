@@ -605,13 +605,17 @@ function UsersTab({ selectedUserId, onSelectUser }: { selectedUserId: string | n
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounced(search, 300);
+  const [showUnvalidated, setShowUnvalidated] = useState(false);
   const [banCode, setBanCode] = useState('');
   const [banStatus, setBanStatus] = useState<string | null>(null);
   const [banBusy, setBanBusy] = useState(false);
 
   const users = useQuery({
-    queryKey: ['admin-users', debouncedSearch],
-    queryFn: () => api<{ users: AdminUserRow[] }>(`/api/admin/users?q=${encodeURIComponent(debouncedSearch)}`),
+    queryKey: ['admin-users', debouncedSearch, showUnvalidated],
+    queryFn: () =>
+      api<{ users: AdminUserRow[] }>(
+        `/api/admin/users?q=${encodeURIComponent(debouncedSearch)}${showUnvalidated ? '&includeUnvalidated=1' : ''}`,
+      ),
     enabled: selectedUserId === null,
   });
 
@@ -666,6 +670,14 @@ function UsersTab({ selectedUserId, onSelectUser }: { selectedUserId: string | n
         </form>
       </div>
       {banStatus && <p className="muted">{banStatus}</p>}
+      <label className="admin-toggle">
+        <input
+          type="checkbox"
+          checked={showUnvalidated}
+          onChange={(e) => setShowUnvalidated(e.target.checked)}
+        />{' '}
+        Show unvalidated users <span className="muted">(sessions with no email and no activity — usually failed post attempts)</span>
+      </label>
 
       {users.isLoading && <p className="muted">Loading…</p>}
       {users.isError && (
