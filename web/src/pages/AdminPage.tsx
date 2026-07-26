@@ -62,6 +62,7 @@ interface AdminUserDetail {
   name: string;
   email: string | null;
   phone: string | null;
+  recoveryCode: string;
   digestFrequency: string;
   isAdmin: boolean;
   bannedAt: string | null;
@@ -502,6 +503,10 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
           <dd>{user.email ?? '—'}</dd>
           <dt>Phone</dt>
           <dd>{user.phone ?? '—'}</dd>
+          <dt>Session code</dt>
+          <dd>
+            <code>{user.recoveryCode}</code>
+          </dd>
           <dt>Digest</dt>
           <dd>{user.digestFrequency}</dd>
           <dt>Photo</dt>

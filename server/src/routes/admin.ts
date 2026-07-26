@@ -276,6 +276,9 @@ adminRoutes.get('/admin/users/:id', async (c) => {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      // Detail view only, never the list: lets the operator hand someone their
+      // session code in person. A code IS the account — treat accordingly.
+      recoveryCode: user.recoveryCode,
       digestFrequency: user.digestFrequency,
       isAdmin: user.isAdmin,
       bannedAt: user.bannedAt?.toISOString() ?? null,

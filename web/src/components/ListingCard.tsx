@@ -1,9 +1,35 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
-import type { Listing } from '../api/types';
+import type { Belongings, Listing } from '../api/types';
 import { isExpired } from '../lib/expiry';
-import { belongingsLabel, directionArrow, formatTimeSlot, formatTravelDate } from '../lib/format';
+import { BELONGINGS_MEANINGS, belongingsLabel, directionArrow, formatTimeSlot, formatTravelDate } from '../lib/format';
+
+/** Gear pill with an ⓘ that reveals what the tier means. Click/tap toggles
+ *  (Safari doesn't focus buttons on click, so :focus CSS alone won't do);
+ *  hovering the pill also shows it on desktop. */
+function GearPill({ level }: { level: Belongings }) {
+  const [open, setOpen] = useState(false);
+  const label = belongingsLabel(level);
+  const meaning = BELONGINGS_MEANINGS[level];
+  return (
+    <span className="pill gear-pill">
+      {label}
+      <button
+        type="button"
+        className="gear-info"
+        aria-label={`${label}: ${meaning}`}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        ⓘ
+      </button>
+      <span className={open ? 'gear-tip gear-tip--open' : 'gear-tip'} role="tooltip">
+        {meaning}
+      </span>
+    </span>
+  );
+}
 
 interface ListingCardProps {
   listing: Listing;
@@ -93,14 +119,10 @@ export default function ListingCard({
             {listing.passengerSpace !== null && (
               <span className="pill">{seatsLabel(listing.passengerSpace)}</span>
             )}
-            {listing.cargoSpace !== null && (
-              <span className="pill">{belongingsLabel(listing.cargoSpace)}</span>
-            )}
+            {listing.cargoSpace !== null && <GearPill level={listing.cargoSpace} />}
           </>
         ) : (
-          listing.riderStuff !== null && (
-            <span className="pill">{belongingsLabel(listing.riderStuff)}</span>
-          )
+          listing.riderStuff !== null && <GearPill level={listing.riderStuff} />
         )}
         {listing.pending && <span className="pill pill-warn">Waiting to sync</span>}
         {expired && <span className="pill pill-warn">Expired</span>}

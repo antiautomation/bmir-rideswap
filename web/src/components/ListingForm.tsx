@@ -67,9 +67,9 @@ for (let hour = 0; hour < 24; hour += 3) {
 
 const BELONGINGS_OPTIONS: { value: Belongings; label: string }[] = [
   { value: 'minimal', label: 'Minimal — a backpack' },
-  { value: 'standard', label: 'Standard — a bin or two' },
-  { value: 'substantial', label: 'Substantial — several bins' },
-  { value: 'extensive', label: 'Extensive — truck-bed load' },
+  { value: 'standard', label: 'Standard — a suitcase or bin' },
+  { value: 'substantial', label: 'Substantial — suitcases/bins + a bike' },
+  { value: 'extensive', label: 'Extensive — a truck-bed load' },
 ];
 
 function buildInitialState(mode: 'create' | 'edit', initialType?: ListingType, initial?: Listing): FormState {

@@ -71,3 +71,11 @@ const BELONGINGS_LABELS: Record<Belongings, string> = {
 export function belongingsLabel(belongings: Belongings): string {
   return BELONGINGS_LABELS[belongings];
 }
+
+/** What each gear tier actually means — shown by the ⓘ on gear pills. */
+export const BELONGINGS_MEANINGS: Record<Belongings, string> = {
+  minimal: 'a backpack',
+  standard: 'a suitcase or bin',
+  substantial: 'suitcases/bins + a bike',
+  extensive: 'a truck-bed load',
+};
