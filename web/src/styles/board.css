@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  padding-block: var(--sp-3);
+  padding-block: var(--sp-3) var(--sp-4);
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
@@ -31,6 +31,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--sp-2);
+}
+
+/* Narrow phones: stack the filter controls full-width instead of letting the
+   odd one out sit as a half-width orphan next to empty space. */
+@media (max-width: 479px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .filter-more > summary {
@@ -99,6 +107,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--sp-6);
+  /* Air between the filter bar's divider and the section headers. */
+  margin-top: var(--sp-4);
 }
 
 @media (min-width: 1024px) {
