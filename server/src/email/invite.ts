@@ -187,7 +187,7 @@ export function renderInvite(input: InviteInput): { subject: string; html: strin
 
   const html = shell({
     title: subject,
-    preheader: 'Private messaging, real matching, works offline — and nothing public anymore.',
+    preheader: 'Private messaging, real matching, works offline — free, from the BMIR family.',
     bodyHtml,
     footerHtml,
   });
