@@ -33,6 +33,7 @@ export function toMe(user: SessionUser) {
     email: user.email,
     phone: user.phone,
     digestFrequency: user.digestFrequency,
+    phoneContactPref: user.phoneContactPref,
     recoveryCode: user.recoveryCode,
     isAdmin: user.isAdmin,
     avatarVersion: user.avatarUpdatedAt?.getTime() ?? null,
@@ -48,6 +49,7 @@ const meUpdateSchema = z.object({
   name: z.string().max(60).optional(),
   email: z.union([z.string().email().max(120), z.literal('')]).optional(),
   phone: z.union([z.string().max(30), z.literal('')]).optional(),
+  phoneContactPref: z.enum(['sms', 'whatsapp']).optional(),
   digestFrequency: z.enum(['instant', 'hourly', 'daily', 'off']).optional(),
 });
 
@@ -109,6 +111,7 @@ sessionRoutes.patch(
       }
     }
     if (data.digestFrequency !== undefined) updates.digestFrequency = data.digestFrequency;
+    if (data.phoneContactPref !== undefined) updates.phoneContactPref = data.phoneContactPref;
 
     let updated = user;
     if (Object.keys(updates).length > 0) {

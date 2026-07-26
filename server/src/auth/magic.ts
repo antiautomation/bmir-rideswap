@@ -1,19 +1,20 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import { db } from '../db/client.js';
+import { appConfig } from '../lib/settings.js';
 import { magicTokens, users } from '../db/schema.js';
 import { hashToken, newRawToken, type SessionUser } from './tokens.js';
 
 // One token is minted per outbound email and shared by all links in it.
 // Multi-use by design: mail scanners prefetch GET links, and burning the token
 // on first use would lock the real reader out.
-const MAGIC_TTL_MS = 30 * 24 * 3600 * 1000;
+const magicTtlMs = (): number => appConfig('magicLinkDays') * 24 * 3600 * 1000;
 
 export async function mintMagicToken(userId: string): Promise<string> {
   const raw = newRawToken('ml');
   await db.insert(magicTokens).values({
     userId,
     tokenHash: hashToken(raw),
-    expiresAt: new Date(Date.now() + MAGIC_TTL_MS),
+    expiresAt: new Date(Date.now() + magicTtlMs()),
   });
   return raw;
 }

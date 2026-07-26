@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
 import FilterBar from '../components/FilterBar';
@@ -25,6 +25,27 @@ export default function BoardPage() {
     const unique = new Set(listings.map((l) => l.travelDate));
     return Array.from(unique).sort();
   }, [listings]);
+
+  // Cities with at least one active listing, deduped case-insensitively
+  // (first-seen display form wins), like the day dropdown.
+  const cities = useMemo(() => {
+    const byKey = new Map<string, string>();
+    for (const l of listings) {
+      const key = l.location.trim().toLowerCase();
+      if (key && !byKey.has(key)) byKey.set(key, l.location.trim());
+    }
+    return Array.from(byKey.values()).sort((a, b) => a.localeCompare(b));
+  }, [listings]);
+
+  // Stale free-text filters from the old search box would silently hide
+  // everything now that the control is a dropdown — clear them once.
+  useEffect(() => {
+    const q = filters.locationQuery.trim().toLowerCase();
+    if (q && listings.length > 0 && !cities.some((c) => c.toLowerCase() === q)) {
+      setFilters({ ...filters, locationQuery: '' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cities]);
 
   const { drivers, riders } = useMemo(
     () => applyFilters(listings, filters, favorites, hidden),
@@ -54,7 +75,7 @@ export default function BoardPage() {
   return (
     <>
       <h1 className="visually-hidden">Ride board</h1>
-      <FilterBar filters={filters} onChange={setFilters} days={days} />
+      <FilterBar filters={filters} onChange={setFilters} days={days} cities={cities} />
 
       <WelcomeCard />
       <MatchesTeaser />

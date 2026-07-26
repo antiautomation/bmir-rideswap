@@ -9,7 +9,16 @@ import { db } from '../db/client.js';
 import { conversations, emailLog, emailSuppressions, flags, listings, messages, users } from '../db/schema.js';
 import { sendEmail } from '../email/ses.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
-import { getRateLimits, RATE_LIMIT_DEFAULTS, RATE_LIMIT_KEYS, setRateLimits } from '../lib/settings.js';
+import {
+  APP_CONFIG_DEFAULTS,
+  APP_CONFIG_KEYS,
+  getAppConfig,
+  getRateLimits,
+  RATE_LIMIT_DEFAULTS,
+  RATE_LIMIT_KEYS,
+  setAppConfig,
+  setRateLimits,
+} from '../lib/settings.js';
 
 function keyMatches(candidate: string): boolean {
   const expected = process.env.ADMIN_KEY;
@@ -541,7 +550,12 @@ adminRoutes.get('/admin/metrics', async (c) => {
 
 adminRoutes.get('/admin/settings', async (c) => {
   requireAdmin(c);
-  return c.json({ rateLimits: await getRateLimits(), defaults: RATE_LIMIT_DEFAULTS });
+  return c.json({
+    rateLimits: await getRateLimits(),
+    defaults: RATE_LIMIT_DEFAULTS,
+    appConfig: await getAppConfig(),
+    appConfigDefaults: APP_CONFIG_DEFAULTS,
+  });
 });
 
 adminRoutes.put(
@@ -553,7 +567,14 @@ adminRoutes.put(
         .object(
           Object.fromEntries(RATE_LIMIT_KEYS.map((k) => [k, z.number().int().min(1).max(100_000).optional()])),
         )
-        .strict(),
+        .strict()
+        .optional(),
+      appConfig: z
+        .object(
+          Object.fromEntries(APP_CONFIG_KEYS.map((k) => [k, z.number().int().min(1).max(10_000).optional()])),
+        )
+        .strict()
+        .optional(),
     }),
     (r, c) => {
       if (!r.success) return c.json({ error: 'invalid' }, 400);
@@ -561,9 +582,11 @@ adminRoutes.put(
   ),
   async (c) => {
     requireAdmin(c);
-    await setRateLimits(c.req.valid('json').rateLimits);
-    console.warn('admin updated rate limits', c.req.valid('json').rateLimits);
-    return c.json({ rateLimits: await getRateLimits() });
+    const body = c.req.valid('json');
+    if (body.rateLimits) await setRateLimits(body.rateLimits);
+    if (body.appConfig) await setAppConfig(body.appConfig);
+    console.warn('admin updated settings', JSON.stringify(body));
+    return c.json({ rateLimits: await getRateLimits(), appConfig: await getAppConfig() });
   },
 );
 

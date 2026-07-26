@@ -95,6 +95,7 @@ function ContactSection({ me }: { me: Me | null }) {
   const [email, setEmail] = useState(me?.email ?? '');
   const [phone, setPhone] = useState(me?.phone ?? '');
   const [digestFrequency, setDigestFrequency] = useState<DigestFrequency>(me?.digestFrequency ?? 'hourly');
+  const [phoneContactPref, setPhoneContactPref] = useState<'sms' | 'whatsapp'>(me?.phoneContactPref ?? 'sms');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [emailTaken, setEmailTaken] = useState<string | null>(null);
@@ -106,7 +107,7 @@ function ContactSection({ me }: { me: Me | null }) {
     try {
       await api('/api/me', {
         method: 'PATCH',
-        body: { name, email, phone, digestFrequency },
+        body: { name, email, phone, digestFrequency, phoneContactPref },
       });
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       setSaved(true);
@@ -155,6 +156,30 @@ function ContactSection({ me }: { me: Me | null }) {
         <div className="field-group">
           <label htmlFor="profile-phone">Phone</label>
           <PhoneInput id="profile-phone" disabled={!me} value={phone} onChange={setPhone} />
+        </div>
+        <div className="field-group">
+          <span className="field-group-label">How should people text you?</span>
+          <div className="seg" role="group" aria-label="Preferred texting app">
+            <button
+              type="button"
+              disabled={!me}
+              aria-pressed={phoneContactPref === 'sms'}
+              onClick={() => setPhoneContactPref('sms')}
+            >
+              💬 SMS / iMessage
+            </button>
+            <button
+              type="button"
+              disabled={!me}
+              aria-pressed={phoneContactPref === 'whatsapp'}
+              onClick={() => setPhoneContactPref('whatsapp')}
+            >
+              🟢 WhatsApp
+            </button>
+          </div>
+          <p className="field-hint">
+            When you share your number in a message, the &ldquo;text me&rdquo; link opens this app.
+          </p>
         </div>
         <div className="field-group">
           <label htmlFor="profile-digest">Email me about new messages</label>

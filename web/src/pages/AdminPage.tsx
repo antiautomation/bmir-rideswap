@@ -159,9 +159,19 @@ interface RateLimits {
   emailLoginLinksPerHour: number;
 }
 
+interface AppConfig {
+  magicLinkDays: number;
+  sessionDays: number;
+  flagAutoHideThreshold: number;
+  maxListingsPerDay: number;
+  maxActiveListingsPerDirection: number;
+}
+
 interface SettingsResponse {
   rateLimits: RateLimits;
   defaults: RateLimits;
+  appConfig: AppConfig;
+  appConfigDefaults: AppConfig;
 }
 
 /* ---------- Small shared helpers ---------- */
@@ -1200,6 +1210,19 @@ const RATE_LIMIT_FIELDS: { key: keyof RateLimits; label: string }[] = [
   { key: 'emailLoginLinksPerHour', label: 'Email sign-in links per IP per hour' },
 ];
 
+const APP_CONFIG_FIELDS: { key: keyof AppConfig; label: string }[] = [
+  { key: 'magicLinkDays', label: 'Magic link validity (days)' },
+  { key: 'sessionDays', label: 'Session length (days)' },
+  { key: 'flagAutoHideThreshold', label: 'Reports needed to auto-hide a listing' },
+  { key: 'maxListingsPerDay', label: 'Listings per user per day' },
+  { key: 'maxActiveListingsPerDirection', label: 'Active listings per user per direction' },
+];
+
+/** Both groups are whole numbers the server accepts within its own bounds. */
+function clampSetting(value: string, max: number): number {
+  return Math.min(max, Math.max(1, Math.round(Number(value) || 1)));
+}
+
 function SettingsTab() {
   const queryClient = useQueryClient();
   const settings = useQuery({
@@ -1207,23 +1230,32 @@ function SettingsTab() {
     queryFn: () => api<SettingsResponse>('/api/admin/settings'),
   });
   const [draft, setDraft] = useState<RateLimits | null>(null);
+  const [appDraft, setAppDraft] = useState<AppConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   const current = draft ?? settings.data?.rateLimits ?? null;
+  const appCurrent = appDraft ?? settings.data?.appConfig ?? null;
 
   function setField(key: keyof RateLimits, value: string): void {
     if (!current) return;
-    const n = Math.max(1, Math.round(Number(value) || 1));
-    setDraft({ ...current, [key]: n });
+    setDraft({ ...current, [key]: clampSetting(value, 100_000) });
+  }
+
+  function setAppField(key: keyof AppConfig, value: string): void {
+    if (!appCurrent) return;
+    setAppDraft({ ...appCurrent, [key]: clampSetting(value, 10_000) });
   }
 
   async function save(): Promise<void> {
-    if (!current) return;
+    if (!current || !appCurrent) return;
     setSaving(true);
     setSaveStatus(null);
     try {
-      await api('/api/admin/settings', { method: 'PUT', body: { rateLimits: current } });
+      await api('/api/admin/settings', {
+        method: 'PUT',
+        body: { rateLimits: current, appConfig: appCurrent },
+      });
       setSaveStatus('Saved ✓ — takes effect within 30s');
       void queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
     } catch {
@@ -1234,7 +1266,7 @@ function SettingsTab() {
   }
 
   if (settings.isLoading) return <p className="muted">Loading…</p>;
-  if (settings.isError || !settings.data || !current) {
+  if (settings.isError || !settings.data || !current || !appCurrent) {
     return (
       <div className="admin-error">
         <p className="muted">Failed to load.</p>
@@ -1246,34 +1278,59 @@ function SettingsTab() {
   }
 
   const defaults = settings.data.defaults;
+  const appDefaults = settings.data.appConfigDefaults;
 
   return (
-    <section className="card admin-settings-card">
-      <h2>Rate limits</h2>
-      <p className="muted">Changes apply live, no deploy needed.</p>
-      <div className="admin-settings-grid">
-        {RATE_LIMIT_FIELDS.map((f) => (
-          <div key={f.key} className="field-group">
-            <label htmlFor={`rl-${f.key}`}>
-              {f.label} <span className="field-hint">(default {defaults[f.key]})</span>
-            </label>
-            <input
-              id={`rl-${f.key}`}
-              type="number"
-              min={1}
-              value={current[f.key]}
-              onChange={(e) => setField(f.key, e.target.value)}
-            />
-          </div>
-        ))}
-      </div>
+    <div className="admin-detail">
+      <section className="card admin-settings-card">
+        <h2>Rate limits</h2>
+        <p className="muted">Changes apply live, no deploy needed.</p>
+        <div className="admin-settings-grid">
+          {RATE_LIMIT_FIELDS.map((f) => (
+            <div key={f.key} className="field-group">
+              <label htmlFor={`rl-${f.key}`}>
+                {f.label} <span className="field-hint">(default {defaults[f.key]})</span>
+              </label>
+              <input
+                id={`rl-${f.key}`}
+                type="number"
+                min={1}
+                value={current[f.key]}
+                onChange={(e) => setField(f.key, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="card admin-settings-card">
+        <h2>App settings</h2>
+        <p className="muted">Changes apply live, no deploy needed.</p>
+        <div className="admin-settings-grid">
+          {APP_CONFIG_FIELDS.map((f) => (
+            <div key={f.key} className="field-group">
+              <label htmlFor={`ac-${f.key}`}>
+                {f.label} <span className="field-hint">(default {appDefaults[f.key]})</span>
+              </label>
+              <input
+                id={`ac-${f.key}`}
+                type="number"
+                min={1}
+                value={appCurrent[f.key]}
+                onChange={(e) => setAppField(f.key, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="admin-row">
         <button className="btn" disabled={saving} onClick={() => void save()}>
           Save
         </button>
         {saveStatus && <p className="muted">{saveStatus}</p>}
       </div>
-    </section>
+    </div>
   );
 }
 

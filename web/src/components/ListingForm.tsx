@@ -19,6 +19,9 @@ interface ListingFormProps {
   /** Contact email the server rejected as belonging to another account (409
    *  email_taken). The form stays mounted, so nothing the user typed is lost. */
   emailTaken?: string | null;
+  /** The server refused the post because the account still has no email (400
+   *  email_required). Surfaced on the email field, same as email_taken. */
+  emailRequired?: boolean;
   onSubmit: (input: CreateListingInput | UpdateListingInput) => void;
 }
 
@@ -111,12 +114,16 @@ function buildInitialState(mode: 'create' | 'edit', initialType?: ListingType, i
 
 type FieldErrors = Partial<Record<keyof FormState, string>>;
 
+/** Shared by the client-side check and the server's 400 email_required. */
+const EMAIL_REQUIRED_ERROR = 'Add an email so people’s replies can reach you.';
+
 export default function ListingForm({
   mode,
   initialType,
   initial,
   needsContact,
   emailTaken,
+  emailRequired,
   onSubmit,
 }: ListingFormProps) {
   const [state, setState] = useState<FormState>(() => buildInitialState(mode, initialType, initial));
@@ -125,6 +132,7 @@ export default function ListingForm({
 
   const today = todayLocalDate();
   const isDriver = state.type === 'driver';
+  const emailError = errors.email ?? (emailRequired ? EMAIL_REQUIRED_ERROR : undefined);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]): void {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -138,11 +146,10 @@ export default function ListingForm({
     if (state.direction === 'from_brc' && !state.campInfo.trim()) {
       next.campInfo = 'Camp info is required for rides leaving BRC — it helps rides find you for exodus.';
     }
-    if (needsContact && mode === 'create') {
-      if (!state.email.trim() && !state.phone.trim()) {
-        next.email = 'Enter at least one way to reach you.';
-        next.phone = 'Enter at least one way to reach you.';
-      }
+    // The form is noValidate, so the required attr is semantics only — the email
+    // gate lives here, matching the other required fields.
+    if (needsContact && mode === 'create' && !state.email.trim()) {
+      next.email = EMAIL_REQUIRED_ERROR;
     }
     return next;
   }
@@ -416,38 +423,47 @@ export default function ListingForm({
           <div className="field-group">
             <span className="field-group-label">Contact info</span>
             <p className="field-hint">
-              How should ride matches reach you? At least one required.{' '}
-              <strong>Never shown publicly</strong> — only shared if you choose to share it in a
-              message.
+              How should ride matches reach you? <strong>Never shown publicly</strong> — only
+              shared if you choose to share it in a message.
             </p>
           </div>
 
           <div className="field-group">
-            <label htmlFor="field-email">Email</label>
+            <label htmlFor="field-email">Email (required)</label>
             <input
               id="field-email"
               type="email"
+              required
               value={state.email}
               onChange={(e) => set('email', e.target.value)}
-              aria-describedby={errors.email ? 'error-email' : undefined}
-              aria-invalid={Boolean(errors.email)}
+              aria-describedby={emailError ? 'hint-email error-email' : 'hint-email'}
+              aria-invalid={Boolean(emailError)}
             />
-            {errors.email && (
+            <p id="hint-email" className="field-hint">
+              Required — it&rsquo;s how replies reach you. We&rsquo;ll email you once with your
+              sign-in link when you post; after that, only the message &amp; match updates you
+              choose. Unsubscribing forever is one click.
+            </p>
+            {emailError && (
               <p id="error-email" className="field-error">
-                {errors.email}
+                {emailError}
               </p>
             )}
             {emailTaken && <EmailTakenNotice key={emailTaken} email={emailTaken} />}
           </div>
 
           <div className="field-group">
-            <label htmlFor="field-phone">Phone</label>
+            <label htmlFor="field-phone">Phone (optional)</label>
             <PhoneInput
               id="field-phone"
               value={state.phone}
               onChange={(v) => set('phone', v)}
               ariaDescribedBy={errors.phone ? 'error-phone' : undefined}
             />
+          <p className="field-hint">
+            Optional, but nice to have — once you match, you can share it in a message at your
+            discretion, and it becomes one-tap call / text / WhatsApp links for your ride.
+          </p>
             {errors.phone && (
               <p id="error-phone" className="field-error">
                 {errors.phone}

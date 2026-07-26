@@ -47,6 +47,7 @@ export interface Me {
   email: string | null;
   phone: string | null;
   digestFrequency: DigestFrequency;
+  phoneContactPref: 'sms' | 'whatsapp';
   recoveryCode: string;
   isAdmin: boolean;
   avatarVersion: number | null;
@@ -117,6 +118,7 @@ export interface ThreadResponse {
   listing: ConversationListing;
   counterpartName: string;
   counterpartAvatarVersion: number | null;
+  counterpartPhonePref: 'sms' | 'whatsapp';
   messages: Message[];
 }
 

@@ -31,7 +31,11 @@ function dayLabel(iso: string): string {
   return `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function waLink(phone: string): string {
+  return `https://wa.me/${phone.replace(/[^0-9]/g, '')}`;
+}
+
+function MessageBubble({ message, phonePref }: { message: Message; phonePref: 'sms' | 'whatsapp' }) {
   return (
     <div className={message.isMine ? 'bubble-row bubble-row--mine' : 'bubble-row bubble-row--theirs'}>
       <div className={message.isMine ? 'bubble bubble--mine' : 'bubble bubble--theirs'}>
@@ -44,7 +48,13 @@ function MessageBubble({ message }: { message: Message }) {
             {message.sharedPhone && (
               <div className="contact-block-phone">
                 <span>{message.sharedPhone}</span>
-                <a href={`sms:${message.sharedPhone}`}>Text</a>
+                {phonePref === 'whatsapp' ? (
+                  <a href={waLink(message.sharedPhone)} target="_blank" rel="noopener noreferrer">
+                    WhatsApp
+                  </a>
+                ) : (
+                  <a href={`sms:${message.sharedPhone}`}>Text</a>
+                )}
                 <a href={`tel:${message.sharedPhone}`}>Call</a>
               </div>
             )}
@@ -181,7 +191,10 @@ export default function ThreadPage() {
                     <span>{dayLabel(m.createdAt)}</span>
                   </div>
                 )}
-                <MessageBubble message={m} />
+                <MessageBubble
+                  message={m}
+                  phonePref={m.isMine ? (me?.phoneContactPref ?? 'sms') : data.counterpartPhonePref}
+                />
               </div>
             );
           })}

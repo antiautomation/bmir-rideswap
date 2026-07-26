@@ -3,12 +3,13 @@ import { and, eq, gt, isNull, lt } from 'drizzle-orm';
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { db } from '../db/client.js';
+import { appConfig } from '../lib/settings.js';
 import { authTokens, magicTokens, users } from '../db/schema.js';
 
 export type SessionUser = typeof users.$inferSelect;
 
 const COOKIE_NAME = 'rs_session';
-const SESSION_TTL_MS = 365 * 24 * 3600 * 1000;
+const sessionTtlMs = (): number => appConfig('sessionDays') * 24 * 3600 * 1000;
 const TOUCH_INTERVAL_MS = 3600 * 1000;
 
 export function hashToken(raw: string): string {
@@ -24,14 +25,14 @@ export async function issueSessionCookie(c: Context, userId: string): Promise<vo
   await db.insert(authTokens).values({
     userId,
     tokenHash: hashToken(raw),
-    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    expiresAt: new Date(Date.now() + sessionTtlMs()),
   });
   setCookie(c, COOKIE_NAME, raw, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
     path: '/',
-    maxAge: SESSION_TTL_MS / 1000,
+    maxAge: sessionTtlMs() / 1000,
   });
 }
 

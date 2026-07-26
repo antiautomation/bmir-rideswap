@@ -6,6 +6,7 @@ interface FilterBarProps {
   onChange: (next: FilterState) => void;
   /** Unique travel dates present on the board, sorted ascending. */
   days: string[];
+  cities: string[];
 }
 
 const DIRECTION_OPTIONS: { value: FilterState['direction']; label: string }[] = [
@@ -28,7 +29,7 @@ const CAPACITY_OPTIONS: { value: FilterState['capacity']; label: string }[] = [
   { value: 'extensive', label: 'Extensive gear' },
 ];
 
-export default function FilterBar({ filters, onChange, days }: FilterBarProps) {
+export default function FilterBar({ filters, onChange, days, cities }: FilterBarProps) {
   function set<K extends keyof FilterState>(key: K, value: FilterState[K]): void {
     onChange({ ...filters, [key]: value });
   }
@@ -77,13 +78,18 @@ export default function FilterBar({ filters, onChange, days }: FilterBarProps) {
           ))}
         </select>
 
-        <input
-          type="search"
-          aria-label="Filter by location"
-          placeholder="Filter by city…"
-          value={filters.locationQuery}
+        <select
+          aria-label="Filter by city"
+          value={cities.some((c) => c.toLowerCase() === filters.locationQuery.trim().toLowerCase()) ? filters.locationQuery : ''}
           onChange={(e) => set('locationQuery', e.target.value)}
-        />
+        >
+          <option value="">All cities</option>
+          {cities.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
+        </select>
 
         <select
           aria-label="Gear capacity"

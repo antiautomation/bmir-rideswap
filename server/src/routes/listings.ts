@@ -7,10 +7,13 @@ import { ensureUser, requireUser } from '../auth/middleware.js';
 import { db } from '../db/client.js';
 import { flags, listings, users } from '../db/schema.js';
 import { allow } from '../lib/rateLimit.js';
-import { rateLimit } from '../lib/settings.js';
+import { appConfig, rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
 import { geocodeLocation } from '../lib/cities.js';
+import { mintMagicToken } from '../auth/magic.js';
+import { renderPostConfirmation } from '../email/postConfirmation.js';
+import { sendEmail } from '../email/ses.js';
 import { recomputeMatchesForListing } from '../matching/score.js';
 import { emailTakenByOther } from './session.js';
 
@@ -125,6 +128,26 @@ function isUniqueViolation(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: unknown }).code === '23505';
 }
 
+/* The one non-digest email we promise on the post form: their post is live,
+   and this message doubles as their sign-in key. Fire-and-forget. */
+async function sendPostConfirmation(
+  user: typeof users.$inferSelect | (typeof users.$inferSelect & Record<string, unknown>),
+  listing: typeof listings.$inferSelect,
+): Promise<void> {
+  if (!user.email) return;
+  const appOrigin = process.env.APP_ORIGIN ?? 'http://localhost:3000';
+  const rendered = renderPostConfirmation({
+    appOrigin,
+    recipientName: user.name,
+    listingId: listing.id,
+    listingType: listing.type,
+    travelDate: listing.travelDate,
+    magicToken: await mintMagicToken(user.id),
+    recoveryCode: user.recoveryCode,
+  });
+  await sendEmail({ userId: user.id, to: user.email, kind: 'post_confirmation', ...rendered });
+}
+
 export const listingRoutes = new Hono();
 
 listingRoutes.get('/listings', async (c) => {
@@ -218,8 +241,8 @@ listingRoutes.post(
         throw err;
       }
     }
-    if (!currentUser.email && !currentUser.phone) {
-      throw new HTTPException(400, { message: 'contact_required' });
+    if (!currentUser.email) {
+      throw new HTTPException(400, { message: 'email_required' });
     }
 
     // Step 3: DB-backed rate limits.
@@ -228,7 +251,7 @@ listingRoutes.post(
       .select({ n: count() })
       .from(listings)
       .where(and(eq(listings.userId, currentUser.id), gt(listings.createdAt, dayAgo)));
-    if (createdTodayRows[0]!.n >= 5) throw new HTTPException(429, { message: 'daily_limit' });
+    if (createdTodayRows[0]!.n >= appConfig('maxListingsPerDay')) throw new HTTPException(429, { message: 'daily_limit' });
 
     const activeSameDirectionRows = await db
       .select({ n: count() })
@@ -242,7 +265,7 @@ listingRoutes.post(
           gt(listings.expiresAt, new Date()),
         ),
       );
-    if (activeSameDirectionRows[0]!.n >= 3) throw new HTTPException(429, { message: 'active_limit' });
+    if (activeSameDirectionRows[0]!.n >= appConfig('maxActiveListingsPerDirection')) throw new HTTPException(429, { message: 'active_limit' });
 
     // Step 4: insert.
     const locationNorm = normalizeLocation(body.location);
@@ -274,6 +297,9 @@ listingRoutes.post(
     try {
       const inserted = await db.insert(listings).values(values).returning();
       await recomputeMatchesForListing(inserted[0]!);
+      sendPostConfirmation(currentUser, inserted[0]!).catch((err) =>
+        console.error('post-confirmation email failed', err),
+      );
       return c.json({ listing: toListingDto(inserted[0]!, currentUser.id) }, 201);
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -418,7 +444,7 @@ listingRoutes.post(
       .onConflictDoNothing();
 
     const flagCountRows = await db.select({ n: count() }).from(flags).where(eq(flags.listingId, id));
-    if (flagCountRows[0]!.n >= 3 && row.hiddenAt === null) {
+    if (flagCountRows[0]!.n >= appConfig('flagAutoHideThreshold') && row.hiddenAt === null) {
       await db.update(listings).set({ hiddenAt: new Date() }).where(eq(listings.id, id));
     }
     return c.json({ ok: true });

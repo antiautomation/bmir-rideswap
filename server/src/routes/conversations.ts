@@ -300,18 +300,20 @@ conversationRoutes.get('/conversations/:id', async (c) => {
   const iAmInitiator = conversation.initiatorUserId === user.id;
   const counterpartUserId = iAmInitiator ? listing.userId : conversation.initiatorUserId;
   const counterpartRows = await db
-    .select({ id: users.id, name: users.name, avatarAt: users.avatarUpdatedAt })
+    .select({ id: users.id, name: users.name, avatarAt: users.avatarUpdatedAt, phonePref: users.phoneContactPref })
     .from(users)
     .where(eq(users.id, counterpartUserId))
     .limit(1);
   const counterpartName = counterpartRows[0]?.name ?? (iAmInitiator ? listing.name : null) ?? 'Burner';
   const counterpartAvatarVersion = counterpartRows[0]?.avatarAt?.getTime() ?? null;
+  const counterpartPhonePref = counterpartRows[0]?.phonePref === 'whatsapp' ? 'whatsapp' : 'sms';
 
   return c.json({
     conversation: { id: conversation.id },
     listing: toConversationListingDto(listing),
     counterpartName,
     counterpartAvatarVersion,
+    counterpartPhonePref,
     messages: messageRows.map((m) => toMessageDto(m, user.id)),
   });
 });
