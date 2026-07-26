@@ -31,9 +31,9 @@ export const DEFAULT_SUBJECT = 'RideFinder got rebuilt — post your ride for Bl
 
 export const DEFAULT_HEADLINE = 'RideFinder got rebuilt from scratch';
 
-export const DEFAULT_INTRO = `You posted a ride on the RideFinder board last year — thank you. It did the job, but it was held together with tape: your email and phone number sat on a public page for anyone to scrape, and finding a match meant scrolling until your thumb gave out.
+export const DEFAULT_INTRO = `You posted on the RideFinder board for last year's burn — thank you for being part of it.
 
-So I rebuilt the whole thing. Same idea, none of the exposure.`;
+This year the whole thing got rebuilt from scratch: same free community ride board, from the same BMIR 94.5 FM family, now with private messaging and matching that does the searching for you. If you're heading back to the dust, it's ready when you are.`;
 
 interface Feature {
   heading: string;
@@ -42,9 +42,9 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    heading: '🔒 Your contact info is yours again',
+    heading: '🔒 Private by design',
     bullets: [
-      '<strong>Nothing is public anymore.</strong> No email addresses, no phone numbers on the board — not to visitors, not to scrapers.',
+      '<strong>Your contact info stays private.</strong> No email addresses or phone numbers on the public board — people reach you through messages, and you share your details only if and when you choose.',
       '<strong>Private messaging built in.</strong> You talk to people inside RideFinder, and you decide message by message whether to hand over your number.',
       '<strong>Photos unlock, not broadcast.</strong> Your profile photo is only visible to someone you are actually in a conversation with.',
       '<strong>Report button on every post</strong>, with a real human reviewing what gets flagged.',
