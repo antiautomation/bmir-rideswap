@@ -409,6 +409,7 @@ function OverviewTab({
 
 function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: () => void; onViewUser: (id: string) => void }) {
   const queryClient = useQueryClient();
+  const { data: me } = useMe();
   const detail = useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: () => api<AdminUserDetailResponse>(`/api/admin/users/${userId}`),
@@ -431,6 +432,24 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
       refreshAll();
     } catch {
       window.alert('Action failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleAdmin(isAdmin: boolean): Promise<void> {
+    const msg = isAdmin
+      ? 'Revoke admin from this user? They keep their account; they just lose the console.'
+      : 'Make this user an admin? They will see the FULL console: every user, every private message thread, bans, and settings. Only for people you trust completely.';
+    if (!window.confirm(msg)) return;
+    setBusy(true);
+    try {
+      await api(`/api/admin/users/${userId}/${isAdmin ? 'demote' : 'promote'}`, { method: 'POST', body: {} });
+      refreshAll();
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'cannot_demote_self') window.alert('You cannot revoke your own admin access.');
+      else if (err instanceof ApiError && err.code === 'cannot_promote_banned') window.alert('Unban this user before making them an admin.');
+      else window.alert('Action failed');
     } finally {
       setBusy(false);
     }
@@ -498,6 +517,17 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
               {user.bannedAt ? 'Unban' : 'Ban'}
             </button>
           )}
+          {user.isAdmin
+            ? user.id !== me?.id && (
+                <button className="btn-danger" disabled={busy} onClick={() => void toggleAdmin(true)}>
+                  Revoke admin
+                </button>
+              )
+            : !user.bannedAt && (
+                <button className="btn-secondary" disabled={busy} onClick={() => void toggleAdmin(false)}>
+                  👑 Make admin
+                </button>
+              )}
           <button className="btn-danger" disabled={busy} onClick={() => void deleteUser()}>
             Delete user + all data
           </button>

@@ -337,6 +337,34 @@ adminRoutes.post(
   },
 );
 
+/* Admin management from the console — beats sharing the ADMIN_KEY: every grant
+   is attributed in the logs and individually revocable. Self-demotion is
+   refused so the last admin can't lock themselves out by accident (the key
+   claim remains the recovery path regardless). */
+
+adminRoutes.post('/admin/users/:id/promote', async (c) => {
+  const admin = requireAdmin(c);
+  const id = c.req.param('id');
+  const [target] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  if (!target) throw new HTTPException(404, { message: 'not_found' });
+  if (target.bannedAt) throw new HTTPException(400, { message: 'cannot_promote_banned' });
+  if (!target.isAdmin) {
+    await db.update(users).set({ isAdmin: true }).where(eq(users.id, id));
+    console.warn(`admin ${admin.id} PROMOTED user ${id} (${target.name ?? 'unnamed'}) to admin`);
+  }
+  return c.json({ ok: true });
+});
+
+adminRoutes.post('/admin/users/:id/demote', async (c) => {
+  const admin = requireAdmin(c);
+  const id = c.req.param('id');
+  if (id === admin.id) throw new HTTPException(400, { message: 'cannot_demote_self' });
+  const updated = await db.update(users).set({ isAdmin: false }).where(eq(users.id, id)).returning();
+  if (updated.length === 0) throw new HTTPException(404, { message: 'not_found' });
+  console.warn(`admin ${admin.id} REVOKED admin from user ${id} (${updated[0]!.name ?? 'unnamed'})`);
+  return c.json({ ok: true });
+});
+
 adminRoutes.delete('/admin/users/:id', async (c) => {
   const admin = requireAdmin(c);
   const id = c.req.param('id');
