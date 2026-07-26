@@ -82,23 +82,6 @@ interface PasteResult {
   sample?: { email: string; name: string | null }[];
 }
 
-interface V1ImportResult {
-  docsScanned: number;
-  driverDocs: number;
-  riderDocs: number;
-  softDeletedDocs: number;
-  docsWithoutEmail: number;
-  docsWithMalformedEmail: number;
-  uniqueContacts: number;
-  segments: { driver: number; rider: number; both: number };
-  excluded: { total: number; byReason: Record<string, number> };
-  inserted: number;
-  updated: number;
-  addedToList: number;
-  listName: string;
-  dryRun: boolean;
-}
-
 interface CampaignRow {
   id: string;
   name: string;
@@ -277,7 +260,6 @@ function ListsPanel({ onOpenList }: { onOpenList: (id: string) => void }) {
             )}
           </>
         )}
-        <V1Import onDone={invalidate} />
       </section>
 
       <section className="card">
@@ -352,86 +334,6 @@ function ListsPanel({ onOpenList }: { onOpenList: (id: string) => void }) {
         )}
       </section>
     </>
-  );
-}
-
-function V1Import({ onDone }: { onDone: () => void }) {
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<V1ImportResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
-
-  async function run(dryRun: boolean): Promise<void> {
-    if (!dryRun && !window.confirm('Import the 2025 Firebase board into contacts? Existing unsubscribes are kept.')) {
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    setResult(null);
-    try {
-      const r = await api<V1ImportResult>('/api/admin/contacts/import-v1', { method: 'POST', body: { dryRun } });
-      setResult(r);
-      if (!dryRun) onDone();
-    } catch (err) {
-      setError(errCode(err) || 'Import failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!open) {
-    return (
-      <div className="admin-row admin-actions">
-        <button className="btn-ghost" onClick={() => setOpen(true)}>
-          One-time: import the 2025 Firebase board
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="admin-detail">
-      <h3>Import the 2025 Firebase board</h3>
-      <p className="muted">
-        Reads the old v1 Firestore directly and files everyone onto a static list, tagging each contact with the side
-        of the board they posted on. One-time — that project is being deleted, after which this stops working.
-      </p>
-      <div className="admin-row admin-actions">
-        <button className="btn-secondary" disabled={busy} onClick={() => void run(true)}>
-          Preview
-        </button>
-        <button className="btn" disabled={busy} onClick={() => void run(false)}>
-          Import
-        </button>
-        <button className="btn-ghost" onClick={() => setOpen(false)}>
-          Close
-        </button>
-      </div>
-      {busy && <p className="muted">Reading the v1 board…</p>}
-      {error && <p className="muted">Import failed: {error}</p>}
-      {result && (
-        <>
-          <div className="admin-stats">
-            <Stat
-              label="v1 posts scanned"
-              value={result.docsScanned}
-              hint={`${result.driverDocs} driver / ${result.riderDocs} rider`}
-            />
-            <Stat label="unique contacts" value={result.uniqueContacts} />
-            <Stat label="drivers" value={result.segments.driver} />
-            <Stat label="riders" value={result.segments.rider} />
-            <Stat label="both" value={result.segments.both} />
-            <Stat label="held back" value={result.excluded.total} />
-            <Stat label="new contacts" value={result.inserted} />
-            <Stat label="added to list" value={result.addedToList} />
-          </div>
-          <p className="muted">
-            {result.dryRun ? 'Dry run — nothing written. ' : `Filed onto "${result.listName}". `}
-            Skipped {result.docsWithoutEmail} posts with no email, {result.docsWithMalformedEmail} malformed.
-          </p>
-        </>
-      )}
-    </div>
   );
 }
 

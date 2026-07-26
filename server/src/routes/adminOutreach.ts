@@ -28,7 +28,6 @@ import { renderForContact, startCampaign } from '../jobs/campaigns.js';
 import { AUDIENCES, countAudience, findAudience, refreshDynamicList } from '../lib/audiences.js';
 import { MAX_PASTE_ENTRIES, parseContactText } from '../lib/contactParse.js';
 import { addToList, newUnsubscribeToken, upsertContacts } from '../lib/contacts.js';
-import { importLegacyContacts } from '../lib/legacyImport.js';
 
 export const adminOutreachRoutes = new Hono();
 
@@ -377,27 +376,6 @@ adminOutreachRoutes.post(
       .returning({ email: contacts.email });
     if (updated.length === 0) throw new HTTPException(404, { message: 'not_found' });
     return c.json({ ok: true });
-  },
-);
-
-/* ---------- One-time v1 Firestore import ---------- */
-
-adminOutreachRoutes.post(
-  '/admin/contacts/import-v1',
-  zValidator('json', z.object({ dryRun: z.boolean().default(true) }), (r, c) => {
-    if (!r.success) return c.json({ error: 'invalid' }, 400);
-  }),
-  async (c) => {
-    requireAdmin(c);
-    const { dryRun } = c.req.valid('json');
-    try {
-      const result = await importLegacyContacts({ dryRun });
-      console.warn(`v1 contact import (dryRun=${dryRun}): ${JSON.stringify(result)}`);
-      return c.json(result);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'import_failed';
-      throw new HTTPException(502, { message: message.slice(0, 300) });
-    }
   },
 );
 
