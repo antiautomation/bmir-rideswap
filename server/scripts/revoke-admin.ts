@@ -1,11 +1,15 @@
-/* Revoke the is_admin flag on a user, by id or recovery code.
+/* Revoke the is_admin flag on a user, by id or recovery code, and kill every
+   session and outstanding magic link they hold.
+
    The admin console can promote (POST /api/admin/claim) but has no demote, and
    the hard-delete endpoint refuses to delete admins — so this is the way to
    clean up an admin account that shouldn't be one (a test/verification session,
-   or a revoked operator).
+   or an operator whose access is being pulled). Sessions go too: de-admining
+   someone who still holds a live cookie is only half the job.
 
    Run: npm run admin:revoke -w server -- <user-id | recovery-code> */
 import { eq } from 'drizzle-orm';
+import { revokeAllSessions } from '../src/auth/tokens.js';
 import { db, pool } from '../src/db/client.js';
 import { users } from '../src/db/schema.js';
 
@@ -27,6 +31,11 @@ async function main(): Promise<void> {
     return;
   }
   console.log('admin revoked:', rows);
+
+  for (const row of rows) {
+    await revokeAllSessions(row.id);
+    console.log(`sessions and magic links revoked for ${row.id}`);
+  }
 
   const remaining = await db
     .select({ id: users.id, name: users.name, email: users.email })

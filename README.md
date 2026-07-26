@@ -98,6 +98,11 @@ Other useful scripts:
 npm run build                 # build web, then server, into web/dist and server/dist
 npm start                      # run the built server (node server/dist/index.js)
 npm run typecheck              # tsc --noEmit across both workspaces
+
+npm run import:contacts -w server -- --dry-run   # preview the one-time v1 Firestore contact import
+npm run import:contacts -w server                # commit it (idempotent, re-runnable)
+npm run admin:revoke -w server -- <id-or-code>   # drop is_admin and kill that user's sessions
+npx tsx server/scripts/check-contact-parse.ts    # checks for the paste/CSV contact parser
 ```
 
 To seed demo data for local testing, use `npm run seed:demo --workspace server`
@@ -160,6 +165,35 @@ emails firing.
   auto-hide it (`hiddenAt`), pending admin review. Admin access itself isn't a
   role you're born with — any session can claim it once via `POST /api/admin/claim`
   with the shared `ADMIN_KEY`, then acts through `/admin` in the web app.
+- **Outreach mail carries no magic links, on purpose.** Bulk mail gets forwarded to camps
+  and group chats, so a login link in it would hand the recipient's account to whoever it
+  reached. Every link in `email/invite.ts` and `email/announcement.ts` is a plain public
+  URL; the only token is the unsubscribe capability at `/u/:token`, which can do exactly
+  one thing — stop bulk mail to the address it was minted for. `GET /u/:token` only
+  renders a confirmation page (prefetch-safe); the `POST` performs it.
+- **Unsubscribe has two tiers, and the distinction matters.** `contacts.unsubscribed_at`
+  stops every campaign. `email_suppressions` stops *all* mail including digests, and is
+  only added for contacts with no linked account — a real user who opts out of
+  announcements must still hear that someone messaged them about their ride, so they get
+  pointed at their profile for digest control instead.
+- **Contacts are not users.** `contacts` is a separate table with no session; being on a
+  list grants no login. A `contact_list` is either `static` (membership is exactly what
+  was imported — pasted text, CSV, or the one-time v1 Firestore import) or `dynamic`
+  (recomputed from a named audience in `lib/audiences.ts`, refreshed automatically right
+  before every send so a campaign can't go out against a stale list). The `invite`
+  template additionally skips anyone who already has an account — "come try the new
+  site" makes no sense to someone already on it — while `announcement` does not, because
+  announcements are usually *for* users.
+- **Campaign sending** is a once-a-minute tick behind its own advisory lock, capped at
+  `campaigns.throttle_per_minute` — deliberately slow, because blasting a cold list in
+  one go is how a young SES identity loses its reputation. `campaign_sends` rows are the
+  idempotency guard (only `pending` rows are ever touched), and starting a campaign is
+  refused outright while `EMAIL_DRY_RUN=1`, since `sendEmail` reports success in that
+  mode and would silently mark the whole list as delivered.
+- **Pasted imports report their rejects.** `lib/contactParse.ts` accepts one-per-line,
+  comma/semicolon/tab/pipe, CSV with a header row, and `Name <addr>` in any mix, and
+  hands back the line numbers it couldn't parse rather than quietly dropping them — a
+  bulk import that silently loses 40 addresses is worse than one that complains.
 - **Anti-abuse** is honeypot fields + layered rate limits (DB-count-based for the
   abuse-critical paths like listings/day, in-memory sliding windows for
   lighter-weight ones) instead of a CAPTCHA — this stays a zero-friction, no-login
@@ -169,13 +203,15 @@ emails firing.
 
 ```
 server/src/
-  routes/       # session, listings, conversations, matches, admin, magic-link exchange
-  jobs/         # digest cron tick, token/match cleanup
-  email/        # SES client + digest HTML/text templates
+  routes/       # session, listings, conversations, matches, admin, magic-link exchange,
+                #   admin outreach (lists/campaigns), public unsubscribe (/u/:token)
+  jobs/         # digest cron tick, campaign sender tick, token/match cleanup
+  email/        # SES client, shared email layout, digest + invite + announcement templates
   matching/     # driver/rider scoring + recompute-on-write
   auth/         # session tokens, recovery codes, magic links, middleware
   db/           # Drizzle schema, pg pool, custom migration runner
-  lib/          # rate limiting, phone normalization, listing expiry rules
+  lib/          # rate limiting, phone normalization, listing expiry rules,
+                #   contact lists, paste/CSV parsing, dynamic audiences, v1 importer
 server/drizzle/ # ordered *.sql migrations applied on boot
 
 web/src/
