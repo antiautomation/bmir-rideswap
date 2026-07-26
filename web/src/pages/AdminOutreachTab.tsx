@@ -270,7 +270,7 @@ function ListsPanel({ onOpenList }: { onOpenList: (id: string) => void }) {
         )}
 
         {lists.data?.lists.map((l) => (
-          <div key={l.id} className="admin-table-row">
+          <div key={l.id} className="admin-listing-row">
             <div>
               <strong>{l.name}</strong>{' '}
               <span className={`pill ${l.kind === 'dynamic' ? 'pill-warn' : 'pill-dim'}`}>{l.kind}</span>
@@ -288,7 +288,7 @@ function ListsPanel({ onOpenList }: { onOpenList: (id: string) => void }) {
               </div>
             </div>
             <div className="admin-row admin-actions">
-              <button className="btn-ghost" onClick={() => onOpenList(l.id)}>
+              <button className="btn-secondary" onClick={() => onOpenList(l.id)}>
                 Open
               </button>
               {l.kind === 'dynamic' && (
@@ -544,7 +544,7 @@ function ListDetail({ id, onBack }: { id: string; onBack: () => void }) {
         <div className="admin-table-wrap">
           <div className="admin-table admin-table--compact">
             {members.data?.members.map((m) => (
-              <div key={m.email} className="admin-table-row">
+              <div key={m.email} className="admin-listing-row">
                 <div>
                   <strong>{m.name ?? '—'}</strong> <span className="muted">{m.email}</span>
                   <div className="muted">
@@ -772,7 +772,7 @@ function CampaignsPanel({ openId, onOpen }: { openId: string | null; onOpen: (id
       )}
 
       {list.data?.campaigns.map((c) => (
-        <div key={c.id} className="admin-table-row">
+        <div key={c.id} className="admin-listing-row">
           <div>
             <strong>{c.name}</strong>{' '}
             <span className={`pill ${c.status === 'sending' ? 'pill-warn' : 'pill-dim'}`}>{c.status}</span>{' '}
@@ -791,7 +791,7 @@ function CampaignsPanel({ openId, onOpen }: { openId: string | null; onOpen: (id
               </div>
             )}
           </div>
-          <button className="btn-ghost" onClick={() => onOpen(c.id)}>
+          <button className="btn-secondary" onClick={() => onOpen(c.id)}>
             Open
           </button>
         </div>
