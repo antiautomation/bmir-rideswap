@@ -1,9 +1,10 @@
-import { aliasedTable, and, asc, desc, eq, gt, inArray, isNull, ne, or } from 'drizzle-orm';
+import { aliasedTable, and, asc, desc, eq, gt, gte, inArray, isNull, ne, or } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { conversations, listings, matches, messages, users } from '../db/schema.js';
 import { mintMagicToken } from '../auth/magic.js';
 import { sendEmail } from '../email/ses.js';
 import { renderDigest, type DigestConversation, type DigestMatch } from '../email/templates.js';
+import { matchingConfig } from '../lib/settings.js';
 
 const DIGEST_LOCK_KEY = 727002;
 const HOUR_MS = 3600 * 1000;
@@ -69,6 +70,12 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
         ),
         liveSide(driverListing),
         liveSide(riderListing),
+        // Weak matches stay browsable in the app but never earn an email. They
+        // are simply not fetched, so they also keep their notified*At null and
+        // become emailable if the threshold is later lowered. A user's personal
+        // floor can only tighten the global one, never loosen it.
+        gte(matches.score, Math.max(matchingConfig('minEmailScore'), user.matchEmailMinScore ?? 0)),
+        user.matchEmailSameDayOnly ? eq(driverListing.travelDate, riderListing.travelDate) : undefined,
       ),
     )
     .orderBy(desc(matches.score))

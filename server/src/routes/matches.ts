@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception';
 import { requireUser } from '../auth/middleware.js';
 import { db } from '../db/client.js';
 import { listings, matches, users } from '../db/schema.js';
+import { matchingConfig } from '../lib/settings.js';
 import type { MatchReasons } from '../matching/score.js';
 import { toListingDto } from './listings.js';
 
@@ -78,7 +79,12 @@ matchRoutes.get('/my/matches', async (c) => {
     .select()
     .from(listings)
     .where(and(eq(listings.userId, user.id), liveListingFilter(new Date())));
-  return c.json({ matches: await matchesForListings(mine, user.id) });
+  // Everything is returned; emailFloor only tells the client where the
+  // "lower-quality, won't be emailed about" cut sits so it can group them.
+  return c.json({
+    matches: await matchesForListings(mine, user.id),
+    emailFloor: matchingConfig('minEmailScore'),
+  });
 });
 
 matchRoutes.get('/listings/:id/matches', async (c) => {

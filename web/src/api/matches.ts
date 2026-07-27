@@ -10,7 +10,8 @@ export function useMyMatches() {
       try {
         return await api<MatchesResponse>('/api/my/matches');
       } catch (err) {
-        if (err instanceof ApiError && err.status === 401) return { matches: [] };
+        // No session → nothing to show; the floor only matters once matches exist.
+        if (err instanceof ApiError && err.status === 401) return { matches: [], emailFloor: 60 };
         throw err;
       }
     },

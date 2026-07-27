@@ -102,6 +102,11 @@ function ContactSection({ me }: { me: Me | null }) {
   const [phone, setPhone] = useState(me?.phone ?? '');
   const [digestFrequency, setDigestFrequency] = useState<DigestFrequency>(me?.digestFrequency ?? 'hourly');
   const [phoneContactPref, setPhoneContactPref] = useState<'sms' | 'whatsapp'>(me?.phoneContactPref ?? 'sms');
+  // '' is the "use the site default" option — it PATCHes as null.
+  const [matchEmailMinScore, setMatchEmailMinScore] = useState<string>(
+    me?.matchEmailMinScore != null ? String(me.matchEmailMinScore) : '',
+  );
+  const [matchEmailSameDayOnly, setMatchEmailSameDayOnly] = useState(me?.matchEmailSameDayOnly ?? false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -115,7 +120,15 @@ function ContactSection({ me }: { me: Me | null }) {
     try {
       await api('/api/me', {
         method: 'PATCH',
-        body: { name, email, phone, digestFrequency, phoneContactPref },
+        body: {
+          name,
+          email,
+          phone,
+          digestFrequency,
+          phoneContactPref,
+          matchEmailMinScore: matchEmailMinScore === '' ? null : Number(matchEmailMinScore),
+          matchEmailSameDayOnly,
+        },
       });
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       setSaved(true);
@@ -205,6 +218,34 @@ function ContactSection({ me }: { me: Me | null }) {
               </option>
             ))}
           </select>
+        </div>
+        <div className="field-group">
+          <label htmlFor="profile-match-min-score">Only email me matches scoring at least</label>
+          <select
+            id="profile-match-min-score"
+            disabled={!me}
+            value={matchEmailMinScore}
+            onChange={(e) => setMatchEmailMinScore(e.target.value)}
+          >
+            <option value="">Default</option>
+            <option value="70">70+</option>
+            <option value="80">80+</option>
+            <option value="90">90+</option>
+          </select>
+          <p className="field-hint">
+            Lower-scoring matches still show up on your Matches page — this only affects email.
+          </p>
+        </div>
+        <div className="field-group">
+          <label className="share-row">
+            <input
+              type="checkbox"
+              disabled={!me}
+              checked={matchEmailSameDayOnly}
+              onChange={(e) => setMatchEmailSameDayOnly(e.target.checked)}
+            />
+            <span>Only email me about same-day departures</span>
+          </label>
         </div>
         <button type="submit" className="btn" disabled={!me || saving}>
           Save

@@ -175,11 +175,29 @@ interface AppConfig {
   flexibleExpiryGraceHours: number;
 }
 
+interface MatchingConfig {
+  datePointsSameDay: number;
+  datePointsOneDayApart: number;
+  datePointsTwoDaysApart: number;
+  capacityPointsPerfect: number;
+  capacityPointsGood: number;
+  capacityPointsRoomy: number;
+  locationPointsExact: number;
+  timePointsAligned: number;
+  freshPoints: number;
+  scoreCapOneDayApart: number;
+  scoreCapTwoDaysApart: number;
+  minMatchScore: number;
+  minEmailScore: number;
+}
+
 interface SettingsResponse {
   rateLimits: RateLimits;
   defaults: RateLimits;
   appConfig: AppConfig;
   appConfigDefaults: AppConfig;
+  matching: MatchingConfig;
+  matchingDefaults: MatchingConfig;
 }
 
 /* ---------- Small shared helpers ---------- */
@@ -1407,6 +1425,25 @@ const APP_CONFIG_FIELDS: { key: keyof AppConfig; label: string }[] = [
   { key: 'flexibleExpiryGraceHours', label: 'Flexible-time expiry: hours past midnight (4 = 4am next day)' },
 ];
 
+/* Sliders, not number boxes — tuning the mix is a relative-weight judgement, so
+   the whole set has to be comparable at a glance. Weights top out at 50; the
+   ceilings and score thresholds live on the 0–100 score scale. */
+const MATCHING_FIELDS: { key: keyof MatchingConfig; label: string; max: number }[] = [
+  { key: 'datePointsSameDay', label: 'Date: same-day points', max: 50 },
+  { key: 'datePointsOneDayApart', label: 'Date: 1-day-apart points', max: 50 },
+  { key: 'datePointsTwoDaysApart', label: 'Date: 2-days-apart points', max: 50 },
+  { key: 'capacityPointsPerfect', label: 'Gear: perfect fit points', max: 50 },
+  { key: 'capacityPointsGood', label: 'Gear: one-tier-spare points', max: 50 },
+  { key: 'capacityPointsRoomy', label: 'Gear: roomy points', max: 50 },
+  { key: 'locationPointsExact', label: 'Location: exact-city points', max: 50 },
+  { key: 'timePointsAligned', label: 'Time: aligned-window points', max: 50 },
+  { key: 'freshPoints', label: 'Freshness bonus points', max: 50 },
+  { key: 'scoreCapOneDayApart', label: 'Score ceiling when 1 day apart', max: 100 },
+  { key: 'scoreCapTwoDaysApart', label: 'Score ceiling when 2 days apart', max: 100 },
+  { key: 'minMatchScore', label: 'Minimum score to create a match', max: 100 },
+  { key: 'minEmailScore', label: 'Minimum score to email a match', max: 100 },
+];
+
 /** Both groups are whole numbers the server accepts within its own bounds. */
 function clampSetting(value: string, max: number, min = 1): number {
   return Math.min(max, Math.max(min, Math.round(Number(value) || 0)));
@@ -1429,6 +1466,7 @@ function SettingsTab() {
   // cleared field snap to 1 and typing append to it. Clamp only on save.
   const [draft, setDraft] = useState<Partial<Record<keyof RateLimits, string>>>({});
   const [appDraft, setAppDraft] = useState<Partial<Record<keyof AppConfig, string>>>({});
+  const [matchDraft, setMatchDraft] = useState<Partial<Record<keyof MatchingConfig, string>>>({});
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
@@ -1436,6 +1474,8 @@ function SettingsTab() {
     draft[key] ?? String(settings.data?.rateLimits[key] ?? '');
   const acValue = (key: keyof AppConfig): string =>
     appDraft[key] ?? String(settings.data?.appConfig[key] ?? '');
+  const mcValue = (key: keyof MatchingConfig): string =>
+    matchDraft[key] ?? String(settings.data?.matching[key] ?? '');
 
   async function save(): Promise<void> {
     if (!settings.data) return;
@@ -1447,13 +1487,18 @@ function SettingsTab() {
     const appConfig = Object.fromEntries(
       APP_CONFIG_FIELDS.map((f) => [f.key, clampSetting(acValue(f.key), 10_000, APP_CONFIG_MIN[f.key] ?? 1)]),
     );
+    // Every matching knob may legitimately be 0 (e.g. "no credit for 2 days apart").
+    const matching = Object.fromEntries(
+      MATCHING_FIELDS.map((f) => [f.key, clampSetting(mcValue(f.key), f.max, 0)]),
+    );
     try {
       await api('/api/admin/settings', {
         method: 'PUT',
-        body: { rateLimits, appConfig },
+        body: { rateLimits, appConfig, matching },
       });
       setDraft({});
       setAppDraft({});
+      setMatchDraft({});
       setSaveStatus('Saved ✓ — takes effect within 30s');
       void queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
     } catch {
@@ -1477,6 +1522,7 @@ function SettingsTab() {
 
   const defaults = settings.data.defaults;
   const appDefaults = settings.data.appConfigDefaults;
+  const matchingDefaults = settings.data.matchingDefaults;
 
   return (
     <div className="admin-detail">
@@ -1516,6 +1562,30 @@ function SettingsTab() {
                 min={APP_CONFIG_MIN[f.key] ?? 1}
                 value={acValue(f.key)}
                 onChange={(e) => setAppDraft((d) => ({ ...d, [f.key]: e.target.value }))}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="card admin-settings-card">
+        <h2>Matching</h2>
+        <p className="muted">Changes re-score all live listings automatically.</p>
+        <div className="admin-settings-grid">
+          {MATCHING_FIELDS.map((f) => (
+            <div key={f.key} className="field-group">
+              <label htmlFor={`mc-${f.key}`}>
+                {f.label} — <strong>{mcValue(f.key)}</strong>{' '}
+                <span className="field-hint">(default {matchingDefaults[f.key]})</span>
+              </label>
+              <input
+                id={`mc-${f.key}`}
+                type="range"
+                min={0}
+                max={f.max}
+                step={1}
+                value={mcValue(f.key)}
+                onChange={(e) => setMatchDraft((d) => ({ ...d, [f.key]: e.target.value }))}
               />
             </div>
           ))}

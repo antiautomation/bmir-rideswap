@@ -40,10 +40,37 @@ export type AppConfigKey = keyof typeof APP_CONFIG_DEFAULTS;
 
 export const APP_CONFIG_KEYS = Object.keys(APP_CONFIG_DEFAULTS) as AppConfigKey[];
 
+/* Matching weights and thresholds, live-tunable so the score curve can be
+   tightened without a deploy. Every key here legitimately accepts 0 (zero
+   points for a two-day gap, no email floor, etc.). */
+export const MATCHING_DEFAULTS = {
+  datePointsSameDay: 35,
+  datePointsOneDayApart: 15,
+  datePointsTwoDaysApart: 5,
+  /** Space/gear fit, weighted equal to date. */
+  capacityPointsPerfect: 35,
+  capacityPointsGood: 28,
+  capacityPointsRoomy: 20,
+  /** Exact normalized-city match. Weaker location signals (flexible, name fuzz,
+      corridor proximity) are scaled fractions of this. */
+  locationPointsExact: 20,
+  timePointsAligned: 7,
+  freshPoints: 3,
+  scoreCapOneDayApart: 75,
+  scoreCapTwoDaysApart: 50,
+  minMatchScore: 40,
+  minEmailScore: 60,
+} as const;
+
+export type MatchingKey = keyof typeof MATCHING_DEFAULTS;
+
+export const MATCHING_KEYS = Object.keys(MATCHING_DEFAULTS) as MatchingKey[];
+
 /* Counts and limits floor at 1, but zero grace hours is a legitimate choice
    ("expire exactly at window end"). Without this, a stored 0 silently reads
-   back as the default. */
-const ZERO_MIN_KEYS = new Set<string>(['expiryGraceHours', 'flexibleExpiryGraceHours']);
+   back as the default. Every matching key floors at 0 by group membership —
+   a weight of zero is a real setting, not an unset value. */
+const ZERO_MIN_KEYS = new Set<string>(['expiryGraceHours', 'flexibleExpiryGraceHours', ...MATCHING_KEYS]);
 export const settingMin = (key: string): number => (ZERO_MIN_KEYS.has(key) ? 0 : 1);
 
 interface Group<K extends string> {
@@ -66,6 +93,12 @@ const groups = {
     keys: APP_CONFIG_KEYS,
     cache: {},
   } as Group<AppConfigKey>,
+  matching: {
+    row: 'matching',
+    defaults: MATCHING_DEFAULTS,
+    keys: MATCHING_KEYS,
+    cache: {},
+  } as Group<MatchingKey>,
 };
 
 let loadedAt = 0;
@@ -99,6 +132,10 @@ export function appConfig(key: AppConfigKey): number {
   return cachedValue(groups.appConfig, key);
 }
 
+export function matchingConfig(key: MatchingKey): number {
+  return cachedValue(groups.matching, key);
+}
+
 async function getGroup<K extends string>(group: Group<K>): Promise<Record<K, number>> {
   await refresh();
   const out = { ...group.defaults };
@@ -128,3 +165,6 @@ export const getRateLimits = (): Promise<Record<RateLimitKey, number>> => getGro
 export const setRateLimits = (p: Partial<Record<RateLimitKey, number>>): Promise<void> => setGroup(groups.rateLimits, p);
 export const getAppConfig = (): Promise<Record<AppConfigKey, number>> => getGroup(groups.appConfig);
 export const setAppConfig = (p: Partial<Record<AppConfigKey, number>>): Promise<void> => setGroup(groups.appConfig, p);
+export const getMatchingConfig = (): Promise<Record<MatchingKey, number>> => getGroup(groups.matching);
+export const setMatchingConfig = (p: Partial<Record<MatchingKey, number>>): Promise<void> =>
+  setGroup(groups.matching, p);

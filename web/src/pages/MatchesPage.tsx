@@ -17,6 +17,7 @@ export default function MatchesPage() {
   const favorites = useIdSet('ridefinder-favorites-v1');
   const hiddenMatches = useIdSet('ridefinder-hidden-matches-v1');
   const [showHidden, setShowHidden] = useState(false);
+  const [showLowQuality, setShowLowQuality] = useStoredState('ridefinder-show-lowq-v1', false);
 
   const matchKey = (m: { driverListingId: string; riderListingId: string }): string =>
     `${m.driverListingId}-${m.riderListingId}`;
@@ -50,6 +51,25 @@ export default function MatchesPage() {
   const hiddenCount = all.filter((m) => hiddenMatches.has(matchKey(m))).length;
   const matches = showHidden ? all : all.filter((m) => !hiddenMatches.has(matchKey(m)));
 
+  // The email floor doubles as the in-app quality bar: anything under it is real
+  // but weak, so it stays out of the main list until asked for. `all` is already
+  // starred-first/score-desc, so each half keeps that order.
+  const emailFloor = data?.emailFloor ?? 60;
+  const quality = matches.filter((m) => m.score >= emailFloor);
+  const lower = matches.filter((m) => m.score < emailFloor);
+
+  const renderMatch = (match: (typeof matches)[number]) => (
+    <MatchCard
+      key={`${match.driverListingId}-${match.riderListingId}`}
+      match={match}
+      onMessage={setMessageTarget}
+      isFavorite={favorites.has(match.listing.id)}
+      onToggleFavorite={favorites.toggle}
+      isHidden={hiddenMatches.has(matchKey(match))}
+      onToggleHidden={() => hiddenMatches.toggle(matchKey(match))}
+    />
+  );
+
   return (
     <>
       <h1>Closest Matches</h1>
@@ -59,7 +79,8 @@ export default function MatchesPage() {
         direction are considered at all). The circled number is a 0&ndash;100 compatibility
         score: how well the dates, route, gear fit, timing, and posting recency line up. The
         badges under each name show what earned most of the score, and the filters below let
-        you narrow things down yourself.
+        you narrow things down yourself. Matches that fall below the quality bar are tucked
+        behind the &ldquo;show lower-quality matches&rdquo; toggle and are never emailed to you.
       </p>
 
       {allRaw.length > 0 && (
@@ -115,19 +136,23 @@ export default function MatchesPage() {
           }
         />
       ) : (
-        <div className="matches-list">
-          {matches.map((match) => (
-            <MatchCard
-              key={`${match.driverListingId}-${match.riderListingId}`}
-              match={match}
-              onMessage={setMessageTarget}
-              isFavorite={favorites.has(match.listing.id)}
-              onToggleFavorite={favorites.toggle}
-              isHidden={hiddenMatches.has(matchKey(match))}
-              onToggleHidden={() => hiddenMatches.toggle(matchKey(match))}
-            />
-          ))}
-        </div>
+        <>
+          {quality.length > 0 && <div className="matches-list">{quality.map(renderMatch)}</div>}
+
+          {lower.length > 0 && (
+            <>
+              <label className="admin-toggle">
+                <input
+                  type="checkbox"
+                  checked={showLowQuality}
+                  onChange={(e) => setShowLowQuality(e.target.checked)}
+                />{' '}
+                Show lower-quality matches ({lower.length})
+              </label>
+              {showLowQuality && <div className="matches-list">{lower.map(renderMatch)}</div>}
+            </>
+          )}
+        </>
       )}
 
       {messageTarget && (

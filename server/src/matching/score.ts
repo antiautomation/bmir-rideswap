@@ -2,12 +2,12 @@ import { and, eq, gt, isNull, ne, notInArray, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { listings, matches } from '../db/schema.js';
 import { TIME_SLOT_RE } from '../lib/listingRules.js';
+import { matchingConfig } from '../lib/settings.js';
 
 type ListingRow = typeof listings.$inferSelect;
 
 const BELONGINGS_RANK: Record<string, number> = { minimal: 1, standard: 2, substantial: 3, extensive: 4 };
 const FLEXIBLE_LOCATION_WORDS = ['flexible', 'anywhere', 'any', 'tbd'];
-const MIN_SCORE = 35;
 const MAX_DATE_DELTA_DAYS = 2;
 
 export interface MatchReasons {
@@ -16,6 +16,17 @@ export interface MatchReasons {
   capacity: number;
   time: number;
   fresh: number;
+  /** Whole days between the two travel dates (0, 1 or 2). Lets the client label
+   *  date pills from the actual gap instead of reverse-engineering it from the
+   *  points, which move with the admin-tunable weights. */
+  dateDelta: number;
+  /** Cargo tier minus rider-stuff tier: 0 = exact fit, 1 = a little room to
+   *  spare, 2+ = lots. Same purpose as dateDelta — the client labels the pill
+   *  from the fit itself, not from a points threshold that admin tuning moves. */
+  capacityFit: number;
+  /** 'aligned' = both flexible or slot starts within 3h, 'partial' = exactly one
+   *  side flexible, 'none' = slots don't overlap. */
+  timing: 'aligned' | 'partial' | 'none';
   /** Present when location credit came from corridor proximity rather than
    *  name similarity: extra driving miles to pick this rider up en route. */
   detourMi?: number;
@@ -40,12 +51,14 @@ function haversineMiles(aLat: number, aLng: number, bLat: number, bLng: number):
 /** Corridor location credit: how many extra miles the driver adds by routing
  *  through the rider's city. Great-circle triangle — an approximation of road
  *  distance, but detour deltas track real routes closely enough for scoring.
- *  Never beats an exact city match (30); comfortably beats weak name fuzz. */
-function corridorPoints(detourMi: number): number {
-  if (detourMi <= 15) return 26;
-  if (detourMi <= 40) return 22;
-  if (detourMi <= 80) return 15;
-  if (detourMi <= 150) return 8;
+ *  Scored as a fraction of an exact city match, so it tracks the tunable
+ *  locationPointsExact: the best tier is 0.87, so corridor proximity never beats
+ *  an exact match, but it comfortably beats weak name fuzz. */
+function corridorPoints(detourMi: number, exact: number): number {
+  if (detourMi <= 15) return Math.round(0.87 * exact);
+  if (detourMi <= 40) return Math.round(0.73 * exact);
+  if (detourMi <= 80) return Math.round(0.5 * exact);
+  if (detourMi <= 150) return Math.round(0.27 * exact);
   return 0;
 }
 
@@ -71,18 +84,25 @@ export function scorePair(
   const stuff = BELONGINGS_RANK[rider.riderStuff ?? ''] ?? 0;
   if (cargo === 0 || stuff === 0 || stuff > cargo) return null;
 
-  const date = delta === 0 ? 40 : delta <= 1 ? 25 : 12;
+  const dateDelta = Math.round(delta);
+  const date =
+    dateDelta === 0
+      ? matchingConfig('datePointsSameDay')
+      : dateDelta === 1
+        ? matchingConfig('datePointsOneDayApart')
+        : matchingConfig('datePointsTwoDaysApart');
 
+  const locationExact = matchingConfig('locationPointsExact');
   let location: number;
   let detourMi: number | undefined;
   if (driver.locationNorm === rider.locationNorm) {
-    location = 30;
+    location = locationExact;
   } else if (
     FLEXIBLE_LOCATION_WORDS.some((w) => driver.locationNorm.includes(w) || rider.locationNorm.includes(w))
   ) {
-    location = 15;
+    location = Math.round(0.5 * locationExact);
   } else {
-    const nameScore = Math.max(0, Math.round(locationSimilarity * 30));
+    const nameScore = Math.max(0, Math.round(locationSimilarity * locationExact));
     let corridorScore = 0;
     if (
       driver.originLat != null &&
@@ -95,28 +115,43 @@ export function scorePair(
         haversineMiles(driver.originLat, driver.originLng, rider.originLat, rider.originLng) +
         haversineMiles(rider.originLat, rider.originLng, BRC.lat, BRC.lng);
       const detour = Math.max(0, viaRider - direct);
-      corridorScore = corridorPoints(detour);
+      corridorScore = corridorPoints(detour, locationExact);
       if (corridorScore > nameScore) detourMi = Math.round(detour);
     }
     location = Math.max(nameScore, corridorScore);
   }
 
-  const fit = cargo - stuff;
-  const capacity = fit === 0 ? 15 : fit === 1 ? 12 : 8;
+  const capacityFit = cargo - stuff;
+  const capacity =
+    capacityFit === 0
+      ? matchingConfig('capacityPointsPerfect')
+      : capacityFit === 1
+        ? matchingConfig('capacityPointsGood')
+        : matchingConfig('capacityPointsRoomy');
 
+  const timeAligned = matchingConfig('timePointsAligned');
   const dStart = slotStartHour(driver.timeSlot);
   const rStart = slotStartHour(rider.timeSlot);
-  let time: number;
-  if (dStart === null && rStart === null) time = 10;
-  else if (dStart === null || rStart === null) time = 7;
-  else time = Math.abs(dStart - rStart) <= 3 ? 10 : 0;
+  let timing: MatchReasons['timing'];
+  if (dStart === null && rStart === null) timing = 'aligned';
+  else if (dStart === null || rStart === null) timing = 'partial';
+  else timing = Math.abs(dStart - rStart) <= 3 ? 'aligned' : 'none';
+  const time = timing === 'aligned' ? timeAligned : timing === 'partial' ? Math.round(0.7 * timeAligned) : 0;
 
   const fresh =
-    now - driver.createdAt.getTime() < 48 * 3600_000 || now - rider.createdAt.getTime() < 48 * 3600_000 ? 5 : 0;
+    now - driver.createdAt.getTime() < 48 * 3600_000 || now - rider.createdAt.getTime() < 48 * 3600_000
+      ? matchingConfig('freshPoints')
+      : 0;
 
-  const score = date + location + capacity + time + fresh;
-  if (score < MIN_SCORE) return null;
-  const reasons: MatchReasons = { date, location, capacity, time, fresh };
+  // Hard cap on a date mismatch: strong location/gear/time credit must never
+  // float a wrong-day pair into "great match" territory. The cap applies to the
+  // total, after every dimension is summed.
+  let score = date + location + capacity + time + fresh;
+  if (dateDelta === 1) score = Math.min(score, matchingConfig('scoreCapOneDayApart'));
+  else if (dateDelta === 2) score = Math.min(score, matchingConfig('scoreCapTwoDaysApart'));
+
+  if (score < matchingConfig('minMatchScore')) return null;
+  const reasons: MatchReasons = { date, location, capacity, time, fresh, dateDelta, capacityFit, timing };
   if (detourMi !== undefined) reasons.detourMi = detourMi;
   return { score, reasons };
 }
@@ -193,6 +228,39 @@ export async function recomputeMatchesForListing(listing: ListingRow): Promise<v
         },
       });
   }
+}
+
+/** Rescore every live pair — used after the matching weights change so existing
+ *  match rows pick up the new curve without waiting for a listing edit.
+ *
+ *  Only the driver side is walked. Every match row names exactly one driver
+ *  listing, so one pass over the live drivers regenerates every pair exactly
+ *  once — including the per-listing delete of pairs that no longer qualify,
+ *  which covers the rider side of those same rows. Walking riders too would
+ *  only redo identical work.
+ *
+ *  Returns the number of listings processed. */
+export async function recomputeAllMatches(): Promise<number> {
+  const now = Date.now();
+  const drivers = await db
+    .select()
+    .from(listings)
+    .where(
+      and(
+        eq(listings.type, 'driver'),
+        isNull(listings.cancelledAt),
+        isNull(listings.deletedAt),
+        isNull(listings.hiddenAt),
+        gt(listings.expiresAt, new Date(now)),
+      ),
+    );
+
+  // Sequential on purpose: a rescore of the whole board is a background chore,
+  // not something worth saturating the pool for.
+  for (const driver of drivers) {
+    await recomputeMatchesForListing(driver);
+  }
+  return drivers.length;
 }
 
 export async function pruneDeadMatches(): Promise<void> {

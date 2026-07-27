@@ -21,7 +21,13 @@ function scoreTier(score: number): 'ok' | 'ember' | 'dim' {
 function reasonPills(reasons: MatchReasons): string[] {
   const pills: string[] = [];
 
-  if (reasons.date >= 40) pills.push('📅 Same day');
+  // dateDelta is authoritative — point thresholds shift whenever an admin tunes
+  // the matching weights. Older rows predate the field, so keep the old ladder.
+  if (typeof reasons.dateDelta === 'number') {
+    if (reasons.dateDelta === 0) pills.push('📅 Same day');
+    else if (reasons.dateDelta === 1) pills.push('📅 1 day apart');
+    else if (reasons.dateDelta === 2) pills.push('📅 2 days apart');
+  } else if (reasons.date >= 40) pills.push('📅 Same day');
   else if (reasons.date >= 25) pills.push('📅 1 day apart');
   else if (reasons.date >= 12) pills.push('📅 2 days apart');
 
@@ -31,14 +37,21 @@ function reasonPills(reasons: MatchReasons): string[] {
   else if (reasons.location >= 30) pills.push('📍 Same area');
   else if (reasons.location >= 15) pills.push('📍 Nearby');
 
-  if (reasons.capacity >= 15) pills.push('🎒 Perfect gear fit');
+  if (typeof reasons.capacityFit === 'number') {
+    if (reasons.capacityFit === 0) pills.push('🎒 Perfect gear fit');
+    else if (reasons.capacityFit === 1) pills.push('🎒 Gear fits');
+    else pills.push('🎒 Plenty of room');
+  } else if (reasons.capacity >= 15) pills.push('🎒 Perfect gear fit');
   else if (reasons.capacity >= 12) pills.push('🎒 Gear fits');
   else if (reasons.capacity >= 8) pills.push('🎒 Plenty of room');
 
-  if (reasons.time >= 10) pills.push('🕐 Times align');
+  if (reasons.timing) {
+    if (reasons.timing === 'aligned') pills.push('🕐 Times align');
+    else if (reasons.timing === 'partial') pills.push('🕐 Flexible timing');
+  } else if (reasons.time >= 10) pills.push('🕐 Times align');
   else if (reasons.time >= 7) pills.push('🕐 Flexible timing');
 
-  if (reasons.fresh >= 5) pills.push('✨ Recently posted');
+  if (reasons.fresh > 0) pills.push('✨ Recently posted');
 
   return pills;
 }

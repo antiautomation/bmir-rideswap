@@ -17,13 +17,18 @@ import {
   APP_CONFIG_DEFAULTS,
   APP_CONFIG_KEYS,
   getAppConfig,
+  getMatchingConfig,
   getRateLimits,
+  MATCHING_DEFAULTS,
+  MATCHING_KEYS,
   RATE_LIMIT_DEFAULTS,
   RATE_LIMIT_KEYS,
   setAppConfig,
+  setMatchingConfig,
   setRateLimits,
   settingMin,
 } from '../lib/settings.js';
+import { recomputeAllMatches } from '../matching/score.js';
 
 function keyMatches(candidate: string): boolean {
   const expected = process.env.ADMIN_KEY;
@@ -650,6 +655,8 @@ adminRoutes.get('/admin/settings', async (c) => {
     defaults: RATE_LIMIT_DEFAULTS,
     appConfig: await getAppConfig(),
     appConfigDefaults: APP_CONFIG_DEFAULTS,
+    matching: await getMatchingConfig(),
+    matchingDefaults: MATCHING_DEFAULTS,
   });
 });
 
@@ -670,6 +677,14 @@ adminRoutes.put(
         )
         .strict()
         .optional(),
+      matching: z
+        .object(
+          // min 0 throughout: settingMin() already floors every matching key at
+          // zero, and a zero weight is a real choice.
+          Object.fromEntries(MATCHING_KEYS.map((k) => [k, z.number().int().min(0).max(10_000).optional()])),
+        )
+        .strict()
+        .optional(),
     }),
     (r, c) => {
       if (!r.success) return c.json({ error: 'invalid' }, 400);
@@ -680,8 +695,32 @@ adminRoutes.put(
     const body = c.req.valid('json');
     if (body.rateLimits) await setRateLimits(body.rateLimits);
     if (body.appConfig) await setAppConfig(body.appConfig);
+
+    let matchingChanged = false;
+    if (body.matching) {
+      const before = await getMatchingConfig();
+      matchingChanged = MATCHING_KEYS.some((k) => {
+        const next = body.matching?.[k];
+        return typeof next === 'number' && next !== before[k];
+      });
+      await setMatchingConfig(body.matching);
+    }
+
     console.warn('admin updated settings', JSON.stringify(body));
-    return c.json({ rateLimits: await getRateLimits(), appConfig: await getAppConfig() });
+
+    // Fire-and-forget: existing match rows are rescored against the new weights
+    // in the background rather than making the admin hold the request open.
+    if (matchingChanged) {
+      void recomputeAllMatches()
+        .then((n) => console.warn(`matching settings changed — rescored ${n} listings`))
+        .catch(console.error);
+    }
+
+    return c.json({
+      rateLimits: await getRateLimits(),
+      appConfig: await getAppConfig(),
+      matching: await getMatchingConfig(),
+    });
   },
 );
 

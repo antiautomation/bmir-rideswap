@@ -36,6 +36,8 @@ export function toMe(user: SessionUser) {
     phone: user.phone,
     digestFrequency: user.digestFrequency,
     phoneContactPref: user.phoneContactPref,
+    matchEmailMinScore: user.matchEmailMinScore,
+    matchEmailSameDayOnly: user.matchEmailSameDayOnly,
     recoveryCode: user.recoveryCode,
     isAdmin: user.isAdmin,
     avatarVersion: user.avatarUpdatedAt?.getTime() ?? null,
@@ -53,6 +55,9 @@ const meUpdateSchema = z.object({
   phone: z.union([z.string().max(30), z.literal('')]).optional(),
   phoneContactPref: z.enum(['sms', 'whatsapp']).optional(),
   digestFrequency: z.enum(['instant', 'hourly', 'daily', 'off']).optional(),
+  // null clears the personal floor and falls back to the global minEmailScore.
+  matchEmailMinScore: z.number().int().min(0).max(100).nullable().optional(),
+  matchEmailSameDayOnly: z.boolean().optional(),
 });
 
 export const sessionRoutes = new Hono();
@@ -114,6 +119,8 @@ sessionRoutes.patch(
     }
     if (data.digestFrequency !== undefined) updates.digestFrequency = data.digestFrequency;
     if (data.phoneContactPref !== undefined) updates.phoneContactPref = data.phoneContactPref;
+    if (data.matchEmailMinScore !== undefined) updates.matchEmailMinScore = data.matchEmailMinScore;
+    if (data.matchEmailSameDayOnly !== undefined) updates.matchEmailSameDayOnly = data.matchEmailSameDayOnly;
 
     let updated = user;
     if (Object.keys(updates).length > 0) {

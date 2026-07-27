@@ -47,6 +47,9 @@ export interface Me {
   email: string | null;
   phone: string | null;
   digestFrequency: DigestFrequency;
+  /** Personal floor for match emails; null means "use the site default". */
+  matchEmailMinScore: number | null;
+  matchEmailSameDayOnly: boolean;
   phoneContactPref: 'sms' | 'whatsapp';
   recoveryCode: string;
   isAdmin: boolean;
@@ -134,6 +137,14 @@ export interface MatchReasons {
   capacity: number;
   time: number;
   fresh: number;
+  /** Days between the two travel dates (0, 1, or 2). Absent on rows scored before
+   *  this field existed — consumers fall back to the date-point thresholds. */
+  dateDelta?: number;
+  /** Gear-fit tiers of slack between what the rider brings and what the driver can
+   *  take: 0 = exact fit, 1 = one tier spare, 2+ = roomy. Absent on older rows. */
+  capacityFit?: number;
+  /** How the two time windows relate. Absent on older rows. */
+  timing?: 'aligned' | 'partial' | 'none';
   /** Present when the rider sits along the driver's route to/from BRC — the corridor
    *  detour in miles. When set, it stands in for the plain location credit. */
   detourMi?: number;
@@ -164,4 +175,7 @@ export interface Match {
 
 export interface MatchesResponse {
   matches: Match[];
+  /** Global minimum score for a match to be emailed. Matches below it are shown
+   *  in-app behind the "lower-quality" toggle only. */
+  emailFloor: number;
 }

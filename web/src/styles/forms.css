@@ -650,6 +650,16 @@ button.admin-stat:hover {
   width: 100%;
 }
 
+/* Sliders inherit the text-input chrome from base.css — strip it so the track
+   reads as a track rather than a boxed field. */
+.admin-settings-grid input[type='range'] {
+  min-height: 0;
+  padding-inline: 0;
+  border: 0;
+  background: none;
+  accent-color: var(--ember);
+}
+
 /* ---------- Emails tab ---------- */
 
 .admin-email-row {
