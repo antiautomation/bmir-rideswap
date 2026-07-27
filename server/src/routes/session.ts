@@ -169,6 +169,39 @@ sessionRoutes.post(
   },
 );
 
+/* Cross-device UI prefs: starred listings, hidden matches/listings. The
+   client PUTs only the keys it changed; unknown keys are preserved. */
+const PREF_KEYS = ['favorites', 'hiddenListings', 'hiddenMatches'] as const;
+const prefsSchema = z
+  .object(
+    Object.fromEntries(
+      PREF_KEYS.map((k) => [k, z.array(z.string().min(1).max(120)).max(1000).optional()]),
+    ),
+  )
+  .strict();
+
+sessionRoutes.get('/me/prefs', async (c) => {
+  const user = requireUser(c);
+  return c.json({ prefs: (user.prefs as Record<string, string[]>) ?? {} });
+});
+
+sessionRoutes.put(
+  '/me/prefs',
+  zValidator('json', prefsSchema, (result, c) => {
+    if (!result.success) return c.json({ error: 'invalid' }, 400);
+  }),
+  async (c) => {
+    const user = requireUser(c);
+    const patch = c.req.valid('json');
+    const merged = { ...((user.prefs as Record<string, string[]>) ?? {}) };
+    for (const key of PREF_KEYS) {
+      if (patch[key] !== undefined) merged[key] = patch[key]!;
+    }
+    await db.update(users).set({ prefs: merged }).where(eq(users.id, user.id));
+    return c.json({ prefs: merged });
+  },
+);
+
 sessionRoutes.post('/session/logout', async (c) => {
   await revokeCurrentSession(c);
   return c.body(null, 204);

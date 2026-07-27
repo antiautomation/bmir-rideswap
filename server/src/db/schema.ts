@@ -38,6 +38,7 @@ export const users = pgTable('users', {
   phone: text('phone'),
   digestFrequency: digestFreqEnum('digest_frequency').notNull().default('hourly'),
   phoneContactPref: text('phone_contact_pref').notNull().default('sms'),
+  prefs: jsonb('prefs').notNull().default({}),
   lastDigestAt: timestamp('last_digest_at', { withTimezone: true }),
   isAdmin: boolean('is_admin').notNull().default(false),
   bannedAt: timestamp('banned_at', { withTimezone: true }),
