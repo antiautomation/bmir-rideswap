@@ -165,6 +165,8 @@ interface AppConfig {
   flagAutoHideThreshold: number;
   maxListingsPerDay: number;
   maxActiveListingsPerDirection: number;
+  expiryGraceHours: number;
+  flexibleExpiryGraceHours: number;
 }
 
 interface SettingsResponse {
@@ -1231,6 +1233,8 @@ const APP_CONFIG_FIELDS: { key: keyof AppConfig; label: string }[] = [
   { key: 'flagAutoHideThreshold', label: 'Reports needed to auto-hide a listing' },
   { key: 'maxListingsPerDay', label: 'Listings per user per day' },
   { key: 'maxActiveListingsPerDirection', label: 'Active listings per user per direction' },
+  { key: 'expiryGraceHours', label: 'Post expiry: hours after the time window (departure-local)' },
+  { key: 'flexibleExpiryGraceHours', label: 'Flexible-time expiry: hours past midnight (4 = 4am next day)' },
 ];
 
 /** Both groups are whole numbers the server accepts within its own bounds. */

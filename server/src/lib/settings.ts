@@ -29,6 +29,11 @@ export const APP_CONFIG_DEFAULTS = {
   flagAutoHideThreshold: 3,
   maxListingsPerDay: 5,
   maxActiveListingsPerDirection: 3,
+  /* Hours a listing outlives its departure window, in the departure point's
+     local time (see listingRules.ts). Flexible-time posts expire this many
+     hours past local midnight — default 4 = 4am the next day. */
+  expiryGraceHours: 4,
+  flexibleExpiryGraceHours: 4,
 } as const;
 
 export type AppConfigKey = keyof typeof APP_CONFIG_DEFAULTS;

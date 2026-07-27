@@ -97,21 +97,23 @@ async function searchCitiesNorm(norm: string, limit: number): Promise<CitySugges
  *  doesn't look like a known city. Exact normalized match wins; otherwise the
  *  best trigram match above a conservative threshold (population breaks ties,
  *  so a bare "springfield" resolves to the biggest Springfield). */
-export async function geocodeLocation(locationNorm: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeLocation(
+  locationNorm: string,
+): Promise<{ lat: number; lng: number; state: string } | null> {
   const norm = locationNorm.trim();
   if (!norm) return null;
   const exact = await db
-    .select({ lat: cities.lat, lng: cities.lng })
+    .select({ lat: cities.lat, lng: cities.lng, state: cities.state })
     .from(cities)
     .where(eq(cities.nameNorm, norm))
     .orderBy(sql`${cities.population} DESC`)
     .limit(1);
   if (exact[0]) return exact[0];
   const fuzzy = await db
-    .select({ lat: cities.lat, lng: cities.lng, sim: sql<number>`similarity(${cities.nameNorm}, ${norm})` })
+    .select({ lat: cities.lat, lng: cities.lng, state: cities.state, sim: sql<number>`similarity(${cities.nameNorm}, ${norm})` })
     .from(cities)
     .where(sql`similarity(${cities.nameNorm}, ${norm}) > 0.55`)
     .orderBy(sql`similarity(${cities.nameNorm}, ${norm}) DESC`, sql`${cities.population} DESC`)
     .limit(1);
-  return fuzzy[0] ? { lat: fuzzy[0].lat, lng: fuzzy[0].lng } : null;
+  return fuzzy[0] ? { lat: fuzzy[0].lat, lng: fuzzy[0].lng, state: fuzzy[0].state } : null;
 }

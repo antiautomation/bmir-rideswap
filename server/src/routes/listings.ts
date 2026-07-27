@@ -270,7 +270,7 @@ listingRoutes.post(
     // Step 4: insert.
     const locationNorm = normalizeLocation(body.location);
     const origin = await geocodeLocation(locationNorm);
-    const expiresAt = computeExpiresAt(body.travelDate, body.timeSlot);
+    const expiresAt = computeExpiresAt(body.travelDate, body.timeSlot, body.direction, origin?.state ?? null);
     const isDriver = body.type === 'driver';
 
     const values: typeof listings.$inferInsert = {
@@ -352,17 +352,28 @@ listingRoutes.patch(
       updatedAt: new Date(),
     };
 
+    let origin: Awaited<ReturnType<typeof geocodeLocation>> | undefined;
     if (body.location !== undefined) {
       updates.locationRaw = body.location;
       updates.locationNorm = normalizeLocation(body.location);
-      const origin = await geocodeLocation(updates.locationNorm);
+      origin = await geocodeLocation(updates.locationNorm);
       updates.originLat = origin?.lat ?? null;
       updates.originLng = origin?.lng ?? null;
     }
-    if (body.travelDate !== undefined || body.timeSlot !== undefined) {
+    // Expiry hangs off date, slot, direction, AND the departure city's timezone,
+    // so recompute whenever any of those move. State isn't stored on the row —
+    // re-derive it from the normalized location.
+    const mergedDirection = updates.direction as typeof row.direction;
+    if (
+      body.travelDate !== undefined ||
+      body.timeSlot !== undefined ||
+      body.location !== undefined ||
+      mergedDirection !== row.direction
+    ) {
       updates.travelDate = mergedTravelDate;
       updates.timeSlot = mergedTimeSlot;
-      updates.expiresAt = computeExpiresAt(mergedTravelDate, mergedTimeSlot);
+      origin ??= await geocodeLocation(row.locationNorm);
+      updates.expiresAt = computeExpiresAt(mergedTravelDate, mergedTimeSlot, mergedDirection, origin?.state ?? null);
     }
 
     const updated = await db.update(listings).set(updates).where(eq(listings.id, id)).returning();
