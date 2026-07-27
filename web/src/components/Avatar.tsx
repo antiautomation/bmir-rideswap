@@ -5,11 +5,13 @@ interface AvatarProps {
   fullSrc?: string;
   name: string;
   size?: number;
+  /** Shown under the full-size image in the lightbox. */
+  lightboxNote?: string;
 }
 
 type LightboxState = 'loading' | 'locked' | 'error' | 'ready';
 
-export default function Avatar({ thumbSrc, fullSrc, name, size = 40 }: AvatarProps) {
+export default function Avatar({ thumbSrc, fullSrc, name, size = 40, lightboxNote }: AvatarProps) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<LightboxState>('loading');
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -126,7 +128,10 @@ export default function Avatar({ thumbSrc, fullSrc, name, size = 40 }: AvatarPro
             {state === 'error' && <p className="avatar-lightbox-status">Couldn&rsquo;t load photo.</p>}
 
             {state === 'ready' && objectUrl && (
-              <img className="avatar-lightbox-img" src={objectUrl} alt="" />
+              <>
+                <img className="avatar-lightbox-img" src={objectUrl} alt="" />
+                {lightboxNote && <p className="field-hint">{lightboxNote}</p>}
+              </>
             )}
           </div>
         </div>

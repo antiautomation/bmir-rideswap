@@ -138,6 +138,20 @@ avatarRoutes.delete('/me/avatar', async (c) => {
   return c.json({ ok: true });
 });
 
+/* Own-photo preview for the You page. Only ever your own session's photo —
+   the listing/conversation keying that guards everyone else's stays intact. */
+avatarRoutes.get('/me/avatar-thumb', async (c) => {
+  const user = requireUser(c);
+  if (!user.avatarThumb) throw new HTTPException(404, { message: 'not_found' });
+  return imageResponse(c, user.avatarThumb, 'private, max-age=300');
+});
+
+avatarRoutes.get('/me/avatar-full', async (c) => {
+  const user = requireUser(c);
+  if (!user.avatarFull) throw new HTTPException(404, { message: 'not_found' });
+  return imageResponse(c, user.avatarFull, 'private, max-age=300');
+});
+
 // Thumbs on public listing cards: genuinely low-res, safe to cache.
 avatarRoutes.get('/listings/:id/avatar-thumb', async (c) => {
   const owner = await ownerOfListing(c.req.param('id'));

@@ -3,9 +3,10 @@ import EmptyState from '../components/EmptyState';
 import MatchCard from '../components/MatchCard';
 import MessageComposer from '../components/MessageComposer';
 import { useMyMatches } from '../api/matches';
-import { useIdSet } from '../lib/prefs';
+import { useIdSet, useStoredState } from '../lib/prefs';
 import { useMe } from '../api/session';
-import type { Listing } from '../api/types';
+import { BELONGINGS_ORDER } from '../api/types';
+import type { Belongings, Listing } from '../api/types';
 import '../styles/matches.css';
 
 export default function MatchesPage() {
@@ -20,7 +21,27 @@ export default function MatchesPage() {
   const matchKey = (m: { driverListingId: string; riderListingId: string }): string =>
     `${m.driverListingId}-${m.riderListingId}`;
 
-  const all = [...(data?.matches ?? [])].sort((a, b) => {
+  const [mf, setMf] = useStoredState<{ minScore: number; hasPhoto: boolean; gear: 'any' | Belongings }>(
+    'ridefinder-match-filters-v1',
+    { minScore: 0, hasPhoto: false, gear: 'any' },
+  );
+
+  const allRaw = data?.matches ?? [];
+  const passesFilters = (m: (typeof allRaw)[number]): boolean => {
+    if (m.score < mf.minScore) return false;
+    if (mf.hasPhoto && m.listing.avatarVersion === null) return false;
+    if (mf.gear !== 'any') {
+      const l = m.listing;
+      if (l.type === 'driver') {
+        if (l.cargoSpace === null || BELONGINGS_ORDER[l.cargoSpace] < BELONGINGS_ORDER[mf.gear]) return false;
+      } else if (l.riderStuff === null || BELONGINGS_ORDER[l.riderStuff] > BELONGINGS_ORDER[mf.gear]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const all = allRaw.filter(passesFilters).sort((a, b) => {
     const aStar = favorites.has(a.listing.id) ? 1 : 0;
     const bStar = favorites.has(b.listing.id) ? 1 : 0;
     if (aStar !== bStar) return bStar - aStar;
@@ -31,11 +52,48 @@ export default function MatchesPage() {
 
   return (
     <>
-      <h1>Matches</h1>
+      <h1>Closest Matches</h1>
       <p className="matches-subtitle">
-        Rides and riders that line up with your listings — same direction, close dates, gear that
-        fits.
+        Rides and riders that line up <em>best</em> with your listings — these aren&rsquo;t
+        guaranteed perfect fits, just the closest ones we found. The circled number is a 0&ndash;100
+        compatibility score: how well the direction, dates, route, gear, and timing line up. The
+        badges under each name show exactly what earned the score, and the filters below let you
+        narrow things down yourself.
       </p>
+
+      {allRaw.length > 0 && (
+        <div className="filter-grid match-filters">
+          <select
+            aria-label="Minimum score"
+            value={String(mf.minScore)}
+            onChange={(e) => setMf({ ...mf, minScore: Number(e.target.value) })}
+          >
+            <option value="0">Any score</option>
+            <option value="50">Score 50+</option>
+            <option value="65">Score 65+</option>
+            <option value="80">Score 80+</option>
+          </select>
+          <select
+            aria-label="Gear"
+            value={mf.gear}
+            onChange={(e) => setMf({ ...mf, gear: e.target.value as 'any' | Belongings })}
+          >
+            <option value="any">Any gear</option>
+            <option value="minimal">Minimal gear</option>
+            <option value="standard">Standard gear</option>
+            <option value="substantial">Lots of gear</option>
+            <option value="extensive">Extensive gear</option>
+          </select>
+          <button
+            type="button"
+            className="pill pill-toggle"
+            aria-pressed={mf.hasPhoto}
+            onClick={() => setMf({ ...mf, hasPhoto: !mf.hasPhoto })}
+          >
+            📸 Has photo
+          </button>
+        </div>
+      )}
 
       {hiddenCount > 0 && (
         <label className="admin-toggle">

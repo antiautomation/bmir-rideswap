@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import Avatar from './Avatar';
 import { ApiError } from '../api/client';
 import type { Me } from '../api/types';
 
@@ -150,7 +151,6 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
     }
   }
 
-  const initial = (me?.name ?? '?').trim().charAt(0).toUpperCase() || '?';
   const hasPhoto = Boolean(me?.avatarVersion) || uploaded;
 
   return (
@@ -192,10 +192,14 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
             <img className="avatar-preview" src={previewUrl} alt="Your profile photo" />
           ) : hasPhoto ? (
             <div className="avatar-upload-current">
-              <span className="avatar-upload-initial" aria-hidden="true">
-                {initial}
-              </span>
-              <p className="field-hint">Photo uploaded ✓ (visible on your listings)</p>
+              <Avatar
+                thumbSrc={`/api/me/avatar-thumb?v=${me?.avatarVersion ?? 'new'}`}
+                fullSrc={`/api/me/avatar-full?v=${me?.avatarVersion ?? 'new'}`}
+                name="Your"
+                size={48}
+                lightboxNote="This full-size view is what someone sees once you've messaged them. Everyone else only ever sees the small blurred thumbnail."
+              />
+              <p className="field-hint">Photo uploaded ✓ — tap the thumbnail to preview what a match sees.</p>
             </div>
           ) : null}
 

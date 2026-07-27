@@ -46,8 +46,20 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/a\//, /^\/healthz/],
         runtimeCaching: [
+          // Thumbs are content-addressed via ?v={avatarVersion}, so cache-first is
+          // safe: a new upload changes the URL, stale entries age out via expiration.
           {
-            urlPattern: /^\/api\/(listings|conversations|me|my)/,
+            urlPattern: /\/api\/(me|listings\/[^/]+|conversations\/[^/]+)\/avatar-thumb/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'avatar-thumbs',
+              expiration: { maxEntries: 300, maxAgeSeconds: 30 * 86400 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
+            // Workbox matches regexes against the full URL, not just the path.
+            urlPattern: /\/api\/(listings|conversations|me|my)/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

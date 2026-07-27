@@ -51,8 +51,11 @@
 }
 
 .match-route {
+  margin: 0;
   font-size: var(--fs-sm);
   font-weight: 600;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
 }
 
 .match-context {
@@ -111,4 +114,13 @@
 
 .match-card--hidden {
   opacity: 0.55;
+}
+
+.match-filters {
+  margin-bottom: var(--sp-4);
+  align-items: center;
+}
+
+.match-filters .pill-toggle {
+  justify-self: start;
 }

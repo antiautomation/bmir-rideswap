@@ -57,9 +57,6 @@ export default function MatchCard({ match, onMessage, isFavorite, onToggleFavori
         <span className={`pill ${isDriver ? 'pill-driver' : 'pill-rider'}`}>
           {isDriver ? '🚗 Driver' : '🎒 Rider'}
         </span>
-        <span className="match-route">
-          {directionArrow(listing.direction)} · {formatTravelDate(listing.travelDate)}
-        </span>
         <span className="match-card-spacer" />
         <button
           type="button"
@@ -71,6 +68,10 @@ export default function MatchCard({ match, onMessage, isFavorite, onToggleFavori
           {isFavorite ? '★' : '☆'}
         </button>
       </div>
+
+      <p className="match-route">
+        {directionArrow(listing.direction)} · {formatTravelDate(listing.travelDate)}
+      </p>
 
       <div className="match-card-identity">
         <span className="match-name">{listing.name}</span>
