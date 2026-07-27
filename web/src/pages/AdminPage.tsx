@@ -1254,8 +1254,11 @@ function MetricsTab() {
 
 /* ---------- Emails tab ---------- */
 
+type EmailsSubTab = 'log' | 'suppressed';
+
 function EmailsTab() {
   const queryClient = useQueryClient();
+  const [subTab, setSubTab] = useState<EmailsSubTab>('log');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounced(search, 300);
   const [busy, setBusy] = useState(false);
@@ -1267,6 +1270,7 @@ function EmailsTab() {
   const suppressions = useQuery({
     queryKey: ['admin-suppressions', debouncedSearch],
     queryFn: () => api<{ suppressions: SuppressionRow[] }>(`/api/admin/suppressions?q=${encodeURIComponent(debouncedSearch)}`),
+    enabled: subTab === 'suppressed',
   });
 
   async function unsuppress(email: string): Promise<void> {
@@ -1285,84 +1289,97 @@ function EmailsTab() {
 
   return (
     <div className="admin-detail">
-      <section className="card">
-        <h2>Suppressed addresses</h2>
-        <p className="muted">These addresses are hard-blocked: no digests, no login links, nothing.</p>
-        <div className="admin-toolbar">
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search suppressed addresses…"
-            className="admin-search"
-          />
-        </div>
-        {suppressions.isLoading && <p className="muted">Loading…</p>}
-        {suppressions.isError && (
-          <div className="admin-error">
-            <p className="muted">Failed to load.</p>
-            <button className="btn-secondary" onClick={() => void suppressions.refetch()}>
-              Retry
-            </button>
-          </div>
-        )}
-        {suppressions.data?.suppressions.length === 0 && <p className="muted">No suppressed addresses.</p>}
-        {suppressions.data && suppressions.data.suppressions.length > 0 && (
-          <div className="admin-table-wrap">
-            <table className="admin-table admin-table--compact">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Reason</th>
-                  <th>Since</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {suppressions.data.suppressions.map((s) => (
-                  <tr key={s.email}>
-                    <td>{s.email}</td>
-                    <td>
-                      <span className="pill pill-warn">{s.reason}</span>
-                    </td>
-                    <td>{fmtDateTime(s.createdAt)}</td>
-                    <td>
-                      <button className="btn-secondary" disabled={busy} onClick={() => void unsuppress(s.email)}>
-                        Un-suppress
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <div className="seg admin-tabs" role="tablist" aria-label="Email sections">
+        <button type="button" aria-pressed={subTab === 'log'} onClick={() => setSubTab('log')}>
+          Recent emails
+        </button>
+        <button type="button" aria-pressed={subTab === 'suppressed'} onClick={() => setSubTab('suppressed')}>
+          Suppressed
+        </button>
+      </div>
 
-      <section className="card">
-        <h2>Recent emails</h2>
-        {emails.isLoading && <p className="muted">Loading…</p>}
-        {emails.isError && (
-          <div className="admin-error">
-            <p className="muted">Failed to load.</p>
-            <button className="btn-secondary" onClick={() => void emails.refetch()}>
-              Retry
-            </button>
+      {subTab === 'suppressed' && (
+        <section className="card">
+          <h2>Suppressed addresses</h2>
+          <p className="muted">These addresses are hard-blocked: no digests, no login links, nothing.</p>
+          <div className="admin-toolbar">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search suppressed addresses…"
+              className="admin-search"
+            />
           </div>
-        )}
-        {emails.data?.emails.length === 0 && <p className="muted">No emails sent yet.</p>}
-        {emails.data?.emails.map((m) => {
-          // sendEmail logs blocked sends as "<kind>-suppressed" instead of dropping them.
-          const blocked = m.kind.endsWith('-suppressed');
-          return (
-            <div key={m.id} className="admin-email-row muted">
-              <span>{fmtDateTime(m.sentAt)}</span> · <span>{blocked ? m.kind.slice(0, -'-suppressed'.length) : m.kind}</span> ·{' '}
-              <span>{m.toEmail}</span> · <span>{m.subject}</span>
-              {blocked && <> · <span className="pill pill-warn">suppressed</span></>}
+          {suppressions.isLoading && <p className="muted">Loading…</p>}
+          {suppressions.isError && (
+            <div className="admin-error">
+              <p className="muted">Failed to load.</p>
+              <button className="btn-secondary" onClick={() => void suppressions.refetch()}>
+                Retry
+              </button>
             </div>
-          );
-        })}
-      </section>
+          )}
+          {suppressions.data?.suppressions.length === 0 && <p className="muted">No suppressed addresses.</p>}
+          {suppressions.data && suppressions.data.suppressions.length > 0 && (
+            <div className="admin-table-wrap">
+              <table className="admin-table admin-table--compact">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Reason</th>
+                    <th>Since</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {suppressions.data.suppressions.map((s) => (
+                    <tr key={s.email}>
+                      <td>{s.email}</td>
+                      <td>
+                        <span className="pill pill-warn">{s.reason}</span>
+                      </td>
+                      <td>{fmtDateTime(s.createdAt)}</td>
+                      <td>
+                        <button className="btn-secondary" disabled={busy} onClick={() => void unsuppress(s.email)}>
+                          Un-suppress
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {subTab === 'log' && (
+        <section className="card">
+          <h2>Recent emails</h2>
+          {emails.isLoading && <p className="muted">Loading…</p>}
+          {emails.isError && (
+            <div className="admin-error">
+              <p className="muted">Failed to load.</p>
+              <button className="btn-secondary" onClick={() => void emails.refetch()}>
+                Retry
+              </button>
+            </div>
+          )}
+          {emails.data?.emails.length === 0 && <p className="muted">No emails sent yet.</p>}
+          {emails.data?.emails.map((m) => {
+            // sendEmail logs blocked sends as "<kind>-suppressed" instead of dropping them.
+            const blocked = m.kind.endsWith('-suppressed');
+            return (
+              <div key={m.id} className="admin-email-row muted">
+                <span>{fmtDateTime(m.sentAt)}</span> · <span>{blocked ? m.kind.slice(0, -'-suppressed'.length) : m.kind}</span> ·{' '}
+                <span>{m.toEmail}</span> · <span>{m.subject}</span>
+                {blocked && <> · <span className="pill pill-warn">suppressed</span></>}
+              </div>
+            );
+          })}
+        </section>
+      )}
     </div>
   );
 }
