@@ -28,19 +28,19 @@ export function allow(key: string, max: number, windowMs: number): boolean {
 }
 
 export function clientIp(c: Context): string {
-  // Railway's Envoy edge reports the real client address here (client-sent
-  // values are sanitized at the edge — verified empirically against prod).
-  const envoy = c.req.header('x-envoy-external-address');
-  if (envoy) return envoy.trim();
-  // Fallback: rightmost X-Forwarded-For entry — the one appended by the edge
-  // about the peer it actually saw. On Railway that's an edge-node address
-  // (bucket shared per edge node, still unspoofable); the leftmost entries
-  // are client-supplied and must never be trusted, or anyone can mint fresh
-  // buckets per request (recovery-code guessing, anon floods, flag storms).
+  // Probed against prod (2026-07-27): x-envoy-external-address is NOT
+  // sanitized by Railway's edge — a client can set it — so never trust it.
+  // The edge appends its own hops to X-Forwarded-For; the rightmost entry is
+  // a Railway edge-node address and the one before it is the client as the
+  // edge saw it. Everything further left is client-supplied and must never
+  // be trusted, or anyone can mint fresh buckets per request (recovery-code
+  // guessing, anon floods, flag storms). With a single entry (no proxy /
+  // local dev) that entry is the peer itself.
   const forwarded = c.req.header('x-forwarded-for');
   if (forwarded) {
-    const parts = forwarded.split(',');
-    return parts[parts.length - 1]!.trim();
+    const parts = forwarded.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length >= 2) return parts[parts.length - 2]!;
+    if (parts.length === 1) return parts[0]!;
   }
   return 'unknown';
 }
