@@ -5,6 +5,8 @@ import { directionArrow, formatTravelDate } from '../lib/format';
 interface MatchCardProps {
   match: Match;
   onMessage: (listing: Listing) => void;
+  isFavorite: boolean;
+  onToggleFavorite: (id: string) => void;
 }
 
 function scoreTier(score: number): 'ok' | 'ember' | 'dim' {
@@ -39,7 +41,7 @@ function reasonPills(reasons: MatchReasons): string[] {
   return pills;
 }
 
-export default function MatchCard({ match, onMessage }: MatchCardProps) {
+export default function MatchCard({ match, onMessage, isFavorite, onToggleFavorite }: MatchCardProps) {
   const { listing, myListing } = match;
   const isDriver = listing.type === 'driver';
   const pills = reasonPills(match.reasons);
@@ -56,6 +58,16 @@ export default function MatchCard({ match, onMessage }: MatchCardProps) {
         <span className="match-route">
           {directionArrow(listing.direction)} · {formatTravelDate(listing.travelDate)}
         </span>
+        <span className="match-card-spacer" />
+        <button
+          type="button"
+          className="icon-btn"
+          aria-pressed={isFavorite}
+          aria-label={isFavorite ? 'Unstar this match' : 'Star this match — starred matches stay at the top'}
+          onClick={() => onToggleFavorite(listing.id)}
+        >
+          {isFavorite ? '★' : '☆'}
+        </button>
       </div>
 
       <div className="match-card-identity">

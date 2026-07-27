@@ -104,3 +104,7 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.match-card-spacer {
+  flex: 1;
+}

@@ -260,6 +260,9 @@ function ListingActions({ listing, onChanged }: { listing: AdminListingRow; onCh
           Delete
         </button>
       )}
+      <Link className="btn-ghost" to={`/listing/${listing.id}/edit`}>
+        Edit
+      </Link>
       <Link className="btn-ghost" to={`/listing/${listing.id}`}>
         Open ↗
       </Link>

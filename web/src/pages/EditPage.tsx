@@ -1,6 +1,7 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
+import { useMe } from '../api/session';
 import ListingForm from '../components/ListingForm';
 import { api, ApiError } from '../api/client';
 import { updateListing } from '../api/listings';
@@ -10,6 +11,7 @@ import type { MyListingsResponse } from '../api/listings';
 export default function EditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { data: me } = useMe();
   const queryClient = useQueryClient();
 
   const cached =
@@ -48,7 +50,8 @@ export default function EditPage() {
     return <EmptyState title="Listing not found or no longer available" />;
   }
 
-  if (!listing.isMine) {
+  const isAdminEdit = !listing.isMine && Boolean(me?.isAdmin);
+  if (!listing.isMine && !isAdminEdit) {
     return <Navigate to={`/listing/${id}`} replace />;
   }
 
@@ -56,7 +59,7 @@ export default function EditPage() {
 
   function handleSubmit(input: CreateListingInput | UpdateListingInput): void {
     updateListing(queryClient, listingId, input as UpdateListingInput);
-    navigate('/me');
+    navigate(isAdminEdit ? `/listing/${listingId}` : '/me');
   }
 
   return (

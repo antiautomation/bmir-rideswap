@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
 import type { Belongings, Listing } from '../api/types';
+import { useMe } from '../api/session';
 import { isExpired } from '../lib/expiry';
 import { BELONGINGS_MEANINGS, belongingsLabel, directionArrow, formatTimeSlot, formatTravelDate } from '../lib/format';
 
@@ -59,6 +60,8 @@ export default function ListingCard({
   forceExpanded = false,
 }: ListingCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const { data: me } = useMe();
+  const isAdmin = me?.isAdmin ?? false;
   const expired = isExpired(listing);
   const isDriver = listing.type === 'driver';
   const showDetails = forceExpanded || expanded;
@@ -161,6 +164,11 @@ export default function ListingCard({
 
       {!listing.pending && (
         <div className="card-footer">
+          {!listing.isMine && isAdmin && (
+            <Link to={`/listing/${listing.id}/edit`} className="btn-ghost" title="Admin: edit this post">
+              🛠 Edit
+            </Link>
+          )}
           {listing.isMine ? (
             <>
               <Link to={`/listing/${listing.id}/edit`} className="btn-secondary">

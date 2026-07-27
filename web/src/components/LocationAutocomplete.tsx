@@ -161,7 +161,8 @@ export default function LocationAutocomplete({
         </ul>
       )}
       <p id={hintId} className="field-hint">
-        Start typing and pick your city — it helps us match rides near you.
+        Your actual departure city only — the app automatically finds people along your route.
+        Adding anything else (neighborhoods, &ldquo;to BRC&rdquo;, notes) breaks that matching.
       </p>
     </div>
   );
