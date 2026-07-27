@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, ne, notInArray, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { listings, matches } from '../db/schema.js';
 import { TIME_SLOT_RE } from '../lib/listingRules.js';
@@ -127,16 +127,15 @@ function isLive(l: ListingRow, now: number): boolean {
 
 export async function recomputeMatchesForListing(listing: ListingRow): Promise<void> {
   const now = Date.now();
+  const sideEq =
+    listing.type === 'driver'
+      ? eq(matches.driverListingId, listing.id)
+      : eq(matches.riderListingId, listing.id);
 
-  await db
-    .delete(matches)
-    .where(
-      listing.type === 'driver'
-        ? eq(matches.driverListingId, listing.id)
-        : eq(matches.riderListingId, listing.id),
-    );
-
-  if (!isLive(listing, now)) return;
+  if (!isLive(listing, now)) {
+    await db.delete(matches).where(sideEq);
+    return;
+  }
 
   const counterpartType = listing.type === 'driver' ? 'rider' : 'driver';
   const candidates = await db
@@ -173,8 +172,26 @@ export async function recomputeMatchesForListing(listing: ListingRow): Promise<v
     }
   }
 
+  // Replace this listing's match set without nuking notification state: pairs
+  // that survive the recompute are updated in place (notified*At untouched, so
+  // nobody gets re-emailed about a match they already saw), pairs that no
+  // longer qualify are deleted.
+  const otherCol = listing.type === 'driver' ? matches.riderListingId : matches.driverListingId;
+  const keepIds = rows.map((r) => (listing.type === 'driver' ? r.riderListingId : r.driverListingId));
+  await db.delete(matches).where(keepIds.length > 0 ? and(sideEq, notInArray(otherCol, keepIds)) : sideEq);
+
   if (rows.length > 0) {
-    await db.insert(matches).values(rows).onConflictDoNothing();
+    await db
+      .insert(matches)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: [matches.driverListingId, matches.riderListingId],
+        set: {
+          score: sql`excluded.score`,
+          reasons: sql`excluded.reasons`,
+          computedAt: new Date(),
+        },
+      });
   }
 }
 
