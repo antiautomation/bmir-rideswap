@@ -11,6 +11,8 @@ interface LocationAutocompleteProps {
   ariaInvalid?: boolean;
   /** Extra id(s) to reference from aria-describedby (e.g. an inline error). */
   ariaDescribedBy?: string;
+  /** Direction-aware guidance shown under the field. */
+  hint?: string;
 }
 
 /**
@@ -25,6 +27,7 @@ export default function LocationAutocomplete({
   maxLength,
   ariaInvalid,
   ariaDescribedBy,
+  hint,
 }: LocationAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<City[]>([]);
   const [open, setOpen] = useState(false);
@@ -161,8 +164,8 @@ export default function LocationAutocomplete({
         </ul>
       )}
       <p id={hintId} className="field-hint">
-        Your actual departure city only — the app automatically finds people along your route.
-        Adding anything else (neighborhoods, &ldquo;to BRC&rdquo;, notes) breaks that matching.
+        {hint ??
+          'Your actual city only — the app automatically finds people along your route. Adding anything else (neighborhoods, notes) breaks that matching.'}
       </p>
     </div>
   );

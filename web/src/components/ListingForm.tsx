@@ -280,6 +280,11 @@ export default function ListingForm({
           onChange={(v) => set('location', v)}
           ariaDescribedBy={errors.location ? 'error-location' : undefined}
           ariaInvalid={Boolean(errors.location)}
+          hint={
+            state.direction === 'to_brc'
+              ? 'Your actual departure city only — the app automatically finds people along your route. Adding anything else (neighborhoods, “to BRC”, notes) breaks that matching.'
+              : 'Your actual destination city only — where you\u2019re headed after the burn. The app automatically finds people along your route; adding anything else breaks that matching.'
+          }
         />
         {errors.location && (
           <p id="error-location" className="field-error">
