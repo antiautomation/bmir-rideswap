@@ -9,6 +9,7 @@ import ToastHost from './components/Toast';
 import StatusBar from './components/StatusBar';
 import InstallPrompt from './components/InstallPrompt';
 import BannedScreen from './components/BannedScreen';
+import RadioPlayer from './components/RadioPlayer';
 
 /** SPA navigation keeps the old scroll position — jump to the top on every
  *  route change. The board ('/') is exempt so returning to it (e.g. back from
@@ -46,6 +47,7 @@ export default function App() {
         <Outlet />
         <Footer />
       </main>
+      <RadioPlayer />
       <InstallPrompt />
       <TabBar />
       <RecoveryCodeNotice />
