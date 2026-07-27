@@ -4,7 +4,7 @@ import Avatar from './Avatar';
 import type { Belongings, Listing } from '../api/types';
 import { useMe } from '../api/session';
 import { isExpired } from '../lib/expiry';
-import { BELONGINGS_MEANINGS, belongingsLabel, directionArrow, formatTimeSlot, formatTravelDate } from '../lib/format';
+import { BELONGINGS_MEANINGS, belongingsLabel, directionArrow, formatDepartureWindow, formatTravelDate } from '../lib/format';
 
 /** Gear pill with an ⓘ that reveals what the tier means. Click/tap toggles
  *  (Safari doesn't focus buttons on click, so :focus CSS alone won't do);
@@ -116,7 +116,7 @@ export default function ListingCard({
       </div>
 
       <div className="listing-card-meta">
-        <span>{formatTimeSlot(listing.timeSlot)}</span>
+        <span>{formatDepartureWindow(listing.timeSlot)}</span>
         {isDriver ? (
           <>
             {listing.passengerSpace !== null && (

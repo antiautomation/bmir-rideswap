@@ -44,6 +44,12 @@ export function formatTimeSlot(slot: string): string {
   return `${to12Hour(start)} – ${to12Hour(end)}`;
 }
 
+/** Prefixes the time slot with a departure cue so it isn't misread as an arrival time. */
+export function formatDepartureWindow(slot: string): string {
+  if (slot === 'flexible') return '🕤 Departing anytime';
+  return `🕤 Departing ${formatTimeSlot(slot)}`;
+}
+
 export function timeAgo(iso: string, now: number = Date.now()): string {
   const diffMs = now - Date.parse(iso);
   const minutes = Math.floor(diffMs / 60_000);
