@@ -425,7 +425,6 @@
 .welcome-card p {
   font-size: var(--fs-sm);
   line-height: 1.65;
-  max-width: 60ch;
 }
 
 .welcome-card-close {

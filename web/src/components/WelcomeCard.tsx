@@ -23,8 +23,10 @@ export default function WelcomeCard() {
       <p className="muted">
         Post a ride or a seat request and you get a private session code — that&rsquo;s your only
         login. Your email and phone stay <strong>off the public board</strong>; they&rsquo;re shared
-        only when you choose to, inside a private message. We&rsquo;ll email you when someone
-        writes back or when a matching ride appears.
+        only when you choose to, inside a private message.{' '}
+        <strong>Create a listing to be notified when a match fits your requirements</strong> — the{' '}
+        <strong>matching algorithm</strong> scores every compatible post against yours and emails
+        you the best ones, along with any replies.
       </p>
       <div className="welcome-card-actions">
         <Link to="/post" className="btn">
