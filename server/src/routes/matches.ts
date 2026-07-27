@@ -83,7 +83,11 @@ matchRoutes.get('/my/matches', async (c) => {
 
 matchRoutes.get('/listings/:id/matches', async (c) => {
   const user = requireUser(c);
-  const rows = await db.select().from(listings).where(eq(listings.id, c.req.param('id'))).limit(1);
+  const id = c.req.param('id');
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  const rows = await db.select().from(listings).where(eq(listings.id, id)).limit(1);
   const listing = rows[0];
   if (!listing || listing.deletedAt) throw new HTTPException(404, { message: 'not_found' });
   if (listing.userId !== user.id && !user.isAdmin) throw new HTTPException(403, { message: 'forbidden' });

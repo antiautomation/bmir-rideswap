@@ -7,6 +7,7 @@ import { ensureUser, requireUser } from '../auth/middleware.js';
 import type { SessionUser } from '../auth/tokens.js';
 import { db } from '../db/client.js';
 import { conversations, listings, messages, users } from '../db/schema.js';
+import { isUniqueViolation } from '../lib/pg.js';
 import { allow } from '../lib/rateLimit.js';
 import { rateLimit } from '../lib/settings.js';
 
@@ -16,9 +17,6 @@ function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
-function isUniqueViolation(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: unknown }).code === '23505';
-}
 
 const sendSchema = z.object({
   clientId: z.string().uuid(),
@@ -285,17 +283,27 @@ conversationRoutes.get('/conversations/:id', async (c) => {
 
   if (!assertParticipant(conversation, listing, user)) throw new HTTPException(403, { message: 'forbidden' });
 
-  await db
-    .update(messages)
-    .set({ readAt: new Date() })
-    .where(and(eq(messages.conversationId, id), ne(messages.senderUserId, user.id), isNull(messages.readAt)));
+  // Reading marks messages read — but only for actual participants. An admin
+  // peeking at a thread must not eat the recipient's unread state (or their
+  // digest email, which skips already-read messages).
+  const isParticipant = conversation.initiatorUserId === user.id || listing.userId === user.id;
+  if (isParticipant) {
+    await db
+      .update(messages)
+      .set({ readAt: new Date() })
+      .where(and(eq(messages.conversationId, id), ne(messages.senderUserId, user.id), isNull(messages.readAt)));
+  }
 
-  const messageRows = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.conversationId, id))
-    .orderBy(asc(messages.createdAt))
-    .limit(500);
+  // Newest window, oldest-first for display — an .orderBy(asc).limit(500)
+  // would pin long threads to their oldest 500 and hide every new message.
+  const messageRows = (
+    await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, id))
+      .orderBy(desc(messages.createdAt))
+      .limit(500)
+  ).reverse();
 
   const iAmInitiator = conversation.initiatorUserId === user.id;
   const counterpartUserId = iAmInitiator ? listing.userId : conversation.initiatorUserId;

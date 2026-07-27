@@ -55,10 +55,11 @@ export default function MatchesPage() {
       <h1>Closest Matches</h1>
       <p className="matches-subtitle">
         Rides and riders that line up <em>best</em> with your listings — these aren&rsquo;t
-        guaranteed perfect fits, just the closest ones we found. The circled number is a 0&ndash;100
-        compatibility score: how well the direction, dates, route, gear, and timing line up. The
-        badges under each name show exactly what earned the score, and the filters below let you
-        narrow things down yourself.
+        guaranteed perfect fits, just the closest ones we found (only listings going your
+        direction are considered at all). The circled number is a 0&ndash;100 compatibility
+        score: how well the dates, route, gear fit, timing, and posting recency line up. The
+        badges under each name show what earned most of the score, and the filters below let
+        you narrow things down yourself.
       </p>
 
       {allRaw.length > 0 && (

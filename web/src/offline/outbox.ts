@@ -105,6 +105,20 @@ export async function flushOutbox(): Promise<void> {
         persist(items.slice(1));
         for (const fn of successListeners) fn(head);
       } catch (err) {
+        if (err instanceof ApiError && err.status === 429 && err.code === 'slow_down') {
+          // Burst-limited (e.g. one message per few seconds) — the same payload
+          // succeeds moments later. Dropping would silently lose typed messages.
+          // Hour-scale limits (daily_limit, rate_limited) stay non-retryable:
+          // a 30s retry loop can't outlive them, so fail fast and visibly.
+          const attempts = head.attempts + 1;
+          if (attempts >= MAX_ATTEMPTS) {
+            dropHead({ item: head, status: err.status, code: err.code });
+            continue;
+          }
+          persist([{ ...head, attempts }, ...items.slice(1)]);
+          scheduleRetry();
+          return;
+        }
         if (err instanceof ApiError && err.status < 500) {
           // The server understood and rejected it — retrying will never help.
           dropHead({ item: head, status: err.status, code: err.code });

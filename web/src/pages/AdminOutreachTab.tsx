@@ -4,7 +4,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 
 /* ---------- Types ---------- */
 
@@ -145,6 +145,9 @@ function fmt(iso: string | null): string {
 }
 
 function errCode(err: unknown): string {
+  // ApiError.message is '<status> <code>' — the FRIENDLY_ERRORS keys are the
+  // bare code, which lives on .code.
+  if (err instanceof ApiError) return err.code;
   return err instanceof Error ? err.message : '';
 }
 

@@ -11,6 +11,21 @@ function parseType(value: string | null): ListingType | undefined {
   return value === 'driver' || value === 'rider' ? value : undefined;
 }
 
+function friendlyRejection(code: string): string {
+  switch (code) {
+    case 'daily_limit':
+      return 'You’ve hit the daily posting limit — try again tomorrow.';
+    case 'active_limit':
+      return 'You already have the maximum active listings in this direction — cancel or edit one from the You page first.';
+    case 'invalid_phone':
+      return 'That phone number doesn’t look right — fix it and post again.';
+    case 'date_out_of_range':
+      return 'That travel date is outside the posting window — double-check the year.';
+    default:
+      return 'Your post was rejected by the server — double-check the fields and try again.';
+  }
+}
+
 export default function PostPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -18,6 +33,7 @@ export default function PostPage() {
   const { data: me } = useMe();
   const [emailTaken, setEmailTaken] = useState<string | null>(null);
   const [emailRequired, setEmailRequired] = useState(false);
+  const [rejection, setRejection] = useState<string | null>(null);
 
   // Posting needs an email now, so ask whenever the account hasn't got one — a
   // phone on file no longer satisfies the server.
@@ -27,6 +43,7 @@ export default function PostPage() {
     const listing = input as CreateListingInput;
     setEmailTaken(null);
     setEmailRequired(false);
+    setRejection(null);
 
     // The POST rides the offline outbox, so a rejection surfaces as an outbox
     // failure rather than a throw. Watch for this listing's own failure while the
@@ -34,11 +51,13 @@ export default function PostPage() {
     // navigate as before.
     let taken = false;
     let missingEmail = false;
+    let rejectedCode: string | null = null;
     const stopWatching = onOutboxFailure((failure) => {
       const body = failure.item.body as CreateListingInput | undefined;
       if (body?.clientId !== listing.clientId) return;
       if (failure.status === 409 && failure.code === 'email_taken') taken = true;
-      if (failure.status === 400 && failure.code === 'email_required') missingEmail = true;
+      else if (failure.status === 400 && failure.code === 'email_required') missingEmail = true;
+      else rejectedCode = failure.code;
     });
     try {
       await createListing(queryClient, listing);
@@ -54,6 +73,12 @@ export default function PostPage() {
       setEmailRequired(true);
       return;
     }
+    if (rejectedCode) {
+      // Stay on the form with everything as typed — navigating away would make
+      // the post look accepted while it silently vanished.
+      setRejection(friendlyRejection(rejectedCode));
+      return;
+    }
     navigate('/', { replace: true });
   }
 
@@ -65,6 +90,11 @@ export default function PostPage() {
           No account needed — posting creates your private session automatically.
         </p>
       </div>
+      {rejection && (
+        <p className="form-note form-note--error" role="alert">
+          {rejection}
+        </p>
+      )}
       <ListingForm
         mode="create"
         initialType={parseType(searchParams.get('type'))}

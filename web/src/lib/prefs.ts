@@ -63,8 +63,24 @@ function fetchServerPrefs(): Promise<Record<string, string[]> | null> {
   return prefsPromise;
 }
 
+/** Forget everything tied to the old session. Call on recover/logout — the
+ *  memoized prefs (and the local mirrors) belong to the account being left,
+ *  and replaying them would bleed stars/hidden ids into the next one. */
+export function resetServerPrefs(): void {
+  prefsPromise = null;
+  for (const localKey of Object.keys(SERVER_KEYS)) {
+    try {
+      localStorage.removeItem(localKey);
+      localStorage.removeItem(`${localKey}:synced`);
+      localStorage.removeItem(`${localKey}:dirty`);
+    } catch {
+      /* storage unavailable */
+    }
+  }
+}
+
 const putTimers = new Map<string, number>();
-function schedulePut(serverKey: string, ids: string[]): void {
+function schedulePut(serverKey: string, localKey: string, ids: string[]): void {
   window.clearTimeout(putTimers.get(serverKey));
   putTimers.set(
     serverKey,
@@ -74,9 +90,16 @@ function schedulePut(serverKey: string, ids: string[]): void {
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({ [serverKey]: ids.slice(0, 1000) }),
-      }).catch(() => {
-        /* offline or no session — local mirror already has it */
-      });
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status));
+          writeStored(`${localKey}:dirty`, false);
+        })
+        .catch(() => {
+          // Offline or no session — remember the local mirror is ahead so the
+          // next sync unions it up instead of overwriting it with server state.
+          writeStored(`${localKey}:dirty`, true);
+        });
     }, 800),
   );
 }
@@ -93,10 +116,13 @@ export function useIdSet(key: string): IdSet {
       if (cancelled || server === null) return; // no session: stay local-only
       const serverIds = server[serverKey] ?? [];
       setIds((local) => {
-        if (!readStored(`${key}:synced`, false)) {
+        // First sync ever, or a previous PUT failed (offline edits): the local
+        // mirror is ahead of the server, so union up rather than overwrite.
+        if (!readStored(`${key}:synced`, false) || readStored(`${key}:dirty`, false)) {
           writeStored(`${key}:synced`, true);
           const union = [...new Set([...serverIds, ...local])];
-          if (union.length !== serverIds.length) schedulePut(serverKey, union);
+          if (union.length !== serverIds.length) schedulePut(serverKey, key, union);
+          else writeStored(`${key}:dirty`, false);
           return union;
         }
         return serverIds;
@@ -114,11 +140,11 @@ export function useIdSet(key: string): IdSet {
     (fn: (prev: string[]) => string[]) => {
       setIds((prev) => {
         const next = fn(prev);
-        if (serverKey && next !== prev) schedulePut(serverKey, next);
+        if (serverKey && next !== prev) schedulePut(serverKey, key, next);
         return next;
       });
     },
-    [setIds, serverKey],
+    [setIds, serverKey, key],
   );
 
   const toggle = useCallback(

@@ -8,6 +8,7 @@ import ListingCard from '../components/ListingCard';
 import MessageComposer from '../components/MessageComposer';
 import { cancelListing, deleteListing, flagListing, useListings } from '../api/listings';
 import type { Listing } from '../api/types';
+import { isExpired } from '../lib/expiry';
 import { applyFilters, DEFAULT_FILTERS, type FilterState } from '../lib/filters';
 import { useIdSet, useStoredState } from '../lib/prefs';
 
@@ -21,24 +22,31 @@ export default function BoardPage() {
 
   const listings = data?.listings ?? [];
 
+  // Dropdown options come from listings the user can actually see — expired
+  // (unless shown) and self-hidden ones would offer filters that match nothing.
+  const visible = useMemo(
+    () => listings.filter((l) => !hidden.has(l.id) && (filters.showExpired || !isExpired(l))),
+    [listings, hidden, filters.showExpired],
+  );
+
   const days = useMemo(() => {
-    const unique = new Set(listings.map((l) => l.travelDate));
+    const unique = new Set(visible.map((l) => l.travelDate));
     return Array.from(unique).sort();
-  }, [listings]);
+  }, [visible]);
 
   // Cities with at least one active listing, deduped case-insensitively
   // (first-seen display form wins), like the day dropdown.
   const cities = useMemo(() => {
     const byKey = new Map<string, string>();
-    for (const l of listings) {
+    for (const l of visible) {
       const key = l.location.trim().toLowerCase();
       if (key && !byKey.has(key)) byKey.set(key, l.location.trim());
     }
     return Array.from(byKey.values()).sort((a, b) => a.localeCompare(b));
-  }, [listings]);
+  }, [visible]);
 
-  // Stale free-text filters from the old search box would silently hide
-  // everything now that the control is a dropdown — clear them once.
+  // Stale persisted filters would silently hide everything with a blank
+  // dropdown — clear a city or day that no longer matches any listing.
   useEffect(() => {
     const q = filters.locationQuery.trim().toLowerCase();
     if (q && listings.length > 0 && !cities.some((c) => c.toLowerCase() === q)) {
@@ -46,6 +54,12 @@ export default function BoardPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cities]);
+  useEffect(() => {
+    if (filters.day !== 'all' && listings.length > 0 && !days.includes(filters.day)) {
+      setFilters({ ...filters, day: 'all' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days]);
 
   const { drivers, riders } = useMemo(
     () => applyFilters(listings, filters, favorites, hidden),

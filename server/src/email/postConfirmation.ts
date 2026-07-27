@@ -14,6 +14,8 @@ export interface PostConfirmationInput {
   /** Raw ml_… token. This email goes only to the verified poster. */
   magicToken: string;
   recoveryCode: string;
+  /** How long the magic-link buttons stay valid (appConfig magicLinkDays). */
+  magicLinkDays: number;
 }
 
 export function renderPostConfirmation(input: PostConfirmationInput): {
@@ -21,7 +23,8 @@ export function renderPostConfirmation(input: PostConfirmationInput): {
   html: string;
   text: string;
 } {
-  const { appOrigin, recipientName, listingId, listingType, travelDate, magicToken, recoveryCode } = input;
+  const { appOrigin, recipientName, listingId, listingType, travelDate, magicToken, recoveryCode, magicLinkDays } =
+    input;
   const name = recipientName?.trim() || 'burner';
   const signIn = (next: string): string => `${appOrigin}/a/${magicToken}?next=${encodeURIComponent(next)}`;
   const subject = 'Your RideFinder post is live — save this email';
@@ -49,9 +52,10 @@ export function renderPostConfirmation(input: PostConfirmationInput): {
               ${button(signIn(`/listing/${listingId}`), 'View your post →')}
               ${buttonGhost(signIn('/matches'), 'See your matches →')}`)}
               <div style="font-size:13px;color:${INK_DIM};line-height:1.5;margin:4px 0 16px;">
-                This is the only email you&rsquo;ll get that isn&rsquo;t a message or match update you asked
-                for &mdash; and those follow your settings (instant, hourly, daily, or off), changeable
-                anytime from the You page or any email&rsquo;s footer. Unsubscribing forever is one click.
+                The buttons above work for the next ${magicLinkDays} days; your session code works forever &mdash;
+                that one line is your real key. Beyond confirmations like this one, we only email the
+                message and match updates you asked for (instant, hourly, daily, or off &mdash; changeable
+                anytime from the You page) plus the rare service announcement, all with one-click unsubscribe.
               </div>
             </td>
           </tr>`;
@@ -72,7 +76,7 @@ View your post (signs you in): ${signIn(`/listing/${listingId}`)}
 See your matches: ${signIn('/matches')}
 Or type your session code on any device: ${recoveryCode}
 
-This is the only email you'll get that isn't a message or match update you asked for — and those follow your settings (instant, hourly, daily, or off), changeable anytime from the You page or any email's footer. Unsubscribing forever is one click.
+The links above work for the next ${magicLinkDays} days; your session code works forever — that one line is your real key. Beyond confirmations like this one, we only email the message and match updates you asked for (instant, hourly, daily, or off — changeable anytime from the You page) plus the rare service announcement, all with one-click unsubscribe.
 
 — RideFinder · rides to & from Black Rock City`;
 

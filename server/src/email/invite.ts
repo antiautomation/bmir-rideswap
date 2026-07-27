@@ -46,7 +46,7 @@ const FEATURES: Feature[] = [
     bullets: [
       '<strong>Your contact info stays private.</strong> No email addresses or phone numbers on the public board — people reach you through messages, and you share your details only if and when you choose.',
       '<strong>Private messaging built in.</strong> You talk to people inside RideFinder, and you decide message by message whether to hand over your number.',
-      '<strong>Photos unlock, not broadcast.</strong> Your profile photo is only visible to someone you are actually in a conversation with.',
+      '<strong>Photos unlock, not broadcast.</strong> Posts show only a small blurred thumbnail — your full-size photo is visible only to someone you are actually in a conversation with.',
       '<strong>Report button on every post</strong>, with a real human reviewing what gets flagged.',
       '<strong>No trackers.</strong> No Google Analytics, no ad pixels, no third-party scripts. Where you are going is nobody else&rsquo;s business.',
       '<strong>Spam traps and rate limits</strong> so the board stays rides and not junk.',

@@ -28,7 +28,14 @@ export function allow(key: string, max: number, windowMs: number): boolean {
 }
 
 export function clientIp(c: Context): string {
+  // Rightmost X-Forwarded-For entry: the one appended by OUR edge proxy about
+  // the peer it actually saw. The leftmost entries are client-supplied and
+  // spoofable — keying limits on them lets anyone mint fresh buckets per
+  // request (recovery-code guessing, anon-session floods, flag storms).
   const forwarded = c.req.header('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0]!.trim();
+  if (forwarded) {
+    const parts = forwarded.split(',');
+    return parts[parts.length - 1]!.trim();
+  }
   return 'unknown';
 }

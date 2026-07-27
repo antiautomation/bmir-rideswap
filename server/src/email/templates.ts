@@ -38,12 +38,22 @@ export interface DigestInput {
   conversations: DigestConversation[];
   totalNewMessages: number;
   newMatches: DigestMatch[];
+  /** Unnotified matches beyond the ones rendered — shown as a "+N more" line. */
+  extraMatchCount: number;
   activeListings: { id: string; name: string }[];
 }
 
 export function renderDigest(input: DigestInput): { subject: string; html: string; text: string } {
-  const { appOrigin, magicToken, recipientName, conversations, totalNewMessages, newMatches, activeListings } =
-    input;
+  const {
+    appOrigin,
+    magicToken,
+    recipientName,
+    conversations,
+    totalNewMessages,
+    newMatches,
+    extraMatchCount,
+    activeListings,
+  } = input;
 
   const link = (path: string): string => `${appOrigin}/a/${magicToken}?next=${encodeURIComponent(path)}`;
 
@@ -135,7 +145,11 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
               ${button(link(`/listing/${m.listingId}`), 'View & message →')}
             `),
           )
-          .join('')}`;
+          .join('')}${
+          extraMatchCount > 0
+            ? `<div style="font-size:13px;color:#555;margin:2px 0 14px;">…and ${extraMatchCount} more — <a href="${esc(link('/matches'))}" style="color:${BRAND};">see all your matches</a>.</div>`
+            : ''
+        }`;
 
   const cancelListingsHtml = activeListings
     .map(
@@ -205,25 +219,26 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
                 `── ${m.theirName} · ${listingTypeLabel(m.theirType)} · ${matchDate(m.travelDate)} · ${m.location} (matches "${m.myListingName}", strength ${m.score}/100)\n   View & message: ${link(`/listing/${m.listingId}`)}`,
             ),
           )
-          .join('\n') + '\n';
+          .concat(extraMatchCount > 0 ? [`…and ${extraMatchCount} more: ${link('/matches')}`] : [])
+          .join('\n');
 
+  // Sections that exist keep a blank line after them; absent sections vanish
+  // entirely — no global ''-filter, which would eat the deliberate spacers.
   const text = [
     `Hi ${greetingName} —`,
     summaryLine,
     '',
-    conversationsText,
-    matchesText,
+    ...(conversationsText ? [conversationsText] : []),
+    ...(matchesText ? [matchesText, ''] : []),
     `See all messages: ${link('/messages')}`,
     `View my profile: ${link('/me')}`,
-    cancelListingsText,
+    ...(cancelListingsText ? [cancelListingsText] : []),
     '',
     "You're getting this because you posted on RideFinder. Change email frequency or unsubscribe from your profile:",
     `Email settings: ${link('/me')}`,
     '',
     'RideFinder · matching@ridefinder.site',
-  ]
-    .filter((line) => line !== '')
-    .join('\n');
+  ].join('\n');
 
   return { subject, html, text };
 }

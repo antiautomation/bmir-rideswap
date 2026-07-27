@@ -80,7 +80,7 @@ export default function FilterBar({ filters, onChange, days, cities }: FilterBar
 
         <select
           aria-label="Filter by city"
-          value={cities.some((c) => c.toLowerCase() === filters.locationQuery.trim().toLowerCase()) ? filters.locationQuery : ''}
+          value={cities.find((c) => c.toLowerCase() === filters.locationQuery.trim().toLowerCase()) ?? ''}
           onChange={(e) => set('locationQuery', e.target.value)}
         >
           <option value="">All cities</option>

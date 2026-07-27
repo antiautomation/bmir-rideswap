@@ -11,9 +11,11 @@ import type { SessionUser } from '../auth/tokens.js';
 import { unreadCountFor } from './conversations.js';
 import { db } from '../db/client.js';
 import { users } from '../db/schema.js';
+import { esc } from '../email/layout.js';
 import { sendEmail } from '../email/ses.js';
+import { isUniqueViolation } from '../lib/pg.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
-import { rateLimit } from '../lib/settings.js';
+import { appConfig, rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 
 /** One account per email: true when another user already owns this address. */
@@ -120,7 +122,7 @@ sessionRoutes.patch(
         updated = rows[0]!;
       } catch (err) {
         // Unique-index race: two sessions claiming the same email simultaneously.
-        if ((err as { code?: string }).code === '23505') {
+        if (isUniqueViolation(err)) {
           throw new HTTPException(409, { message: 'email_taken' });
         }
         throw err;
@@ -154,14 +156,16 @@ sessionRoutes.post(
       if (user && !user.bannedAt) {
         const appOrigin = process.env.APP_ORIGIN ?? 'http://localhost:3000';
         const link = `${appOrigin}/a/${await mintMagicToken(user.id)}`;
+        const days = appConfig('magicLinkDays');
         const hello = user.name ? `Hey ${user.name},` : 'Hey,';
+        const helloHtml = user.name ? `Hey ${esc(user.name)},` : 'Hey,';
         await sendEmail({
           userId: user.id,
           to: email,
           kind: 'login_link',
           subject: 'Your RideFinder sign-in link',
-          text: `${hello}\n\nHere's your sign-in link for RideFinder:\n\n${link}\n\nIt signs you straight into your account — no password needed — and works for 30 days. If you didn't ask for this, you can ignore it; nobody can get in without this email.\n\n— RideFinder · rides to & from Black Rock City`,
-          html: `<p>${hello}</p><p>Here's your sign-in link for RideFinder:</p><p><a href="${link}">Sign in to RideFinder</a></p><p>It signs you straight into your account — no password needed — and works for 30 days. If you didn't ask for this, you can ignore it; nobody can get in without this email.</p><p>— RideFinder · rides to &amp; from Black Rock City</p>`,
+          text: `${hello}\n\nHere's your sign-in link for RideFinder:\n\n${link}\n\nIt signs you straight into your account — no password needed — and works for ${days} days. If you didn't ask for this, you can ignore it; nobody can get in without this email.\n\n— RideFinder · rides to & from Black Rock City`,
+          html: `<p>${helloHtml}</p><p>Here's your sign-in link for RideFinder:</p><p><a href="${link}">Sign in to RideFinder</a></p><p>It signs you straight into your account — no password needed — and works for ${days} days. If you didn't ask for this, you can ignore it; nobody can get in without this email.</p><p>— RideFinder · rides to &amp; from Black Rock City</p>`,
         });
       }
     }

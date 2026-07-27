@@ -44,6 +44,12 @@ export function unsubscribeHeaders(unsubscribeUrl: string): { name: string; valu
 
 export async function sendEmail(mail: OutgoingEmail): Promise<{ sent: boolean; messageId: string | null }> {
   if (await isSuppressed(mail.to)) {
+    // Leave a trace: a suppressed post confirmation or login link is otherwise
+    // indistinguishable from "never sent" when debugging a user report.
+    await db
+      .insert(emailLog)
+      .values({ userId: mail.userId, toEmail: mail.to, kind: `${mail.kind}-suppressed`, subject: mail.subject, sesMessageId: null })
+      .catch((err) => console.error('email_log insert failed (suppressed)', err));
     return { sent: false, messageId: null };
   }
 
@@ -69,12 +75,17 @@ export async function sendEmail(mail: OutgoingEmail): Promise<{ sent: boolean; m
     messageId = res.MessageId ?? null;
   }
 
-  await db.insert(emailLog).values({
-    userId: mail.userId,
-    toEmail: mail.to,
-    kind: process.env.EMAIL_DRY_RUN === '1' ? `${mail.kind}-dry` : mail.kind,
-    subject: mail.subject,
-    sesMessageId: messageId,
-  });
+  // The email is already out the door — a bookkeeping failure here must not
+  // bubble up as "send failed", or retry loops (campaigns) double-send it.
+  await db
+    .insert(emailLog)
+    .values({
+      userId: mail.userId,
+      toEmail: mail.to,
+      kind: process.env.EMAIL_DRY_RUN === '1' ? `${mail.kind}-dry` : mail.kind,
+      subject: mail.subject,
+      sesMessageId: messageId,
+    })
+    .catch((err) => console.error(`email_log insert failed after send (to=${mail.to} kind=${mail.kind})`, err));
   return { sent: true, messageId };
 }

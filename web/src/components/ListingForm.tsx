@@ -143,6 +143,10 @@ export default function ListingForm({
     if (!state.name.trim()) next.name = 'Please enter a name.';
     if (!state.location.trim()) next.location = 'Please enter a location.';
     if (!state.travelDate) next.travelDate = 'Please choose a date.';
+    // noValidate skips the input's own min/max, so enforce the range here —
+    // a past date would post an instantly-expired, invisible listing.
+    else if (state.travelDate < today) next.travelDate = 'That date has already passed — pick an upcoming one.';
+    else if (state.travelDate > MAX_DATE) next.travelDate = 'That date is past the posting window.';
     if (state.direction === 'from_brc' && !state.campInfo.trim()) {
       next.campInfo = 'Camp info is required for rides leaving BRC — it helps rides find you for exodus.';
     }
@@ -160,17 +164,22 @@ export default function ListingForm({
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
+    // Create: omit empty optional text (nothing to store). Edit: send '' so the
+    // server actually clears the field — omitting means "keep the old text".
+    const clearable = (value: string): string | undefined =>
+      mode === 'edit' ? value.trim() : value.trim() || undefined;
+
     const shared = {
       direction: state.direction,
       name: state.name.trim(),
       location: state.location.trim(),
       travelDate: state.travelDate,
       timeSlot: state.timeSlot,
-      details: state.details.trim() || undefined,
-      campInfo: state.campInfo.trim() || undefined,
+      details: clearable(state.details),
+      campInfo: clearable(state.campInfo),
       passengerSpace: isDriver ? Number(state.passengerSpace) : undefined,
       cargoSpace: isDriver ? state.cargoSpace : undefined,
-      routeDetails: isDriver ? state.routeDetails.trim() || undefined : undefined,
+      routeDetails: isDriver ? clearable(state.routeDetails) : undefined,
       riderStuff: isDriver ? undefined : state.riderStuff,
     };
 

@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 import { ensureUser, requireAdmin } from '../auth/middleware.js';
+import { normalizeRecoveryCode } from '../auth/recoveryCodes.js';
 import { db } from '../db/client.js';
 import { conversations, emailLog, emailSuppressions, flags, listings, messages, users } from '../db/schema.js';
 import { sendEmail } from '../email/ses.js';
@@ -18,6 +19,7 @@ import {
   RATE_LIMIT_KEYS,
   setAppConfig,
   setRateLimits,
+  settingMin,
 } from '../lib/settings.js';
 
 function keyMatches(candidate: string): boolean {
@@ -178,7 +180,7 @@ adminRoutes.get('/admin/users', async (c) => {
   const limit = Math.min(Number(c.req.query('limit') ?? '100') || 100, 200);
   const includeUnvalidated = c.req.query('includeUnvalidated') === '1';
   const searchCond = q
-    ? or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`), eq(users.recoveryCode, q.toLowerCase()))
+    ? or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`), eq(users.recoveryCode, normalizeRecoveryCode(q)))
     : undefined;
   // "Unvalidated" = sessions that never completed anything: no email (posting
   // requires one), no listings, no messages. Usually failed/abandoned attempts.
@@ -344,7 +346,7 @@ adminRoutes.post(
   }),
   async (c) => {
     requireAdmin(c);
-    const code = c.req.valid('json').code.trim().toLowerCase();
+    const code = normalizeRecoveryCode(c.req.valid('json').code);
     const [target] = await db.select().from(users).where(eq(users.recoveryCode, code)).limit(1);
     if (!target) throw new HTTPException(404, { message: 'not_found' });
     if (target.isAdmin) throw new HTTPException(400, { message: 'cannot_ban_admin' });
@@ -580,7 +582,7 @@ adminRoutes.put(
         .optional(),
       appConfig: z
         .object(
-          Object.fromEntries(APP_CONFIG_KEYS.map((k) => [k, z.number().int().min(1).max(10_000).optional()])),
+          Object.fromEntries(APP_CONFIG_KEYS.map((k) => [k, z.number().int().min(settingMin(k)).max(10_000).optional()])),
         )
         .strict()
         .optional(),

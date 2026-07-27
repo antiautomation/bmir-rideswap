@@ -1,4 +1,4 @@
-import { aliasedTable, and, asc, eq, gt, inArray, isNull, ne, or } from 'drizzle-orm';
+import { aliasedTable, and, asc, desc, eq, gt, inArray, isNull, ne, or } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { conversations, listings, matches, messages, users } from '../db/schema.js';
 import { mintMagicToken } from '../auth/magic.js';
@@ -42,6 +42,9 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
     .where(
       and(
         isNull(messages.emailedAt),
+        // Already read in the app → nothing to notify about. (Rows stay
+        // un-emailed forever, which is fine: this readAt filter keeps them out.)
+        isNull(messages.readAt),
         ne(messages.senderUserId, user.id),
         or(eq(conversations.initiatorUserId, user.id), eq(listings.userId, user.id)),
       ),
@@ -68,9 +71,10 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
         liveSide(riderListing),
       ),
     )
-    .limit(20);
-  unnotifiedMatches.sort((a, b) => b.match.score - a.match.score);
+    .orderBy(desc(matches.score))
+    .limit(100);
   const topMatches = unnotifiedMatches.slice(0, 5);
+  const extraMatchCount = unnotifiedMatches.length - topMatches.length;
 
   if (unsent.length === 0 && topMatches.length === 0) return;
 
@@ -138,6 +142,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
     conversations: Array.from(byConversation.values()),
     totalNewMessages: unsent.length,
     newMatches,
+    extraMatchCount,
     activeListings,
   });
 
@@ -159,7 +164,10 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
       .set({ emailedAt: now })
       .where(inArray(messages.id, unsent.map((m) => m.messageId)));
   }
-  for (const { match, driver } of topMatches) {
+  // Stamp EVERY fetched match, not just the five rendered — the email covers
+  // the rest with a "+N more" line, and leaving them unstamped would re-fire
+  // this digest every tick until the backlog drained, one drip per period.
+  for (const { match, driver } of unnotifiedMatches) {
     const mineIsDriver = driver.userId === user.id;
     await db
       .update(matches)

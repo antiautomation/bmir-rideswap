@@ -21,7 +21,7 @@
 import { eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { db } from '../db/client.js';
-import { contacts, emailSuppressions } from '../db/schema.js';
+import { contacts, emailSuppressions, users } from '../db/schema.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
 import { BRAND, CARD_BORDER, esc, FONT_STACK, INK, INK_DIM, INK_FAINT, PAGE_BG } from '../email/layout.js';
 
@@ -87,7 +87,18 @@ unsubscribeRoutes.get('/u/:token', async (c) => {
     );
   }
 
-  const userNote = row.userId
+  // Same account check as the POST below: contacts.userId lags behind reality
+  // for people who signed up after being imported.
+  let confirmHasAccount = row.userId != null;
+  if (!confirmHasAccount) {
+    const owner = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`lower(${users.email}) = ${row.email.toLowerCase()}`)
+      .limit(1);
+    confirmHasAccount = owner.length > 0;
+  }
+  const userNote = confirmHasAccount
     ? `<p style="font-size:13px;">You have a RideFinder account on this address. This only stops announcements —
        you'll still get told when someone messages you about a ride. To change those too, use the email settings on
        <a href="/me">your profile</a>.</p>`
@@ -127,12 +138,24 @@ unsubscribeRoutes.post('/u/:token', async (c) => {
   // Only hard-suppress people with no account. For users, contacts.unsubscribed_at
   // already blocks every campaign, and suppressing them outright would also kill
   // "someone messaged you about your ride" — which they did not ask to lose.
-  if (!row.userId) {
+  // contacts.userId is only linked at import/refresh time, so someone who signed
+  // up AFTER being imported has userId=null here — check the users table too
+  // before deciding this address has no account.
+  let hasAccount = row.userId != null;
+  if (!hasAccount) {
+    const owner = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`lower(${users.email}) = ${row.email.toLowerCase()}`)
+      .limit(1);
+    hasAccount = owner.length > 0;
+  }
+  if (!hasAccount) {
     await db.insert(emailSuppressions).values({ email: row.email, reason: 'unsubscribe' }).onConflictDoNothing();
   }
-  console.warn(`unsubscribe: ${row.email}${row.userId ? ' (account holder — announcements only)' : ''}`);
+  console.warn(`unsubscribe: ${row.email}${hasAccount ? ' (account holder — announcements only)' : ''}`);
 
-  const userNote = row.userId
+  const userNote = hasAccount
     ? `<p>Because you have an account, you'll still get told when someone messages you about a ride. Turn those off
        too — or switch to a daily digest — in the email settings on <a href="/me">your profile</a>.</p>`
     : '';

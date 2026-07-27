@@ -10,7 +10,7 @@ import { api, ApiError } from '../api/client';
 import { cancelListing, deleteListing, useMyListings } from '../api/listings';
 import { useMe } from '../api/session';
 import type { DigestFrequency, Me } from '../api/types';
-import { useIdSet } from '../lib/prefs';
+import { resetServerPrefs, useIdSet } from '../lib/prefs';
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {
@@ -31,9 +31,9 @@ const DIGEST_OPTIONS: { value: DigestFrequency; label: string }[] = [
 function RecoverSessionSection({ me }: { me: Me | null }) {
   const queryClient = useQueryClient();
   const [code, setCode] = useState('');
-  const [status, setStatus] = useState<'idle' | 'busy' | 'success' | 'not_found' | 'rate_limited'>(
-    'idle',
-  );
+  const [status, setStatus] = useState<
+    'idle' | 'busy' | 'success' | 'not_found' | 'rate_limited' | 'failed'
+  >('idle');
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
@@ -41,6 +41,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
     setStatus('busy');
     try {
       await api<{ me: Me }>('/api/session/recover', { method: 'POST', body: { code: code.trim() } });
+      resetServerPrefs(); // stars/hidden of the old session must not bleed into this one
       queryClient.clear();
       await queryClient.invalidateQueries();
       setStatus('success');
@@ -51,7 +52,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
       } else if (err instanceof ApiError && err.status === 429) {
         setStatus('rate_limited');
       } else {
-        setStatus('idle');
+        setStatus('failed');
       }
     }
   }
@@ -71,7 +72,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
           placeholder="e.g. dusty-camel-8214"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          aria-label="Recovery code"
+          aria-label="Session code"
         />
         <button type="submit" className="btn-secondary" disabled={status === 'busy'}>
           Recover
@@ -83,6 +84,11 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
       )}
       {status === 'rate_limited' && (
         <p className="form-note form-note--error">Too many attempts — try again in an hour</p>
+      )}
+      {status === 'failed' && (
+        <p className="form-note form-note--error">
+          Couldn&rsquo;t recover with that code — it may be mistyped, banned, or unavailable
+        </p>
       )}
       <EmailSignInLinkForm />
     </section>
@@ -98,12 +104,14 @@ function ContactSection({ me }: { me: Me | null }) {
   const [phoneContactPref, setPhoneContactPref] = useState<'sms' | 'whatsapp'>(me?.phoneContactPref ?? 'sms');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [emailTaken, setEmailTaken] = useState<string | null>(null);
 
   async function handleSave(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setSaving(true);
     setEmailTaken(null);
+    setSaveError(null);
     try {
       await api('/api/me', {
         method: 'PATCH',
@@ -117,8 +125,10 @@ function ContactSection({ me }: { me: Me | null }) {
       // offer the way into that account instead.
       if (err instanceof ApiError && err.status === 409 && err.code === 'email_taken') {
         setEmailTaken(email.trim());
+      } else if (err instanceof ApiError && err.code === 'invalid_phone') {
+        setSaveError('That phone number doesn’t look right — check it and try again');
       } else {
-        throw err;
+        setSaveError('Save failed — check your connection and try again');
       }
     } finally {
       setSaving(false);
@@ -182,7 +192,7 @@ function ContactSection({ me }: { me: Me | null }) {
           </p>
         </div>
         <div className="field-group">
-          <label htmlFor="profile-digest">Email me about new messages</label>
+          <label htmlFor="profile-digest">Email me about new messages &amp; matches</label>
           <select
             id="profile-digest"
             disabled={!me}
@@ -200,6 +210,7 @@ function ContactSection({ me }: { me: Me | null }) {
           Save
         </button>
         {saved && <p className="form-note form-note--success">Saved ✓</p>}
+        {saveError && <p className="form-note form-note--error">{saveError}</p>}
       </form>
     </section>
   );
@@ -226,12 +237,13 @@ export default function ProfilePage() {
   async function handleSignOut(): Promise<void> {
     if (
       !window.confirm(
-        'Make sure you saved your session code above — it is the only way back in. Sign out?',
+        'Make sure you saved your session code above (or have your email on your profile) — you need one of them to get back in. Sign out?',
       )
     ) {
       return;
     }
     await api('/api/session/logout', { method: 'POST' });
+    resetServerPrefs();
     queryClient.clear();
     navigate('/');
   }

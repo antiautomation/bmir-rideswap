@@ -474,10 +474,21 @@ adminOutreachRoutes.put(
   async (c) => {
     requireAdmin(c);
     const id = c.req.param('id');
-    const [existing] = await db.select({ status: campaigns.status }).from(campaigns).where(eq(campaigns.id, id));
+    const [existing] = await db
+      .select({ status: campaigns.status, listId: campaigns.listId })
+      .from(campaigns)
+      .where(eq(campaigns.id, id));
     if (!existing) throw new HTTPException(404, { message: 'not_found' });
     if (existing.status === 'sending') throw new HTTPException(409, { message: 'pause_first' });
     const body = c.req.valid('json');
+    // Audience swap: the queue was materialised from the OLD list. Drop rows
+    // not yet acted on so a restart doesn't mail people outside the new
+    // audience; sent/suppressed/unsubscribed history stays for the stats.
+    if (body.listId !== existing.listId) {
+      await db
+        .delete(campaignSends)
+        .where(and(eq(campaignSends.campaignId, id), eq(campaignSends.status, 'pending')));
+    }
     await db
       .update(campaigns)
       .set({

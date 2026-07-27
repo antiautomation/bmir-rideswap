@@ -29,6 +29,8 @@ export function formatTravelDate(dateStr: string): string {
 function to12Hour(hhmm: string): string {
   const [hoursStr] = hhmm.split(':');
   let hours = Number(hoursStr ?? 0);
+  // 24:00 is midnight (the 9pm–12am slot's end), not noon.
+  if (hours === 24 || hours === 0) return '12am';
   const suffix = hours >= 12 ? 'pm' : 'am';
   hours = hours % 12;
   if (hours === 0) hours = 12;

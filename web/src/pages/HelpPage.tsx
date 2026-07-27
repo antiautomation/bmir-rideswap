@@ -33,12 +33,12 @@ export default function HelpPage() {
         </li>
         <li>
           <strong>Post your ride.</strong> Hit <em>Post</em>, pick driver or rider, and fill in
-          your name (playa names welcome), city, travel date, and how many seats or how much gear
-          space you&rsquo;ve got. No account, no password — posting quietly creates a session on
-          your device.
+          your name (playa names welcome), city, travel date, how many seats or how much gear
+          space you&rsquo;ve got, and an email so replies can reach you. No account, no password
+          — posting quietly creates a session on your device.
         </li>
         <li>
-          <strong>Save your recovery code.</strong> The <em>You</em> page shows a short code like{' '}
+          <strong>Save your session code.</strong> The <em>You</em> page shows a short code like{' '}
           <code>dusty-camel-8214</code>. Write it down or screenshot it — it&rsquo;s how you sign
           back in from another device or after clearing your browser.
         </li>
@@ -49,13 +49,13 @@ export default function HelpPage() {
         </li>
         <li>
           <strong>Check your matches.</strong> The <em>Matches</em> tab scores every compatible
-          listing against yours — same dates, nearby departure points, enough seats — so the best
-          candidates float to the top.
+          listing against yours — same dates, nearby departure points, gear that fits — so the
+          best candidates float to the top.
         </li>
         <li>
-          <strong>Let email do the watching.</strong> Add your email on the <em>You</em> page and
-          pick a digest frequency. We&rsquo;ll email you when new messages or matches show up,
-          with a link that signs you straight in.
+          <strong>Let email do the watching.</strong> Your email is saved when you post — just
+          pick a digest frequency on the <em>You</em> page. We&rsquo;ll email you when new
+          messages or matches show up, with a link that signs you straight in.
         </li>
         <li>
           <strong>Close the loop.</strong> Found your ride? Cancel or delete your listing from
@@ -71,7 +71,7 @@ export default function HelpPage() {
           session. Everything you own (listings, messages, settings) hangs off it.
         </p>
       </QA>
-      <QA q="What's a recovery code and why should I care?">
+      <QA q="What's a session code and why should I care?">
         <p>
           It&rsquo;s a short human-friendly code (like <code>dusty-camel-8214</code>) shown on
           your <em>You</em> page. It&rsquo;s the key to your stuff: enter it on any other device
@@ -81,17 +81,17 @@ export default function HelpPage() {
       </QA>
       <QA q="I cleared my cookies / got a new phone. Is everything gone?">
         <p>
-          Not if you have your recovery code — enter it under <em>You → Sign in with a recovery
-          code</em>. No code? Any RideFinder email in your inbox contains a sign-in link that
-          restores your session too — and if your email is on your profile you don&rsquo;t need
-          one at all: use <em>Or get a sign-in link by email</em> on the <em>You</em> page and
+          Not if you have your session code — enter it under <em>You → Recover a session</em>.
+          No code? Any RideFinder email in your inbox contains a sign-in link that restores
+          your session too — and if your email is on your profile you don&rsquo;t need one at
+          all: use <em>Or get a sign-in link by email</em> on the <em>You</em> page and
           we&rsquo;ll send you a fresh link. If you have neither, the old listings are
           unreachable — post fresh, and screenshot the code this time.
         </p>
       </QA>
       <QA q="Can I use RideFinder on my phone and laptop at the same time?">
         <p>
-          Yes. Sign in on the second device with your recovery code (or via a link from any
+          Yes. Sign in on the second device with your session code (or via a link from any
           RideFinder email). Sessions last up to a year each, and you can sign out of all
           devices at once from the <em>You</em> page if one goes missing.
         </p>
@@ -131,8 +131,10 @@ export default function HelpPage() {
       </QA>
       <QA q="How long does my listing stay up?">
         <p>
-          Until shortly after your travel date passes — then it expires on its own and drops off
-          the public board within a few days. You don&rsquo;t need to clean up after the burn;
+          Until a few hours after your departure window passes, in your departure point&rsquo;s
+          local time — a morning window expires that afternoon, and &ldquo;flexible&rdquo;
+          listings stay up until roughly 4am the next day. Expired listings drop off the public
+          board on their own within a few days. You don&rsquo;t need to clean up after the burn;
           the playa provides, and so does the cron job.
         </p>
       </QA>
@@ -151,7 +153,7 @@ export default function HelpPage() {
       </QA>
       <QA q="My listing vanished. What happened?">
         <p>
-          Either its travel date passed (it expired normally), you cancelled it, or it was
+          Either its departure window passed (it expired normally), you cancelled it, or it was
           hidden after multiple user reports. If you think it was hidden unfairly, email{' '}
           <a href="mailto:matching@ridefinder.site">matching@ridefinder.site</a>.
         </p>
@@ -160,13 +162,14 @@ export default function HelpPage() {
       <h2>Matching</h2>
       <QA q="How does matching actually work?">
         <p>
-          Every driver listing is scored against every rider listing (0–100) on four things:
-          how close the travel dates are, how similar the departure locations look, whether
-          seats and gear fit, and how well the time windows overlap. Fresh listings get a small
-          boost. Rides can also match when a rider&rsquo;s city sits along the driver&rsquo;s route
-          to or from Black Rock City — say a Tucson driver and a Phoenix rider — which shows up as
-          &ldquo;on the way&rdquo; on the match. Scores recompute automatically whenever listings
-          change — there&rsquo;s no button to press.
+          Every driver listing is scored against every rider listing going the same direction
+          (0–100) on four things: how close the travel dates are, how similar the departure
+          locations look, whether your gear fits their cargo space, and how well the time
+          windows overlap. Fresh listings get a small boost. Rides can also match when a
+          rider&rsquo;s city sits along the driver&rsquo;s route to or from Black Rock City —
+          say a Tucson driver and a Phoenix rider — which shows up as &ldquo;on the way&rdquo;
+          on the match. Scores recompute automatically whenever listings change —
+          there&rsquo;s no button to press.
         </p>
       </QA>
       <QA q="What do the little tags on a match mean?">
@@ -174,6 +177,15 @@ export default function HelpPage() {
           They&rsquo;re the reasons behind the score — &ldquo;same day,&rdquo; &ldquo;nearby
           departure,&rdquo; &ldquo;fits your gear,&rdquo; and so on. High score, several tags:
           message that person.
+        </p>
+      </QA>
+      <QA q="Can I narrow down or tidy my matches?">
+        <p>
+          Yes — the <em>Matches</em> tab has filters for minimum score, gear, and whether the
+          person has a photo. Star (★) a match to pin it to the top, or <em>Hide</em> ones that
+          don&rsquo;t fit — hidden matches aren&rsquo;t deleted, and the &ldquo;show hidden
+          matches&rdquo; toggle brings them back. Stars and hidden matches follow your account
+          across devices.
         </p>
       </QA>
       <QA q="Why do I have no matches?">
@@ -226,10 +238,11 @@ export default function HelpPage() {
       <h2>Profile photos</h2>
       <QA q="How do profile photos work?">
         <p>
-          They&rsquo;re optional. Upload one from the <em>You</em> page (JPG, PNG, WebP, HEIC —
-          up to 10&nbsp;MB) and it&rsquo;s cropped into a circle from the center, so put your
-          face in the middle. Next to your listings, others see only a small blurred
-          thumbnail.
+          They&rsquo;re optional. Upload one from the <em>You</em> page (JPG, PNG, WebP — and
+          HEIC on iPhones/Safari — up to 10&nbsp;MB) and it&rsquo;s cropped into a circle from
+          the center, so put your face in the middle. Next to your listings, others see only a
+          small blurred thumbnail — tap your own thumbnail on the <em>You</em> page to preview
+          exactly what a match sees.
         </p>
       </QA>
       <QA q="When can someone see my full-size photo?">
@@ -277,8 +290,9 @@ export default function HelpPage() {
       <QA q="Does RideFinder work offline?">
         <p>
           Mostly, yes. Once you&rsquo;ve loaded it, the app and your last-seen board, matches,
-          and messages are cached on your device. Anything you post while offline is queued and
-          sent automatically when you reconnect — a status bar tells you what&rsquo;s pending.
+          messages, and profile thumbnails are cached on your device. Anything you post while
+          offline is queued and sent automatically when you reconnect — a status bar tells you
+          what&rsquo;s pending.
         </p>
       </QA>
       <QA q="Can I install it like an app?">
@@ -355,7 +369,7 @@ export default function HelpPage() {
       <QA q="What happens to my data?">
         <p>
           As little as possible: no analytics, no tracking cookies, no advertising IDs.
-          Listings expire after your travel date; messages stay visible to their participants.
+          Listings expire shortly after your departure window; messages stay visible to their participants.
           Want everything erased? Email{' '}
           <a href="mailto:matching@ridefinder.site">matching@ridefinder.site</a> from the
           address on your profile. Full details in the{' '}

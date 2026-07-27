@@ -40,6 +40,12 @@ export type AppConfigKey = keyof typeof APP_CONFIG_DEFAULTS;
 
 export const APP_CONFIG_KEYS = Object.keys(APP_CONFIG_DEFAULTS) as AppConfigKey[];
 
+/* Counts and limits floor at 1, but zero grace hours is a legitimate choice
+   ("expire exactly at window end"). Without this, a stored 0 silently reads
+   back as the default. */
+const ZERO_MIN_KEYS = new Set<string>(['expiryGraceHours', 'flexibleExpiryGraceHours']);
+export const settingMin = (key: string): number => (ZERO_MIN_KEYS.has(key) ? 0 : 1);
+
 interface Group<K extends string> {
   row: string;
   defaults: Record<K, number>;
@@ -82,7 +88,7 @@ function cachedValue<K extends string>(group: Group<K>, key: K): number {
       });
   }
   const v = group.cache[key];
-  return typeof v === 'number' && Number.isFinite(v) && v >= 1 ? Math.floor(v) : group.defaults[key];
+  return typeof v === 'number' && Number.isFinite(v) && v >= settingMin(key) ? Math.floor(v) : group.defaults[key];
 }
 
 export function rateLimit(key: RateLimitKey): number {
@@ -98,7 +104,7 @@ async function getGroup<K extends string>(group: Group<K>): Promise<Record<K, nu
   const out = { ...group.defaults };
   for (const key of group.keys) {
     const v = group.cache[key];
-    if (typeof v === 'number' && Number.isFinite(v) && v >= 1) out[key] = Math.floor(v);
+    if (typeof v === 'number' && Number.isFinite(v) && v >= settingMin(key)) out[key] = Math.floor(v);
   }
   return out;
 }
@@ -108,7 +114,7 @@ async function setGroup<K extends string>(group: Group<K>, patch: Partial<Record
   const merged: Partial<Record<K, number>> = { ...group.cache };
   for (const key of group.keys) {
     const v = patch[key];
-    if (typeof v === 'number' && Number.isFinite(v) && v >= 1) merged[key] = Math.floor(v);
+    if (typeof v === 'number' && Number.isFinite(v) && v >= settingMin(key)) merged[key] = Math.floor(v);
   }
   await db
     .insert(appSettings)

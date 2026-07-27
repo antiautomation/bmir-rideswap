@@ -1,12 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
-import { and, asc, count, desc, eq, gt, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, isNull, ne } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 import { ensureUser, requireUser } from '../auth/middleware.js';
 import { db } from '../db/client.js';
 import { flags, listings, users } from '../db/schema.js';
-import { allow } from '../lib/rateLimit.js';
+import { allow, clientIp } from '../lib/rateLimit.js';
 import { appConfig, rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
@@ -14,6 +14,7 @@ import { geocodeLocation } from '../lib/cities.js';
 import { mintMagicToken } from '../auth/magic.js';
 import { renderPostConfirmation } from '../email/postConfirmation.js';
 import { sendEmail } from '../email/ses.js';
+import { isUniqueViolation } from '../lib/pg.js';
 import { recomputeMatchesForListing } from '../matching/score.js';
 import { emailTakenByOther } from './session.js';
 
@@ -55,7 +56,18 @@ const belongingsSchema = z.enum(['minimal', 'standard', 'substantial', 'extensiv
 const timeSlotSchema = z
   .string()
   .refine((s) => s === 'flexible' || TIME_SLOT_RE.test(s), { message: 'invalid_time_slot' });
-const travelDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const travelDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  // Sane window: yesterday (any US timezone) through ~18 months out. Blocks
+  // pre-expired posts and fat-fingered years without hardcoding event dates.
+  .refine(
+    (d) => {
+      const t = Date.parse(`${d}T12:00:00Z`);
+      return t >= Date.now() - 2 * 86400_000 && t <= Date.now() + 550 * 86400_000;
+    },
+    { message: 'date_out_of_range' },
+  );
 
 const createSchema = z
   .object({
@@ -124,9 +136,6 @@ async function avatarVersionsFor(userIds: string[]): Promise<Map<string, number>
   return new Map(rows.map((r) => [r.id, r.at!.getTime()]));
 }
 
-function isUniqueViolation(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: unknown }).code === '23505';
-}
 
 /* The one non-digest email we promise on the post form: their post is live,
    and this message doubles as their sign-in key. Fire-and-forget. */
@@ -144,6 +153,7 @@ async function sendPostConfirmation(
     travelDate: listing.travelDate,
     magicToken: await mintMagicToken(user.id),
     recoveryCode: user.recoveryCode,
+    magicLinkDays: appConfig('magicLinkDays'),
   });
   await sendEmail({ userId: user.id, to: user.email, kind: 'post_confirmation', ...rendered });
 }
@@ -235,7 +245,7 @@ listingRoutes.post(
         const rows = await db.update(users).set(userUpdates).where(eq(users.id, currentUser.id)).returning();
         currentUser = rows[0]!;
       } catch (err) {
-        if ((err as { code?: string }).code === '23505') {
+        if (isUniqueViolation(err)) {
           throw new HTTPException(409, { message: 'email_taken' });
         }
         throw err;
@@ -340,17 +350,44 @@ listingRoutes.patch(
       throw new HTTPException(400, { message: 'invalid' });
     }
 
+    // Optional text fields: an explicit '' means "clear it" — store null so the
+    // field actually empties instead of silently reverting to the old text.
+    const textOrClear = (incoming: string | undefined, current: string | null): string | null =>
+      incoming !== undefined ? incoming.trim() || null : current;
+
     const updates: Partial<typeof listings.$inferInsert> = {
       direction: body.direction ?? row.direction,
       name: body.name ?? row.name,
-      details: body.details ?? row.details,
-      campInfo: body.campInfo ?? row.campInfo,
+      details: textOrClear(body.details, row.details),
+      campInfo: textOrClear(body.campInfo, row.campInfo),
       passengerSpace: mergedPassengerSpace,
       cargoSpace: mergedCargoSpace,
-      routeDetails: body.routeDetails ?? row.routeDetails,
+      routeDetails: textOrClear(body.routeDetails, row.routeDetails),
       riderStuff: mergedRiderStuff,
       updatedAt: new Date(),
     };
+
+    // Direction moves count against the same per-direction active cap as
+    // creation — otherwise the cap is trivially bypassed by posting in the
+    // other direction and flipping.
+    if (body.direction !== undefined && body.direction !== row.direction) {
+      const activeRows = await db
+        .select({ n: count() })
+        .from(listings)
+        .where(
+          and(
+            eq(listings.userId, row.userId),
+            eq(listings.direction, body.direction),
+            ne(listings.id, id),
+            isNull(listings.cancelledAt),
+            isNull(listings.deletedAt),
+            gt(listings.expiresAt, new Date()),
+          ),
+        );
+      if (activeRows[0]!.n >= appConfig('maxActiveListingsPerDirection')) {
+        throw new HTTPException(429, { message: 'active_limit' });
+      }
+    }
 
     let origin: Awaited<ReturnType<typeof geocodeLocation>> | undefined;
     if (body.location !== undefined) {
@@ -372,7 +409,11 @@ listingRoutes.patch(
     ) {
       updates.travelDate = mergedTravelDate;
       updates.timeSlot = mergedTimeSlot;
-      origin ??= await geocodeLocation(row.locationNorm);
+      // A null origin from geocoding the NEW location must stay null (playa
+      // fallback, matching the create path) — only re-geocode the stored
+      // location when this patch didn't touch it. `??=` would wrongly revive
+      // the old city's timezone when the new city fails to geocode.
+      if (origin === undefined) origin = await geocodeLocation(row.locationNorm);
       updates.expiresAt = computeExpiresAt(mergedTravelDate, mergedTimeSlot, mergedDirection, origin?.state ?? null);
     }
 
@@ -442,7 +483,10 @@ listingRoutes.post(
     const id = c.req.param('id');
     const user = await ensureUser(c);
     if (!isUuid(id)) throw new HTTPException(404, { message: 'not_found' });
+    // Per-user AND per-IP: ensureUser mints a fresh anonymous user per
+    // cookie-less request, so the user-keyed bucket alone is trivially reset.
     if (!allow(`flag:${user.id}`, rateLimit('listingFlagsPerHour'), 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
+    if (!allow(`flag-ip:${clientIp(c)}`, rateLimit('listingFlagsPerHour'), 3600_000)) throw new HTTPException(429, { message: 'rate_limited' });
 
     const rows = await db.select().from(listings).where(eq(listings.id, id)).limit(1);
     const row = rows[0];
@@ -454,7 +498,14 @@ listingRoutes.post(
       .values({ listingId: id, flaggerId: user.id, reason: body.reason ?? null })
       .onConflictDoNothing();
 
-    const flagCountRows = await db.select({ n: count() }).from(flags).where(eq(flags.listingId, id));
+    // Auto-hide only counts flaggers who've actually used the site (posted →
+    // email on file). Every flag is still recorded for admin review; this just
+    // stops three curl-minted anonymous sessions from taking a listing down.
+    const flagCountRows = await db
+      .select({ n: count() })
+      .from(flags)
+      .innerJoin(users, eq(flags.flaggerId, users.id))
+      .where(and(eq(flags.listingId, id), isNotNull(users.email)));
     if (flagCountRows[0]!.n >= appConfig('flagAutoHideThreshold') && row.hiddenAt === null) {
       await db.update(listings).set({ hiddenAt: new Date() }).where(eq(listings.id, id));
     }

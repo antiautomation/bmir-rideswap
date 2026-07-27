@@ -124,6 +124,10 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
       }
       setPendingFile(null);
       setUploaded(true);
+      // Drop the local blob preview so the uploaded-state branch (with the
+      // tap-to-preview lightbox) renders instead of the stale pre-upload image.
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
       await invalidateAvatarQueries(queryClient);
     } catch {
       setError('Upload failed — try again');

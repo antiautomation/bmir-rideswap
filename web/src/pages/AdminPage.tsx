@@ -1238,9 +1238,16 @@ const APP_CONFIG_FIELDS: { key: keyof AppConfig; label: string }[] = [
 ];
 
 /** Both groups are whole numbers the server accepts within its own bounds. */
-function clampSetting(value: string, max: number): number {
-  return Math.min(max, Math.max(1, Math.round(Number(value) || 1)));
+function clampSetting(value: string, max: number, min = 1): number {
+  return Math.min(max, Math.max(min, Math.round(Number(value) || 0)));
 }
+
+/* Zero is meaningful for the grace-hour knobs ("expire exactly at window
+   end"); every other setting floors at 1, mirroring the server. */
+const APP_CONFIG_MIN: Partial<Record<keyof AppConfig, number>> = {
+  expiryGraceHours: 0,
+  flexibleExpiryGraceHours: 0,
+};
 
 function SettingsTab() {
   const queryClient = useQueryClient();
@@ -1248,33 +1255,35 @@ function SettingsTab() {
     queryKey: ['admin-settings'],
     queryFn: () => api<SettingsResponse>('/api/admin/settings'),
   });
-  const [draft, setDraft] = useState<RateLimits | null>(null);
-  const [appDraft, setAppDraft] = useState<AppConfig | null>(null);
+  // Drafts stay raw strings while typing — clamping per keystroke made a
+  // cleared field snap to 1 and typing append to it. Clamp only on save.
+  const [draft, setDraft] = useState<Partial<Record<keyof RateLimits, string>>>({});
+  const [appDraft, setAppDraft] = useState<Partial<Record<keyof AppConfig, string>>>({});
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  const current = draft ?? settings.data?.rateLimits ?? null;
-  const appCurrent = appDraft ?? settings.data?.appConfig ?? null;
-
-  function setField(key: keyof RateLimits, value: string): void {
-    if (!current) return;
-    setDraft({ ...current, [key]: clampSetting(value, 100_000) });
-  }
-
-  function setAppField(key: keyof AppConfig, value: string): void {
-    if (!appCurrent) return;
-    setAppDraft({ ...appCurrent, [key]: clampSetting(value, 10_000) });
-  }
+  const rlValue = (key: keyof RateLimits): string =>
+    draft[key] ?? String(settings.data?.rateLimits[key] ?? '');
+  const acValue = (key: keyof AppConfig): string =>
+    appDraft[key] ?? String(settings.data?.appConfig[key] ?? '');
 
   async function save(): Promise<void> {
-    if (!current || !appCurrent) return;
+    if (!settings.data) return;
     setSaving(true);
     setSaveStatus(null);
+    const rateLimits = Object.fromEntries(
+      RATE_LIMIT_FIELDS.map((f) => [f.key, clampSetting(rlValue(f.key), 100_000)]),
+    );
+    const appConfig = Object.fromEntries(
+      APP_CONFIG_FIELDS.map((f) => [f.key, clampSetting(acValue(f.key), 10_000, APP_CONFIG_MIN[f.key] ?? 1)]),
+    );
     try {
       await api('/api/admin/settings', {
         method: 'PUT',
-        body: { rateLimits: current, appConfig: appCurrent },
+        body: { rateLimits, appConfig },
       });
+      setDraft({});
+      setAppDraft({});
       setSaveStatus('Saved ✓ — takes effect within 30s');
       void queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
     } catch {
@@ -1285,7 +1294,7 @@ function SettingsTab() {
   }
 
   if (settings.isLoading) return <p className="muted">Loading…</p>;
-  if (settings.isError || !settings.data || !current || !appCurrent) {
+  if (settings.isError || !settings.data) {
     return (
       <div className="admin-error">
         <p className="muted">Failed to load.</p>
@@ -1314,8 +1323,8 @@ function SettingsTab() {
                 id={`rl-${f.key}`}
                 type="number"
                 min={1}
-                value={current[f.key]}
-                onChange={(e) => setField(f.key, e.target.value)}
+                value={rlValue(f.key)}
+                onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
               />
             </div>
           ))}
@@ -1334,9 +1343,9 @@ function SettingsTab() {
               <input
                 id={`ac-${f.key}`}
                 type="number"
-                min={1}
-                value={appCurrent[f.key]}
-                onChange={(e) => setAppField(f.key, e.target.value)}
+                min={APP_CONFIG_MIN[f.key] ?? 1}
+                value={acValue(f.key)}
+                onChange={(e) => setAppDraft((d) => ({ ...d, [f.key]: e.target.value }))}
               />
             </div>
           ))}
