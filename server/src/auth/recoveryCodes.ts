@@ -42,11 +42,23 @@ const NOUNS = [
   'phoenix', 'dragon', 'griffin', 'sphinx', 'unicorn', 'yeti', 'kraken', 'wizard',
 ] as const;
 
+/** Three words, no digits: adjective-noun-noun. 120 × 128 × 128 ≈ 1.97M
+ *  combinations — the memorable-words floor we accept given the recover
+ *  endpoint's per-IP throttle. Two words (15,360 total) would be guessable
+ *  AND cap the user count, so never drop below three. Legacy
+ *  adjective-noun-#### codes stay valid via findUserByRecoveryCode. */
+/** The example code shown in Help/placeholders — never assign it to a real
+ *  user, or everyone who types the example lands in their account. */
+const DOCS_EXAMPLE_CODE = 'dusty-camel-lantern';
+
 export function generateRecoveryCode(): string {
-  const adjective = ADJECTIVES[randomInt(ADJECTIVES.length)];
-  const noun = NOUNS[randomInt(NOUNS.length)];
-  const digits = randomInt(0, 10000).toString().padStart(4, '0');
-  return `${adjective}-${noun}-${digits}`;
+  for (;;) {
+    const adjective = ADJECTIVES[randomInt(ADJECTIVES.length)];
+    const noun = NOUNS[randomInt(NOUNS.length)];
+    const noun2 = NOUNS[randomInt(NOUNS.length)];
+    const code = `${adjective}-${noun}-${noun2}`;
+    if (code !== DOCS_EXAMPLE_CODE) return code;
+  }
 }
 
 export function normalizeRecoveryCode(input: string): string {
@@ -75,7 +87,8 @@ export async function createAnonUser(): Promise<SessionUser> {
 
 export async function findUserByRecoveryCode(code: string): Promise<SessionUser | null> {
   const normalized = normalizeRecoveryCode(code);
-  if (!/^[a-z0-9]+-[a-z0-9]+-\d{4}$/.test(normalized)) return null;
+  // Three word groups; the last is either a word (current) or 4 digits (legacy).
+  if (!/^[a-z]+-[a-z]+-(?:[a-z]+|\d{4})$/.test(normalized)) return null;
   const rows = await db.select().from(users).where(eq(users.recoveryCode, normalized)).limit(1);
   return rows[0] ?? null;
 }

@@ -69,7 +69,7 @@ function RecoverSessionSection({ me }: { me: Me | null }) {
       <form className="recover-row" onSubmit={(e) => void handleSubmit(e)}>
         <input
           type="text"
-          placeholder="e.g. dusty-camel-8214"
+          placeholder="e.g. dusty-camel-lantern"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           aria-label="Session code"

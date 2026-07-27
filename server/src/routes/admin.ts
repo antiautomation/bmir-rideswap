@@ -9,7 +9,10 @@ import { normalizeRecoveryCode } from '../auth/recoveryCodes.js';
 import { db } from '../db/client.js';
 import { conversations, emailLog, emailSuppressions, flags, listings, messages, users } from '../db/schema.js';
 import { sendEmail } from '../email/ses.js';
+import { isUniqueViolation } from '../lib/pg.js';
+import { normalizePhone } from '../lib/phone.js';
 import { allow, clientIp } from '../lib/rateLimit.js';
+import { emailTakenByOther } from './session.js';
 import {
   APP_CONFIG_DEFAULTS,
   APP_CONFIG_KEYS,
@@ -144,6 +147,58 @@ adminRoutes.post('/admin/users/:id/unban', async (c) => {
   return c.json({ ok: true });
 });
 
+/* Manual contact fixes ("I typo'd my email", "put my new number on it") — same
+   normalization and uniqueness rules as the user-facing PATCH /me. */
+adminRoutes.patch(
+  '/admin/users/:id',
+  zValidator(
+    'json',
+    z
+      .object({
+        email: z.union([z.string().email().max(120), z.literal('')]).optional(),
+        phone: z.union([z.string().max(30), z.literal('')]).optional(),
+      })
+      .strict(),
+    (r, c) => {
+      if (!r.success) return c.json({ error: 'invalid' }, 400);
+    },
+  ),
+  async (c) => {
+    const admin = requireAdmin(c);
+    const id = c.req.param('id');
+    const data = c.req.valid('json');
+
+    const updates: Partial<typeof users.$inferInsert> = {};
+    if (data.email !== undefined) {
+      const trimmed = data.email.trim().toLowerCase();
+      updates.email = trimmed === '' ? null : trimmed;
+      if (updates.email && (await emailTakenByOther(updates.email, id))) {
+        throw new HTTPException(409, { message: 'email_taken' });
+      }
+    }
+    if (data.phone !== undefined) {
+      if (data.phone.trim() === '') {
+        updates.phone = null;
+      } else {
+        const normalized = normalizePhone(data.phone);
+        if (!normalized) throw new HTTPException(400, { message: 'invalid_phone' });
+        updates.phone = normalized;
+      }
+    }
+    if (Object.keys(updates).length === 0) return c.json({ ok: true });
+
+    try {
+      const updated = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+      if (updated.length === 0) throw new HTTPException(404, { message: 'not_found' });
+    } catch (err) {
+      if (isUniqueViolation(err)) throw new HTTPException(409, { message: 'email_taken' });
+      throw err;
+    }
+    console.warn(`admin ${admin.id} edited contact info for user ${id}`);
+    return c.json({ ok: true });
+  },
+);
+
 adminRoutes.get('/admin/emails', async (c) => {
   requireAdmin(c);
   const rows = await db.select().from(emailLog).orderBy(desc(emailLog.sentAt)).limit(50);
@@ -151,6 +206,35 @@ adminRoutes.get('/admin/emails', async (c) => {
     emails: rows.map((r) => ({ ...r, sentAt: r.sentAt.toISOString() })),
   });
 });
+
+adminRoutes.get('/admin/suppressions', async (c) => {
+  requireAdmin(c);
+  const q = (c.req.query('q') ?? '').trim();
+  const rows = await db
+    .select()
+    .from(emailSuppressions)
+    .where(q ? ilike(emailSuppressions.email, `%${q}%`) : undefined)
+    .orderBy(desc(emailSuppressions.createdAt))
+    .limit(200);
+  return c.json({
+    suppressions: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
+  });
+});
+
+adminRoutes.post(
+  '/admin/unsuppress',
+  zValidator('json', z.object({ email: z.string().email() }), (r, c) => {
+    if (!r.success) return c.json({ error: 'invalid' }, 400);
+  }),
+  async (c) => {
+    const admin = requireAdmin(c);
+    const email = c.req.valid('json').email.trim().toLowerCase();
+    const removed = await db.delete(emailSuppressions).where(eq(emailSuppressions.email, email)).returning();
+    if (removed.length === 0) throw new HTTPException(404, { message: 'not_found' });
+    console.warn(`admin ${admin.id} un-suppressed ${email} (was: ${removed[0]!.reason})`);
+    return c.json({ ok: true });
+  },
+);
 
 adminRoutes.post(
   '/admin/test-email',

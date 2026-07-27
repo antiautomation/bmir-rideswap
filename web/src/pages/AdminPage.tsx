@@ -42,6 +42,12 @@ interface EmailRow {
   sentAt: string;
 }
 
+interface SuppressionRow {
+  email: string;
+  reason: string;
+  createdAt: string;
+}
+
 interface AdminUserRow {
   id: string;
   name: string;
@@ -431,6 +437,9 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
     queryFn: () => api<AdminUserDetailResponse>(`/api/admin/users/${userId}`),
   });
   const [busy, setBusy] = useState(false);
+  const [editingContact, setEditingContact] = useState(false);
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
 
   function refreshAll(): void {
     void queryClient.invalidateQueries({ queryKey: ['admin-user-detail', userId] });
@@ -489,6 +498,24 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
     }
   }
 
+  async function saveContact(): Promise<void> {
+    setBusy(true);
+    try {
+      await api(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        body: { email: contactEmail.trim(), phone: contactPhone.trim() },
+      });
+      setEditingContact(false);
+      refreshAll();
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'email_taken') window.alert('That email is already on another account.');
+      else if (err instanceof ApiError && err.code === 'invalid_phone') window.alert("That phone number doesn't look valid.");
+      else window.alert('Save failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (detail.isLoading) return <p className="muted">Loading…</p>;
   if (detail.isError || !detail.data) {
     return (
@@ -515,9 +542,31 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
         </h2>
         <dl className="admin-dl">
           <dt>Email</dt>
-          <dd>{user.email ?? '—'}</dd>
+          <dd>
+            {editingContact ? (
+              <input
+                type="email"
+                aria-label="User email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            ) : (
+              (user.email ?? '—')
+            )}
+          </dd>
           <dt>Phone</dt>
-          <dd>{user.phone ?? '—'}</dd>
+          <dd>
+            {editingContact ? (
+              <input
+                type="tel"
+                aria-label="User phone"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
+            ) : (
+              (user.phone ?? '—')
+            )}
+          </dd>
           <dt>Session code</dt>
           <dd>
             <code>{user.recoveryCode}</code>
@@ -532,6 +581,28 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
           <dd>{fmtDateTime(user.lastSeenAt)}</dd>
         </dl>
         <div className="admin-row">
+          {editingContact ? (
+            <>
+              <button className="btn" disabled={busy} onClick={() => void saveContact()}>
+                Save contact
+              </button>
+              <button className="btn-ghost" disabled={busy} onClick={() => setEditingContact(false)}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              className="btn-secondary"
+              disabled={busy}
+              onClick={() => {
+                setContactEmail(user.email ?? '');
+                setContactPhone(user.phone ?? '');
+                setEditingContact(true);
+              }}
+            >
+              ✏️ Edit contact
+            </button>
+          )}
           {!user.isAdmin && (
             <button className="btn-danger" disabled={busy} onClick={() => void toggleBan(Boolean(user.bannedAt))}>
               {user.bannedAt ? 'Unban' : 'Ban'}
@@ -666,7 +737,7 @@ function UsersTab({ selectedUserId, onSelectUser }: { selectedUserId: string | n
           <input
             value={banCode}
             onChange={(e) => setBanCode(e.target.value)}
-            placeholder="dusty-camel-8214"
+            placeholder="dusty-camel-lantern"
             className="admin-ban-input"
           />
           <button type="submit" className="btn-danger" disabled={banBusy || !banCode.trim()}>
@@ -1184,33 +1255,115 @@ function MetricsTab() {
 /* ---------- Emails tab ---------- */
 
 function EmailsTab() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounced(search, 300);
+  const [busy, setBusy] = useState(false);
+
   const emails = useQuery({
     queryKey: ['admin-emails'],
     queryFn: () => api<{ emails: EmailRow[] }>('/api/admin/emails'),
   });
+  const suppressions = useQuery({
+    queryKey: ['admin-suppressions', debouncedSearch],
+    queryFn: () => api<{ suppressions: SuppressionRow[] }>(`/api/admin/suppressions?q=${encodeURIComponent(debouncedSearch)}`),
+  });
 
-  if (emails.isLoading) return <p className="muted">Loading…</p>;
-  if (emails.isError || !emails.data) {
-    return (
-      <div className="admin-error">
-        <p className="muted">Failed to load.</p>
-        <button className="btn-secondary" onClick={() => void emails.refetch()}>
-          Retry
-        </button>
-      </div>
-    );
+  async function unsuppress(email: string): Promise<void> {
+    if (!window.confirm(`Allow mail to ${email} again? Bounced addresses will just bounce again.`)) return;
+    setBusy(true);
+    try {
+      await api('/api/admin/unsuppress', { method: 'POST', body: { email } });
+      void queryClient.invalidateQueries({ queryKey: ['admin-suppressions'] });
+      void queryClient.invalidateQueries({ queryKey: ['outreach-stats'] });
+    } catch {
+      window.alert('Un-suppress failed');
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <section className="card">
-      <h2>Recent emails</h2>
-      {emails.data.emails.length === 0 && <p className="muted">No emails sent yet.</p>}
-      {emails.data.emails.map((m) => (
-        <div key={m.id} className="admin-email-row muted">
-          <span>{fmtDateTime(m.sentAt)}</span> · <span>{m.kind}</span> · <span>{m.toEmail}</span> · <span>{m.subject}</span>
+    <div className="admin-detail">
+      <section className="card">
+        <h2>Suppressed addresses</h2>
+        <p className="muted">These addresses are hard-blocked: no digests, no login links, nothing.</p>
+        <div className="admin-toolbar">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search suppressed addresses…"
+            className="admin-search"
+          />
         </div>
-      ))}
-    </section>
+        {suppressions.isLoading && <p className="muted">Loading…</p>}
+        {suppressions.isError && (
+          <div className="admin-error">
+            <p className="muted">Failed to load.</p>
+            <button className="btn-secondary" onClick={() => void suppressions.refetch()}>
+              Retry
+            </button>
+          </div>
+        )}
+        {suppressions.data?.suppressions.length === 0 && <p className="muted">No suppressed addresses.</p>}
+        {suppressions.data && suppressions.data.suppressions.length > 0 && (
+          <div className="admin-table-wrap">
+            <table className="admin-table admin-table--compact">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Reason</th>
+                  <th>Since</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {suppressions.data.suppressions.map((s) => (
+                  <tr key={s.email}>
+                    <td>{s.email}</td>
+                    <td>
+                      <span className="pill pill-warn">{s.reason}</span>
+                    </td>
+                    <td>{fmtDateTime(s.createdAt)}</td>
+                    <td>
+                      <button className="btn-secondary" disabled={busy} onClick={() => void unsuppress(s.email)}>
+                        Un-suppress
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Recent emails</h2>
+        {emails.isLoading && <p className="muted">Loading…</p>}
+        {emails.isError && (
+          <div className="admin-error">
+            <p className="muted">Failed to load.</p>
+            <button className="btn-secondary" onClick={() => void emails.refetch()}>
+              Retry
+            </button>
+          </div>
+        )}
+        {emails.data?.emails.length === 0 && <p className="muted">No emails sent yet.</p>}
+        {emails.data?.emails.map((m) => {
+          // sendEmail logs blocked sends as "<kind>-suppressed" instead of dropping them.
+          const blocked = m.kind.endsWith('-suppressed');
+          return (
+            <div key={m.id} className="admin-email-row muted">
+              <span>{fmtDateTime(m.sentAt)}</span> · <span>{blocked ? m.kind.slice(0, -'-suppressed'.length) : m.kind}</span> ·{' '}
+              <span>{m.toEmail}</span> · <span>{m.subject}</span>
+              {blocked && <> · <span className="pill pill-warn">suppressed</span></>}
+            </div>
+          );
+        })}
+      </section>
+    </div>
   );
 }
 

@@ -66,7 +66,7 @@ const FEATURES: Feature[] = [
     bullets: [
       '<strong>Posting takes about a minute.</strong>',
       '<strong>Install it to your home screen</strong> and it opens with no signal at all — write your post in the middle of nowhere and it syncs itself when you get a bar back.',
-      '<strong>A recovery code instead of a password.</strong> Save one line like <code style="font-family:ui-monospace,Menlo,monospace;">dusty-camel-8214</code> and get back in from any device.',
+      '<strong>A recovery code instead of a password.</strong> Save one line like <code style="font-family:ui-monospace,Menlo,monospace;">dusty-camel-lantern</code> and get back in from any device.',
       '<strong>Dark by default</strong>, because you are going to be reading this at 2am.',
     ],
   },

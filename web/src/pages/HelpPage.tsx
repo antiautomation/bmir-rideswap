@@ -39,7 +39,7 @@ export default function HelpPage() {
         </li>
         <li>
           <strong>Save your session code.</strong> The <em>You</em> page shows a short code like{' '}
-          <code>dusty-camel-8214</code>. Write it down or screenshot it — it&rsquo;s how you sign
+          <code>dusty-camel-lantern</code>. Write it down or screenshot it — it&rsquo;s how you sign
           back in from another device or after clearing your browser.
         </li>
         <li>
@@ -73,7 +73,7 @@ export default function HelpPage() {
       </QA>
       <QA q="What's a session code and why should I care?">
         <p>
-          It&rsquo;s a short human-friendly code (like <code>dusty-camel-8214</code>) shown on
+          It&rsquo;s a short human-friendly code (like <code>dusty-camel-lantern</code>) shown on
           your <em>You</em> page. It&rsquo;s the key to your stuff: enter it on any other device
           — or after clearing your cookies — and you&rsquo;re back in with everything intact.
           Treat it like a password: anyone who has it can act as you.
