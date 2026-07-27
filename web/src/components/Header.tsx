@@ -19,7 +19,7 @@ export default function Header() {
           Board
         </NavLink>
         <NavLink to="/post" className={navLinkClass}>
-          Post a ride
+          Create a post
         </NavLink>
         <NavLink to="/matches" className={navLinkClass}>
           Matches

@@ -37,7 +37,7 @@ export default defineConfig({
         ],
         shortcuts: [
           { name: 'Ride board', url: '/' },
-          { name: 'Post a ride', url: '/post' },
+          { name: 'Create a post', url: '/post' },
           { name: 'Messages', url: '/messages' },
         ],
       },

@@ -28,7 +28,7 @@ export default function WelcomeCard() {
       </p>
       <div className="welcome-card-actions">
         <Link to="/post" className="btn">
-          Post a ride
+          Create a post
         </Link>
         <button type="button" className="btn-ghost" onClick={() => setDismissed(true)}>
           Just browsing

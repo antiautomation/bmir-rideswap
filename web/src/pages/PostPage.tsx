@@ -5,10 +5,14 @@ import ListingForm from '../components/ListingForm';
 import { createListing } from '../api/listings';
 import { useMe } from '../api/session';
 import { onOutboxFailure } from '../offline/outbox';
-import type { CreateListingInput, ListingType, UpdateListingInput } from '../api/types';
+import type { CreateListingInput, Direction, ListingType, UpdateListingInput } from '../api/types';
 
 function parseType(value: string | null): ListingType | undefined {
   return value === 'driver' || value === 'rider' ? value : undefined;
+}
+
+function parseDirection(value: string | null): Direction | undefined {
+  return value === 'to_brc' || value === 'from_brc' ? value : undefined;
 }
 
 function friendlyRejection(code: string): string {
@@ -85,7 +89,7 @@ export default function PostPage() {
   return (
     <div className="form-page">
       <div className="form-page-header">
-        <h1>Post a ride</h1>
+        <h1>Create a post</h1>
         <p className="form-page-subtext">
           No account needed — posting creates your private session automatically.
         </p>
@@ -98,6 +102,7 @@ export default function PostPage() {
       <ListingForm
         mode="create"
         initialType={parseType(searchParams.get('type'))}
+        initialDirection={parseDirection(searchParams.get('direction'))}
         needsContact={needsContact}
         emailTaken={emailTaken}
         emailRequired={emailRequired}

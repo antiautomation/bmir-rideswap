@@ -14,6 +14,8 @@ import type {
 interface ListingFormProps {
   mode: 'create' | 'edit';
   initialType?: ListingType;
+  /** Pre-selects the direction segment in create mode (e.g. /post?direction=from_brc). */
+  initialDirection?: Direction;
   initial?: Listing;
   needsContact: boolean;
   /** Contact email the server rejected as belonging to another account (409
@@ -75,7 +77,12 @@ const BELONGINGS_OPTIONS: { value: Belongings; label: string }[] = [
   { value: 'extensive', label: 'Extensive — a truck-bed load' },
 ];
 
-function buildInitialState(mode: 'create' | 'edit', initialType?: ListingType, initial?: Listing): FormState {
+function buildInitialState(
+  mode: 'create' | 'edit',
+  initialType?: ListingType,
+  initialDirection?: Direction,
+  initial?: Listing,
+): FormState {
   if (mode === 'edit' && initial) {
     return {
       type: initial.type,
@@ -96,7 +103,7 @@ function buildInitialState(mode: 'create' | 'edit', initialType?: ListingType, i
   }
   return {
     type: initialType ?? 'driver',
-    direction: 'to_brc',
+    direction: initialDirection ?? 'to_brc',
     name: '',
     location: '',
     travelDate: '',
@@ -120,13 +127,16 @@ const EMAIL_REQUIRED_ERROR = 'Add an email so people’s replies can reach you.'
 export default function ListingForm({
   mode,
   initialType,
+  initialDirection,
   initial,
   needsContact,
   emailTaken,
   emailRequired,
   onSubmit,
 }: ListingFormProps) {
-  const [state, setState] = useState<FormState>(() => buildInitialState(mode, initialType, initial));
+  const [state, setState] = useState<FormState>(() =>
+    buildInitialState(mode, initialType, initialDirection, initial),
+  );
   const [errors, setErrors] = useState<FieldErrors>({});
   const honeypotRef = useRef<HTMLInputElement>(null);
 

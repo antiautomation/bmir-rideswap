@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
 import FilterBar from '../components/FilterBar';
@@ -69,6 +70,10 @@ export default function BoardPage() {
   const showDrivers = filters.kind !== 'riders';
   const showRiders = filters.kind !== 'drivers';
 
+  // Column CTAs carry the column's type plus the active direction filter, so the
+  // form opens already set to what the user is looking at.
+  const directionParam = filters.direction === 'all' ? '' : `&direction=${filters.direction}`;
+
   function handleCancel(id: string): void {
     cancelListing(queryClient, id);
   }
@@ -112,6 +117,13 @@ export default function BoardPage() {
           <section className="board-column board-column--drivers">
             <h2 className="board-column-title">
               🚗 Drivers offering rides <span className="pill">{drivers.length}</span>
+              <Link
+                to={`/post?type=driver${directionParam}`}
+                className="board-column-post"
+                aria-label="Create a driver post"
+              >
+                + Post
+              </Link>
             </h2>
             {drivers.length === 0 ? (
               <EmptyState
@@ -139,6 +151,13 @@ export default function BoardPage() {
           <section className="board-column board-column--riders">
             <h2 className="board-column-title">
               🎒 Riders looking for rides <span className="pill">{riders.length}</span>
+              <Link
+                to={`/post?type=rider${directionParam}`}
+                className="board-column-post"
+                aria-label="Create a rider post"
+              >
+                + Post
+              </Link>
             </h2>
             {riders.length === 0 ? (
               <EmptyState
