@@ -7,6 +7,8 @@ interface MatchCardProps {
   onMessage: (listing: Listing) => void;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  isHidden: boolean;
+  onToggleHidden: () => void;
 }
 
 function scoreTier(score: number): 'ok' | 'ember' | 'dim' {
@@ -41,13 +43,13 @@ function reasonPills(reasons: MatchReasons): string[] {
   return pills;
 }
 
-export default function MatchCard({ match, onMessage, isFavorite, onToggleFavorite }: MatchCardProps) {
+export default function MatchCard({ match, onMessage, isFavorite, onToggleFavorite, isHidden, onToggleHidden }: MatchCardProps) {
   const { listing, myListing } = match;
   const isDriver = listing.type === 'driver';
   const pills = reasonPills(match.reasons);
 
   return (
-    <article className="card match-card">
+    <article className={isHidden ? 'card match-card match-card--hidden' : 'card match-card'}>
       <div className="match-card-header">
         <span className={`match-score match-score--${scoreTier(match.score)}`}>
           {match.score}
@@ -96,6 +98,9 @@ export default function MatchCard({ match, onMessage, isFavorite, onToggleFavori
         <Link to={`/listing/${listing.id}`} className="btn-ghost push-right">
           View listing
         </Link>
+        <button type="button" className="btn-ghost" onClick={onToggleHidden}>
+          {isHidden ? 'Unhide' : 'Hide'}
+        </button>
       </div>
     </article>
   );

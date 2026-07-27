@@ -14,13 +14,20 @@ export default function MatchesPage() {
   const [messageTarget, setMessageTarget] = useState<Listing | null>(null);
   // Same store as the board's ★ — starring in either place pins it in both.
   const favorites = useIdSet('ridefinder-favorites-v1');
+  const hiddenMatches = useIdSet('ridefinder-hidden-matches-v1');
+  const [showHidden, setShowHidden] = useState(false);
 
-  const matches = [...(data?.matches ?? [])].sort((a, b) => {
+  const matchKey = (m: { driverListingId: string; riderListingId: string }): string =>
+    `${m.driverListingId}-${m.riderListingId}`;
+
+  const all = [...(data?.matches ?? [])].sort((a, b) => {
     const aStar = favorites.has(a.listing.id) ? 1 : 0;
     const bStar = favorites.has(b.listing.id) ? 1 : 0;
     if (aStar !== bStar) return bStar - aStar;
     return b.score - a.score;
   });
+  const hiddenCount = all.filter((m) => hiddenMatches.has(matchKey(m))).length;
+  const matches = showHidden ? all : all.filter((m) => !hiddenMatches.has(matchKey(m)));
 
   return (
     <>
@@ -29,6 +36,13 @@ export default function MatchesPage() {
         Rides and riders that line up with your listings — same direction, close dates, gear that
         fits.
       </p>
+
+      {hiddenCount > 0 && (
+        <label className="admin-toggle">
+          <input type="checkbox" checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} />{' '}
+          Show hidden matches ({hiddenCount})
+        </label>
+      )}
 
       {isLoading && !data ? (
         <p className="muted">Finding matches…</p>
@@ -50,6 +64,8 @@ export default function MatchesPage() {
               onMessage={setMessageTarget}
               isFavorite={favorites.has(match.listing.id)}
               onToggleFavorite={favorites.toggle}
+              isHidden={hiddenMatches.has(matchKey(match))}
+              onToggleHidden={() => hiddenMatches.toggle(matchKey(match))}
             />
           ))}
         </div>
