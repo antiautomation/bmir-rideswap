@@ -236,17 +236,18 @@ function ContactSection({ me }: { me: Me | null }) {
             Lower-scoring matches still show up on your Matches page — this only affects email.
           </p>
         </div>
-        <div className="field-group">
-          <label className="share-row">
-            <input
-              type="checkbox"
-              disabled={!me}
-              checked={matchEmailSameDayOnly}
-              onChange={(e) => setMatchEmailSameDayOnly(e.target.checked)}
-            />
-            <span>Only email me about same-day departures</span>
-          </label>
-        </div>
+        {/* Deliberately NOT wrapped in .field-group — that rule stretches every
+            descendant input to width:100%, which flattens the checkbox across the
+            row and leaves the label a one-character column. */}
+        <label className="share-row">
+          <input
+            type="checkbox"
+            disabled={!me}
+            checked={matchEmailSameDayOnly}
+            onChange={(e) => setMatchEmailSameDayOnly(e.target.checked)}
+          />
+          <span>Only email me about same-day departures</span>
+        </label>
         <button type="submit" className="btn" disabled={!me || saving}>
           Save
         </button>
