@@ -48,17 +48,21 @@ export default function MatchesPage() {
     if (aStar !== bStar) return bStar - aStar;
     return b.score - a.score;
   });
-  const hiddenCount = all.filter((m) => hiddenMatches.has(matchKey(m))).length;
-  const matches = showHidden ? all : all.filter((m) => !hiddenMatches.has(matchKey(m)));
+  const isHiddenMatch = (m: (typeof all)[number]) => hiddenMatches.has(matchKey(m));
+  const hiddenCount = all.filter(isHiddenMatch).length;
 
   // The email floor doubles as the in-app quality bar: anything under it is real
   // but weak, so it stays out of the main list until asked for. `all` is already
-  // starred-first/score-desc, so each half keeps that order.
+  // starred-first/score-desc, so each half keeps that order. Split on quality
+  // FIRST, then apply the hidden filter inside each half, so the two toggles stay
+  // independent of each other.
   const emailFloor = data?.emailFloor ?? 60;
-  const quality = matches.filter((m) => m.score >= emailFloor);
-  const lower = matches.filter((m) => m.score < emailFloor);
+  const qualityAll = all.filter((m) => m.score >= emailFloor);
+  const lowerAll = all.filter((m) => m.score < emailFloor);
+  const quality = showHidden ? qualityAll : qualityAll.filter((m) => !isHiddenMatch(m));
+  const lower = showHidden ? lowerAll : lowerAll.filter((m) => !isHiddenMatch(m));
 
-  const renderMatch = (match: (typeof matches)[number]) => (
+  const renderMatch = (match: (typeof all)[number]) => (
     <MatchCard
       key={`${match.driverListingId}-${match.riderListingId}`}
       match={match}
@@ -117,16 +121,34 @@ export default function MatchesPage() {
         </div>
       )}
 
-      {hiddenCount > 0 && (
-        <label className="admin-toggle">
-          <input type="checkbox" checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} />{' '}
-          Show hidden matches ({hiddenCount})
-        </label>
+      {(hiddenCount > 0 || lower.length > 0) && (
+        <div className="admin-toolbar">
+          {hiddenCount > 0 && (
+            <label className="admin-toggle">
+              <input
+                type="checkbox"
+                checked={showHidden}
+                onChange={(e) => setShowHidden(e.target.checked)}
+              />{' '}
+              Show hidden matches ({hiddenCount})
+            </label>
+          )}
+          {lower.length > 0 && (
+            <label className="admin-toggle">
+              <input
+                type="checkbox"
+                checked={showLowQuality}
+                onChange={(e) => setShowLowQuality(e.target.checked)}
+              />{' '}
+              Show lower-quality matches ({lower.length})
+            </label>
+          )}
+        </div>
       )}
 
       {isLoading && !data ? (
         <p className="muted">Finding matches…</p>
-      ) : matches.length === 0 ? (
+      ) : quality.length === 0 && lowerAll.length === 0 ? (
         <EmptyState
           title="No matches yet"
           hint={
@@ -139,18 +161,8 @@ export default function MatchesPage() {
         <>
           {quality.length > 0 && <div className="matches-list">{quality.map(renderMatch)}</div>}
 
-          {lower.length > 0 && (
-            <>
-              <label className="admin-toggle">
-                <input
-                  type="checkbox"
-                  checked={showLowQuality}
-                  onChange={(e) => setShowLowQuality(e.target.checked)}
-                />{' '}
-                Show lower-quality matches ({lower.length})
-              </label>
-              {showLowQuality && <div className="matches-list">{lower.map(renderMatch)}</div>}
-            </>
+          {showLowQuality && lower.length > 0 && (
+            <div className="matches-list">{lower.map(renderMatch)}</div>
           )}
         </>
       )}
