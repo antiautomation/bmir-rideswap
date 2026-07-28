@@ -145,6 +145,9 @@ export interface MatchReasons {
   capacityFit?: number;
   /** How the two time windows relate. Absent on older rows. */
   timing?: 'aligned' | 'partial' | 'none';
+  /** To-BRC only: extra calendar days the driver spends reaching the rider's city
+   *  (8h of driving per day). Present only when >= 1. */
+  pickupDaysLater?: number;
   /** Present when the rider sits along the driver's route to/from BRC — the corridor
    *  detour in miles. When set, it stands in for the plain location credit. */
   detourMi?: number;

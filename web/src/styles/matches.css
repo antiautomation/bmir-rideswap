@@ -5,6 +5,7 @@
   font-size: var(--fs-sm);
   color: var(--text-dim);
   margin-top: var(--sp-1);
+  margin-bottom: var(--sp-4);
 }
 
 .matches-list {

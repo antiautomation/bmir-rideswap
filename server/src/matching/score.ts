@@ -10,6 +10,20 @@ const BELONGINGS_RANK: Record<string, number> = { minimal: 1, standard: 2, subst
 const FLEXIBLE_LOCATION_WORDS = ['flexible', 'anywhere', 'any', 'tbd'];
 const MAX_DATE_DELTA_DAYS = 2;
 
+/* En-route pickup model (to_brc only). A driver heading to BRC collects a
+   corridor rider partway along the leg, and on a long leg that pickup lands a
+   calendar day or more after the driver's stated departure date — so comparing
+   the two travel dates raw is fiction. Best-effort assumption: nobody drives
+   more than ~8 hours in a day, at an average ~55 mph. */
+const AVG_MPH = 55;
+const DRIVING_HOURS_PER_DAY = 8;
+/** Below this the pickup is same-day and the departure slots are comparable. */
+const LOCAL_PICKUP_HOURS = 4;
+
+function addDays(date: string, days: number): string {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+}
+
 export interface MatchReasons {
   date: number;
   location: number;
@@ -27,6 +41,10 @@ export interface MatchReasons {
   /** 'aligned' = both flexible or slot starts within 3h, 'partial' = exactly one
    *  side flexible, 'none' = slots don't overlap. */
   timing: 'aligned' | 'partial' | 'none';
+  /** Whole days the en-route pickup falls after the driver's departure date on a
+   *  long to_brc leg. Present only when >= 1 — dateDelta is already measured
+   *  against the effective pickup date, this just explains why. */
+  pickupDaysLater?: number;
   /** Present when location credit came from corridor proximity rather than
    *  name similarity: extra driving miles to pick this rider up en route. */
   detourMi?: number;
@@ -77,7 +95,24 @@ export function scorePair(
   locationSimilarity: number,
   now: number = Date.now(),
 ): { score: number; reasons: MatchReasons } | null {
-  const delta = dateDeltaDays(driver.travelDate, rider.travelDate);
+  // How long the driver is on the road before reaching the rider's city. Only
+  // meaningful for to_brc: on the way home both parties leave BRC together, so
+  // there is no en-route pickup to model. Without coords we can't measure the
+  // leg at all and fall back to the raw date comparison.
+  const legHours =
+    driver.direction === 'to_brc' &&
+    driver.originLat != null &&
+    driver.originLng != null &&
+    rider.originLat != null &&
+    rider.originLng != null
+      ? haversineMiles(driver.originLat, driver.originLng, rider.originLat, rider.originLng) / AVG_MPH
+      : null;
+  const pickupDaysLater = legHours === null ? 0 : Math.floor(legHours / DRIVING_HOURS_PER_DAY);
+
+  // Compare the rider's date against when the driver actually reaches them, not
+  // against the driver's departure date.
+  const pickupDate = pickupDaysLater > 0 ? addDays(driver.travelDate, pickupDaysLater) : driver.travelDate;
+  const delta = dateDeltaDays(pickupDate, rider.travelDate);
   if (delta > MAX_DATE_DELTA_DAYS) return null;
 
   const cargo = BELONGINGS_RANK[driver.cargoSpace ?? ''] ?? 0;
@@ -130,13 +165,27 @@ export function scorePair(
         : matchingConfig('capacityPointsRoomy');
 
   const timeAligned = matchingConfig('timePointsAligned');
-  const dStart = slotStartHour(driver.timeSlot);
-  const rStart = slotStartHour(rider.timeSlot);
   let timing: MatchReasons['timing'];
-  if (dStart === null && rStart === null) timing = 'aligned';
-  else if (dStart === null || rStart === null) timing = 'partial';
-  else timing = Math.abs(dStart - rStart) <= 3 ? 'aligned' : 'none';
-  const time = timing === 'aligned' ? timeAligned : timing === 'partial' ? Math.round(0.7 * timeAligned) : 0;
+  let time: number;
+  if (legHours !== null && legHours > DRIVING_HOURS_PER_DAY) {
+    // Multi-day leg: the driver's departure slot says nothing about what hour
+    // they roll through the rider's city. Flat partial credit, slots ignored.
+    timing = 'partial';
+    time = Math.round(0.5 * timeAligned);
+  } else {
+    const dStart = slotStartHour(driver.timeSlot);
+    const rStart = slotStartHour(rider.timeSlot);
+    if (dStart === null && rStart === null) timing = 'aligned';
+    else if (dStart === null || rStart === null) timing = 'partial';
+    else timing = Math.abs(dStart - rStart) <= 3 ? 'aligned' : 'none';
+
+    // A half-day leg still lets the slots be compared, but a nominal match is
+    // worth less than a genuinely local pickup: the arrival hour has drifted,
+    // and the ride itself is a different proposition (gas splits, a driver who
+    // has already been alone for hours).
+    if (timing === 'aligned' && legHours !== null && legHours > LOCAL_PICKUP_HOURS) timing = 'partial';
+    time = timing === 'aligned' ? timeAligned : timing === 'partial' ? Math.round(0.7 * timeAligned) : 0;
+  }
 
   const fresh =
     now - driver.createdAt.getTime() < 48 * 3600_000 || now - rider.createdAt.getTime() < 48 * 3600_000
@@ -152,6 +201,7 @@ export function scorePair(
 
   if (score < matchingConfig('minMatchScore')) return null;
   const reasons: MatchReasons = { date, location, capacity, time, fresh, dateDelta, capacityFit, timing };
+  if (pickupDaysLater >= 1) reasons.pickupDaysLater = pickupDaysLater;
   if (detourMi !== undefined) reasons.detourMi = detourMi;
   return { score, reasons };
 }

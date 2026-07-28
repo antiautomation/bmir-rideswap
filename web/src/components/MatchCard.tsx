@@ -37,6 +37,12 @@ function reasonPills(reasons: MatchReasons): string[] {
   else if (reasons.location >= 30) pills.push('📍 Same area');
   else if (reasons.location >= 15) pills.push('📍 Nearby');
 
+  // Sits with the route pills: the pickup is on the way, just not on day one.
+  if (typeof reasons.pickupDaysLater === 'number' && reasons.pickupDaysLater >= 1) {
+    const d = reasons.pickupDaysLater;
+    pills.push(`🛣️ pickup +${d} day${d === 1 ? '' : 's'} into their drive`);
+  }
+
   if (typeof reasons.capacityFit === 'number') {
     if (reasons.capacityFit === 0) pills.push('🎒 Perfect gear fit');
     else if (reasons.capacityFit === 1) pills.push('🎒 Gear fits');
