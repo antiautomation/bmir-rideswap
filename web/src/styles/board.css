@@ -196,6 +196,12 @@
   background: var(--violet);
 }
 
+/* The card's flex gap already separates the footer; the shared .card-footer
+   margin would double the space above the divider. */
+.listing-card > .card-footer {
+  margin-top: 0;
+}
+
 .listing-card-header {
   display: flex;
   flex-wrap: wrap;
@@ -291,16 +297,18 @@
   display: block;
 }
 
-/* Details disclosure */
-
-.listing-details-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
+/* Details disclosure — the toggle rides in the card footer beside Message, so a
+   collapsed card spends no row on it; the panel opens above the footer, in the
+   space the old toggle row used to occupy. */
 
 .listing-details-toggle {
-  align-self: flex-start;
+  /* Tighter than a stock secondary button so Details + Message + ⋯ still share one
+     footer row on narrow phones. */
+  padding-inline: var(--sp-3);
+}
+
+.listing-details-toggle[aria-expanded='true'] {
+  border-color: var(--border-strong);
 }
 
 .listing-details-toggle[aria-expanded='true'] .chevron {
@@ -311,6 +319,9 @@
   font-size: var(--fs-sm);
   color: var(--text-dim);
   white-space: pre-wrap;
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
 }
 
 .listing-details p + p {

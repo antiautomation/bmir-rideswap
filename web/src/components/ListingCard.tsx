@@ -64,8 +64,12 @@ export default function ListingCard({
   const isAdmin = me?.isAdmin ?? false;
   const expired = isExpired(listing);
   const isDriver = listing.type === 'driver';
-  const showDetails = forceExpanded || expanded;
   const hasMore = Boolean(listing.details || listing.campInfo || listing.routeDetails);
+  const showDetails = hasMore && (forceExpanded || expanded);
+  /** The toggle lives in the footer, so the footer also carries pending cards. */
+  const canToggleDetails = hasMore && !forceExpanded;
+  const showFooter = !listing.pending || canToggleDetails;
+  const detailsId = `listing-details-${listing.id}`;
 
   const handleCancel = () => {
     if (window.confirm('Cancel this listing? It will be removed from the board.')) {
@@ -132,80 +136,83 @@ export default function ListingCard({
         {listing.cancelledAt && <span className="pill pill-dim">Cancelled</span>}
       </div>
 
-      {hasMore && (
-        <div className="listing-details-wrap">
-          {!forceExpanded && (
+      {showDetails && (
+        <div className="listing-details" id={detailsId}>
+          {listing.details && <p>{listing.details}</p>}
+          {listing.routeDetails && (
+            <p>
+              <strong>Route:</strong> {listing.routeDetails}
+            </p>
+          )}
+          {listing.campInfo && (
+            <p>
+              <strong>Camp:</strong> {listing.campInfo}
+            </p>
+          )}
+        </div>
+      )}
+
+      {showFooter && (
+        <div className="card-footer">
+          {canToggleDetails && (
             <button
               type="button"
-              className="btn-ghost listing-details-toggle"
-              aria-expanded={showDetails}
+              className="btn-secondary listing-details-toggle"
+              aria-expanded={expanded}
+              aria-controls={detailsId}
               onClick={() => setExpanded((v) => !v)}
             >
               Details <span className="chevron" aria-hidden="true">▾</span>
             </button>
           )}
-          {showDetails && (
-            <div className="listing-details">
-              {listing.details && <p>{listing.details}</p>}
-              {listing.routeDetails && (
-                <p>
-                  <strong>Route:</strong> {listing.routeDetails}
-                </p>
-              )}
-              {listing.campInfo && (
-                <p>
-                  <strong>Camp:</strong> {listing.campInfo}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {!listing.pending && (
-        <div className="card-footer">
-          {!listing.isMine && isAdmin && (
-            <Link to={`/listing/${listing.id}/edit`} className="btn-ghost" title="Admin: edit this post">
-              🛠 Edit
-            </Link>
-          )}
-          {listing.isMine ? (
-            <>
-              <Link to={`/listing/${listing.id}/edit`} className="btn-secondary">
-                Edit
-              </Link>
-              {onCancel && !listing.cancelledAt && (
-                <button type="button" className="btn-secondary" onClick={handleCancel}>
-                  Cancel listing
-                </button>
-              )}
-              {onDelete && (
-                <button type="button" className="btn-danger push-right" onClick={handleDelete}>
-                  Delete
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              {onMessage && (
-                <button type="button" className="btn" onClick={() => onMessage(listing)}>
-                  Message
-                </button>
-              )}
-              {onFlag && (
-                <details className="listing-card-menu push-right">
-                  <summary className="icon-btn" aria-label="More options">
-                    ⋯
-                  </summary>
-                  <div className="listing-menu">
-                    <button type="button" onClick={() => onFlag(listing.id)}>
-                      Report listing
-                    </button>
-                  </div>
-                </details>
-              )}
-            </>
-          )}
+          {!listing.pending &&
+            (listing.isMine ? (
+              <>
+                <Link to={`/listing/${listing.id}/edit`} className="btn-secondary">
+                  Edit
+                </Link>
+                {onCancel && !listing.cancelledAt && (
+                  <button type="button" className="btn-secondary" onClick={handleCancel}>
+                    Cancel listing
+                  </button>
+                )}
+                {onDelete && (
+                  <button type="button" className="btn-danger push-right" onClick={handleDelete}>
+                    Delete
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {isAdmin && (
+                  <Link
+                    to={`/listing/${listing.id}/edit`}
+                    className="icon-btn"
+                    title="Admin: edit this post"
+                    aria-label="Admin: edit this post"
+                  >
+                    🛠
+                  </Link>
+                )}
+                {onMessage && (
+                  <button type="button" className="btn" onClick={() => onMessage(listing)}>
+                    Message
+                  </button>
+                )}
+                {onFlag && (
+                  <details className="listing-card-menu push-right">
+                    <summary className="icon-btn" aria-label="More options">
+                      ⋯
+                    </summary>
+                    <div className="listing-menu">
+                      <button type="button" onClick={() => onFlag(listing.id)}>
+                        Report listing
+                      </button>
+                    </div>
+                  </details>
+                )}
+              </>
+            ))}
         </div>
       )}
     </article>
