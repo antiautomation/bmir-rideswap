@@ -211,6 +211,11 @@ export default function HelpPage() {
           need to trade numbers to make a plan — but when you&rsquo;re ready to, tick the share
           box and your contact info rides along with that message.
         </p>
+        <p>
+          Your first message asks for your name and email if you haven&rsquo;t posted yet — so
+          the person you&rsquo;re writing to knows who&rsquo;s asking, and their reply can reach
+          you.
+        </p>
       </QA>
       <QA q="I shared my phone number in one conversation. Can others see it?">
         <p>

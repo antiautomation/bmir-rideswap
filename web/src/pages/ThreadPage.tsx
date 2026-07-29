@@ -3,10 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
-import { ShareContactFields } from '../components/MessageComposer';
+import { IntroduceYourselfFields, ShareContactFields } from '../components/MessageComposer';
 import { showToast } from '../components/Toast';
 import { ApiError } from '../api/client';
-import { buildShareAndPatch, sendReply, useThread } from '../api/messages';
+import { buildShareAndPatch, needsIntro, sendReply, useThread } from '../api/messages';
 import { useMe } from '../api/session';
 import { enqueue } from '../offline/outbox';
 import type { Message } from '../api/types';
@@ -79,8 +79,11 @@ export default function ThreadPage() {
   const [sharePhone, setSharePhone] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [introName, setIntroName] = useState('');
+  const [introEmail, setIntroEmail] = useState('');
 
   const messages = data?.messages ?? [];
+  const missing = needsIntro(me);
 
   useEffect(() => {
     const el = listRef.current;
@@ -129,7 +132,14 @@ export default function ThreadPage() {
     e.preventDefault();
     if (!body.trim() || !convId) return;
 
-    const { share, patch } = buildShareAndPatch(me, { shareEmail, sharePhone, newEmail, newPhone });
+    const { share, patch } = buildShareAndPatch(me, {
+      shareEmail,
+      sharePhone,
+      newEmail,
+      newPhone,
+      introName,
+      introEmail,
+    });
 
     // FIFO outbox: queue the profile update first so it lands before the reply.
     if (patch) {
@@ -202,6 +212,16 @@ export default function ThreadPage() {
       </div>
 
       <form className="composer" onSubmit={handleSend}>
+        <IntroduceYourselfFields
+          me={me}
+          recipientName={data.counterpartName}
+          name={introName}
+          onNameChange={setIntroName}
+          email={introEmail}
+          onEmailChange={setIntroEmail}
+          idPrefix="thread-intro"
+        />
+
         <textarea
           className="composer-textarea"
           placeholder="Write a reply…"
@@ -215,6 +235,7 @@ export default function ThreadPage() {
           <div className="composer-share">
             <ShareContactFields
               me={me}
+              mirroredEmail={missing.email ? introEmail : undefined}
               shareEmail={shareEmail}
               sharePhone={sharePhone}
               onShareEmailChange={setShareEmail}

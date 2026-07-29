@@ -1,6 +1,7 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { api, ApiError } from './client';
 import { enqueue, onOutboxFailure, onOutboxSuccess } from '../offline/outbox';
+import { showToast } from '../components/Toast';
 import type { CreateListingInput, Listing, ListingsResponse, UpdateListingInput } from './types';
 
 export function useListings() {
@@ -35,6 +36,24 @@ export function invalidateListings(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: ['my-listings'] });
 }
 
+function messageFailureText(code: string): string {
+  switch (code) {
+    case 'name_required':
+    case 'email_required':
+      return 'Message not sent — add your name & email on the You page to send messages.';
+    case 'email_taken':
+      return 'Message not sent — that email is already used by another account.';
+    case 'rate_limited':
+    case 'conversation_limit':
+      return "Message not sent — you've hit the messaging limit for now. Try again later.";
+    case 'forbidden':
+    case 'not_found':
+      return "Message not sent — that conversation isn't available any more.";
+    default:
+      return "Message not sent — it couldn't be delivered. Try again.";
+  }
+}
+
 let invalidationRegistered = false;
 
 /** Wires outbox replay successes/failures to cache refreshes. Call once from main.tsx. */
@@ -51,10 +70,20 @@ export function registerOutboxInvalidation(queryClient: QueryClient): void {
     void queryClient.invalidateQueries({ queryKey: ['conversations'] });
     void queryClient.invalidateQueries({ queryKey: ['thread'] });
   });
-  onOutboxFailure(() => {
+  onOutboxFailure((failure) => {
     // The server rejected the write (or we gave up) — clear any stranded
     // optimistic entries by refetching the real state.
     invalidateListings(queryClient);
+
+    // Messages ride the outbox too, and until now a rejected one vanished in
+    // silence after the "Message sent" toast. Say what happened.
+    if (failure.item.label === 'send message' || failure.item.label === 'start conversation') {
+      showToast(messageFailureText(failure.code));
+    } else if (failure.item.label === 'update contact' && failure.code === 'email_taken') {
+      // The inline contact PATCH lost the email — the message queued behind it
+      // will bounce with email_required, so name the real cause first.
+      showToast('That email is already used by another account — try another on the You page.');
+    }
   });
 }
 
