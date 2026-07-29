@@ -18,6 +18,15 @@ function isUuid(value: string): boolean {
 }
 
 
+// Messaging is a front door into the app just like posting: a cookie-less visitor
+// gets a fresh anonymous account from ensureUser(), and without this guard could
+// message anyone with no name and no reachable address. Recipients need to know
+// who is writing, and replies have to be emailable back to the sender.
+function requireContactComplete(user: SessionUser): void {
+  if (!user.name?.trim()) throw new HTTPException(400, { message: 'name_required' });
+  if (!user.email) throw new HTTPException(400, { message: 'email_required' });
+}
+
 const sendSchema = z.object({
   clientId: z.string().uuid(),
   body: z.string().min(1).max(2000),
@@ -117,6 +126,7 @@ conversationRoutes.post(
     if (!isUuid(listingId)) throw new HTTPException(404, { message: 'not_found' });
 
     const user = await ensureUser(c);
+    requireContactComplete(user);
     const body = c.req.valid('json');
 
     // Idempotency replay: a message with this clientId already made it in.
@@ -335,6 +345,9 @@ conversationRoutes.post(
     const id = c.req.param('id');
     if (!isUuid(id)) throw new HTTPException(404, { message: 'not_found' });
     const user = requireUser(c);
+    // Legacy anonymous accounts predate the guard above — they must complete
+    // their profile before sending anything further.
+    requireContactComplete(user);
     const body = c.req.valid('json');
 
     const convRows = await db.select().from(conversations).where(eq(conversations.id, id)).limit(1);

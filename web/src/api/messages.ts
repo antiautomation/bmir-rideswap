@@ -87,19 +87,36 @@ export interface ContactShareState {
   sharePhone: boolean;
   newEmail: string;
   newPhone: string;
+  /** "Introduce yourself" fields — required by the server before any message. */
+  introName?: string;
+  introEmail?: string;
 }
 
 export interface ShareAndPatch {
   share: SendMessageInput['share'];
-  patch: { email?: string; phone?: string } | null;
+  patch: { name?: string; email?: string; phone?: string } | null;
+}
+
+/** True when the server would reject this user's message for a missing name or
+ *  email, i.e. the composer must collect them before sending. */
+export function needsIntro(me: Me | null | undefined): { name: boolean; email: boolean } {
+  return { name: !me?.name?.trim(), email: !me?.email };
 }
 
 /** Builds the boolean share flags to send with a message (never raw contact
  *  values — the server attaches those from the profile) plus an optional
  *  profile PATCH body for any brand-new contact value typed inline. */
 export function buildShareAndPatch(me: Me | null | undefined, state: ContactShareState): ShareAndPatch {
-  const patch: { email?: string; phone?: string } = {};
-  if (state.shareEmail && !me?.email && state.newEmail.trim()) {
+  const patch: { name?: string; email?: string; phone?: string } = {};
+  const missing = needsIntro(me);
+  if (missing.name && state.introName?.trim()) {
+    patch.name = state.introName.trim();
+  }
+  // The introduce-yourself email is mandatory, so it wins over the optional
+  // share-contact one when a user somehow fills both.
+  if (missing.email && state.introEmail?.trim()) {
+    patch.email = state.introEmail.trim();
+  } else if (state.shareEmail && !me?.email && state.newEmail.trim()) {
     patch.email = state.newEmail.trim();
   }
   if (state.sharePhone && !me?.phone && state.newPhone.trim()) {
