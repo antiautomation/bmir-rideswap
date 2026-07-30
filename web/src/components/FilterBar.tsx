@@ -1,12 +1,15 @@
+import type { Belongings } from '../api/types';
 import type { FilterState } from '../lib/filters';
-import { formatTravelDate } from '../lib/format';
+import { belongingsLabel, formatTravelDate } from '../lib/format';
 
 interface FilterBarProps {
   filters: FilterState;
   onChange: (next: FilterState) => void;
-  /** Unique travel dates present on the board, sorted ascending. */
+  /** Options that still return a listing under the other active filters, so
+   *  picking any of them can't land the user on an empty board. */
   days: string[];
   cities: string[];
+  capacities: Belongings[];
 }
 
 const DIRECTION_OPTIONS: { value: FilterState['direction']; label: string }[] = [
@@ -21,15 +24,7 @@ const KIND_OPTIONS: { value: FilterState['kind']; label: string }[] = [
   { value: 'riders', label: '🎒 Riders' },
 ];
 
-const CAPACITY_OPTIONS: { value: FilterState['capacity']; label: string }[] = [
-  { value: 'any', label: 'Any gear' },
-  { value: 'minimal', label: 'Minimal gear' },
-  { value: 'standard', label: 'Standard gear' },
-  { value: 'substantial', label: 'Lots of gear' },
-  { value: 'extensive', label: 'Extensive gear' },
-];
-
-export default function FilterBar({ filters, onChange, days, cities }: FilterBarProps) {
+export default function FilterBar({ filters, onChange, days, cities, capacities }: FilterBarProps) {
   function set<K extends keyof FilterState>(key: K, value: FilterState[K]): void {
     onChange({ ...filters, [key]: value });
   }
@@ -65,9 +60,12 @@ export default function FilterBar({ filters, onChange, days, cities }: FilterBar
       </div>
 
       <div className="filter-grid">
+        {/* Each value falls back to its catch-all when the selection is no longer
+            offered, so the control never renders blank in the frame before the
+            board reconciles it. */}
         <select
           aria-label="Travel day"
-          value={filters.day}
+          value={days.includes(filters.day) ? filters.day : 'all'}
           onChange={(e) => set('day', e.target.value)}
         >
           <option value="all">All days</option>
@@ -93,12 +91,13 @@ export default function FilterBar({ filters, onChange, days, cities }: FilterBar
 
         <select
           aria-label="Gear capacity"
-          value={filters.capacity}
+          value={capacities.includes(filters.capacity as Belongings) ? filters.capacity : 'any'}
           onChange={(e) => set('capacity', e.target.value as FilterState['capacity'])}
         >
-          {CAPACITY_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          <option value="any">Any gear</option>
+          {capacities.map((level) => (
+            <option key={level} value={level}>
+              {belongingsLabel(level)}
             </option>
           ))}
         </select>

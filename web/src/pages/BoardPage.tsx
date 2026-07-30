@@ -9,8 +9,13 @@ import ListingCard from '../components/ListingCard';
 import MessageComposer from '../components/MessageComposer';
 import { cancelListing, deleteListing, flagListing, useListings } from '../api/listings';
 import type { Listing } from '../api/types';
-import { isExpired } from '../lib/expiry';
-import { applyFilters, DEFAULT_FILTERS, type FilterState } from '../lib/filters';
+import {
+  applyFilters,
+  DEFAULT_FILTERS,
+  filterOptions,
+  stalePicks,
+  type FilterState,
+} from '../lib/filters';
 import { useIdSet, useStoredState } from '../lib/prefs';
 
 export default function BoardPage() {
@@ -23,44 +28,26 @@ export default function BoardPage() {
 
   const listings = data?.listings ?? [];
 
-  // Dropdown options come from listings the user can actually see — expired
-  // (unless shown) and self-hidden ones would offer filters that match nothing.
-  const visible = useMemo(
-    () => listings.filter((l) => !hidden.has(l.id) && (filters.showExpired || !isExpired(l))),
-    [listings, hidden, filters.showExpired],
+  // Every dropdown option is a value that still returns a listing under the
+  // filters already set — so no option is ever a dead end, and days/cities drop
+  // off on their own as listings expire.
+  const { days, cities, capacities } = useMemo(
+    () => filterOptions(listings, filters, favorites, hidden),
+    [listings, filters, favorites, hidden],
   );
 
-  const days = useMemo(() => {
-    const unique = new Set(visible.map((l) => l.travelDate));
-    return Array.from(unique).sort();
-  }, [visible]);
+  // A pick can stop existing entirely — a stale persisted filter, a listing that
+  // expired, or a day that only had BRC→ posts once you switch to →BRC. Left
+  // alone that filters the board by something the user can't see or undo, so
+  // reset just those picks back to their catch-all.
+  const stale = useMemo(
+    () => stalePicks(listings, filters, favorites, hidden),
+    [listings, filters, favorites, hidden],
+  );
 
-  // Cities with at least one active listing, deduped case-insensitively
-  // (first-seen display form wins), like the day dropdown.
-  const cities = useMemo(() => {
-    const byKey = new Map<string, string>();
-    for (const l of visible) {
-      const key = l.location.trim().toLowerCase();
-      if (key && !byKey.has(key)) byKey.set(key, l.location.trim());
-    }
-    return Array.from(byKey.values()).sort((a, b) => a.localeCompare(b));
-  }, [visible]);
-
-  // Stale persisted filters would silently hide everything with a blank
-  // dropdown — clear a city or day that no longer matches any listing.
   useEffect(() => {
-    const q = filters.locationQuery.trim().toLowerCase();
-    if (q && listings.length > 0 && !cities.some((c) => c.toLowerCase() === q)) {
-      setFilters({ ...filters, locationQuery: '' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cities]);
-  useEffect(() => {
-    if (filters.day !== 'all' && listings.length > 0 && !days.includes(filters.day)) {
-      setFilters({ ...filters, day: 'all' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days]);
+    if (stale) setFilters((prev) => ({ ...prev, ...stale }));
+  }, [stale, setFilters]);
 
   const { drivers, riders } = useMemo(
     () => applyFilters(listings, filters, favorites, hidden),
@@ -94,7 +81,13 @@ export default function BoardPage() {
   return (
     <>
       <h1 className="visually-hidden">Ride board</h1>
-      <FilterBar filters={filters} onChange={setFilters} days={days} cities={cities} />
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        days={days}
+        cities={cities}
+        capacities={capacities}
+      />
 
       <WelcomeCard />
       <MatchesTeaser />
