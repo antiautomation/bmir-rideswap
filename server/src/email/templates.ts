@@ -154,7 +154,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
   const cancelListingsHtml = activeListings
     .map(
       (l) =>
-        `<div>Cancel listing &quot;${esc(l.name)}&quot; &mdash; <a href="${esc(link(`/listing/${l.id}`))}" style="color:${BRAND};">Manage listing</a> (opens the listing — tap Cancel there)</div>`,
+        `<div>Deactivate listing &quot;${esc(l.name)}&quot; &mdash; <a href="${esc(link(`/listing/${l.id}`))}" style="color:${BRAND};">Manage listing</a> (opens the listing — tap Deactivate there)</div>`,
     )
     .join('');
 
@@ -206,7 +206,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     .join('\n');
 
   const cancelListingsText = activeListings
-    .map((l) => `Cancel listing "${l.name}": ${link(`/listing/${l.id}`)} (opens the listing — tap Cancel there)`)
+    .map((l) => `Deactivate listing "${l.name}": ${link(`/listing/${l.id}`)} (opens the listing — tap Deactivate there)`)
     .join('\n');
 
   const matchesText =

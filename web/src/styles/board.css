@@ -196,10 +196,17 @@
   background: var(--violet);
 }
 
-/* The card's flex gap already separates the footer; the shared .card-footer
-   margin would double the space above the divider. */
+/* margin-top: the card's own flex gap already separates the footer, and the shared
+   .card-footer margin would double the space above the divider.
+   gap: a tighter cluster than stock, so an owner's full set — Details, Edit,
+   Deactivate, ⋯ — still shares one footer row down to 375px. */
 .listing-card > .card-footer {
   margin-top: 0;
+  gap: var(--sp-1);
+}
+
+.listing-card > .card-footer .btn-secondary {
+  padding-inline: 10px;
 }
 
 .listing-card-header {
@@ -302,9 +309,8 @@
    space the old toggle row used to occupy. */
 
 .listing-details-toggle {
-  /* Tighter than a stock secondary button so Details + Message + ⋯ still share one
-     footer row on narrow phones. */
-  padding-inline: var(--sp-3);
+  /* The chevron reads as part of the label, not a second element. */
+  gap: var(--sp-1);
 }
 
 .listing-details-toggle[aria-expanded='true'] {

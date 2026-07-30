@@ -72,7 +72,11 @@ export default function ListingCard({
   const detailsId = `listing-details-${listing.id}`;
 
   const handleCancel = () => {
-    if (window.confirm('Cancel this listing? It will be removed from the board.')) {
+    if (
+      window.confirm(
+        'Deactivate this listing? It comes off the board and stops matching. Your messages stay, and you can post again anytime.',
+      )
+    ) {
       onCancel?.(listing.id);
     }
   };
@@ -82,6 +86,21 @@ export default function ListingCard({
       onDelete?.(listing.id);
     }
   };
+
+  /** Destructive and rare actions sit behind ⋯ so the footer keeps to one row —
+   *  Delete on your own posts, Report on everyone else's. Deactivate stays out
+   *  in the open, since that's the move we want when a ride is settled. */
+  const overflowAction = listing.isMine
+    ? onDelete && (
+        <button type="button" onClick={handleDelete}>
+          Delete listing
+        </button>
+      )
+    : onFlag && (
+        <button type="button" onClick={() => onFlag(listing.id)}>
+          Report listing
+        </button>
+      );
 
   return (
     <article
@@ -133,7 +152,7 @@ export default function ListingCard({
         )}
         {listing.pending && <span className="pill pill-warn">Waiting to sync</span>}
         {expired && <span className="pill pill-warn">Expired</span>}
-        {listing.cancelledAt && <span className="pill pill-dim">Cancelled</span>}
+        {listing.cancelledAt && <span className="pill pill-dim">Deactivated</span>}
       </div>
 
       {showDetails && (
@@ -173,12 +192,7 @@ export default function ListingCard({
                 </Link>
                 {onCancel && !listing.cancelledAt && (
                   <button type="button" className="btn-secondary" onClick={handleCancel}>
-                    Cancel listing
-                  </button>
-                )}
-                {onDelete && (
-                  <button type="button" className="btn-danger push-right" onClick={handleDelete}>
-                    Delete
+                    Deactivate
                   </button>
                 )}
               </>
@@ -199,20 +213,16 @@ export default function ListingCard({
                     Message
                   </button>
                 )}
-                {onFlag && (
-                  <details className="listing-card-menu push-right">
-                    <summary className="icon-btn" aria-label="More options">
-                      ⋯
-                    </summary>
-                    <div className="listing-menu">
-                      <button type="button" onClick={() => onFlag(listing.id)}>
-                        Report listing
-                      </button>
-                    </div>
-                  </details>
-                )}
               </>
             ))}
+          {!listing.pending && overflowAction && (
+            <details className="listing-card-menu push-right">
+              <summary className="icon-btn" aria-label="More options">
+                ⋯
+              </summary>
+              <div className="listing-menu">{overflowAction}</div>
+            </details>
+          )}
         </div>
       )}
     </article>

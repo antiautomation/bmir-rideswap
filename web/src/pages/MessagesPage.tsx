@@ -68,7 +68,7 @@ export default function MessagesPage() {
                   <span className="inbox-context">
                     {c.listing.type === 'driver' ? '🚗' : '🎒'} {directionArrow(c.listing.direction)} ·{' '}
                     {formatTravelDate(c.listing.travelDate)}
-                    {cancelled && ' · (cancelled)'}
+                    {cancelled && ' · (deactivated)'}
                   </span>
                   <span className="inbox-preview">{previewText}</span>
                 </div>
