@@ -20,7 +20,7 @@ function friendlyRejection(code: string): string {
     case 'daily_limit':
       return 'You’ve hit the daily posting limit — try again tomorrow.';
     case 'active_limit':
-      return 'You already have the maximum active listings in this direction — cancel or edit one from the You page first.';
+      return 'You already have the maximum active listings in this direction — deactivate or edit one from the You page first.';
     case 'invalid_phone':
       return 'That phone number doesn’t look right — fix it and post again.';
     case 'date_out_of_range':

@@ -58,7 +58,7 @@ export default function HelpPage() {
           messages or matches show up, with a link that signs you straight in.
         </li>
         <li>
-          <strong>Close the loop.</strong> Found your ride? Cancel or delete your listing from
+          <strong>Close the loop.</strong> Found your ride? <em>Deactivate</em> your listing from
           the <em>You</em> page so people stop reaching out. Plans changed? Edit it instead.
         </li>
       </ol>
@@ -138,11 +138,12 @@ export default function HelpPage() {
           the playa provides, and so does the cron job.
         </p>
       </QA>
-      <QA q="How do I edit, cancel, or delete a listing?">
+      <QA q="How do I edit, deactivate, or delete a listing?">
         <p>
-          From the <em>You</em> page, or the ⋯ menu on your own card. <em>Edit</em> changes
-          details in place, <em>Cancel</em> keeps it visible but clearly marked cancelled (in
-          case someone already messaged you), <em>Delete</em> removes it.
+          From the <em>You</em> page, or your own card on the board. <em>Edit</em> changes details
+          in place. <em>Deactivate</em> pulls it off the board but keeps it on your <em>You</em>{' '}
+          page and in any thread you already started, so nobody messaging you hits a dead end.{' '}
+          <em>Delete</em> lives under the ⋯ menu and removes it for good.
         </p>
       </QA>
       <QA q="Can I post more than one listing?">
@@ -153,7 +154,7 @@ export default function HelpPage() {
       </QA>
       <QA q="My listing vanished. What happened?">
         <p>
-          Either its departure window passed (it expired normally), you cancelled it, or it was
+          Either its departure window passed (it expired normally), you deactivated it, or it was
           hidden after multiple user reports. If you think it was hidden unfairly, email{' '}
           <a href="mailto:matching@ridefinder.site">matching@ridefinder.site</a>.
         </p>

@@ -106,7 +106,7 @@ export default function PrivacyPage() {
       <h2>7. Your rights</h2>
       <ul>
         <li>Access, update, or correct your information any time from the You page</li>
-        <li>Cancel or delete your listings yourself</li>
+        <li>Deactivate or delete your listings yourself</li>
         <li>Change email frequency or unsubscribe entirely (You → Email settings, or any email footer)</li>
         <li>Request full deletion or a copy of your data by email</li>
       </ul>
