@@ -1,5 +1,5 @@
 import type { Belongings } from '../api/types';
-import type { FilterState } from '../lib/filters';
+import { DEFAULT_FILTERS, hasActiveFilters, type FilterState } from '../lib/filters';
 import { belongingsLabel, formatTravelDate } from '../lib/format';
 
 interface FilterBarProps {
@@ -103,29 +103,37 @@ export default function FilterBar({ filters, onChange, days, cities, capacities 
         </select>
       </div>
 
-      <details className="filter-more">
-        <summary className="btn-ghost">
-          More filters <span className="chevron" aria-hidden="true">▾</span>
-        </summary>
-        <div className="filter-more-panel">
-          <button
-            type="button"
-            className="pill pill-toggle"
-            aria-pressed={filters.favoritesOnly}
-            onClick={() => set('favoritesOnly', !filters.favoritesOnly)}
-          >
-            Favorites only
+      <div className="filter-actions">
+        <details className="filter-more">
+          <summary className="btn-secondary">
+            More filters <span className="chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div className="filter-more-panel">
+            <button
+              type="button"
+              className="pill pill-toggle"
+              aria-pressed={filters.favoritesOnly}
+              onClick={() => set('favoritesOnly', !filters.favoritesOnly)}
+            >
+              Favorites only
+            </button>
+            <button
+              type="button"
+              className="pill pill-toggle"
+              aria-pressed={filters.showExpired}
+              onClick={() => set('showExpired', !filters.showExpired)}
+            >
+              Show recently expired
+            </button>
+          </div>
+        </details>
+
+        {hasActiveFilters(filters) && (
+          <button type="button" className="btn filter-clear" onClick={() => onChange(DEFAULT_FILTERS)}>
+            Clear filters
           </button>
-          <button
-            type="button"
-            className="pill pill-toggle"
-            aria-pressed={filters.showExpired}
-            onClick={() => set('showExpired', !filters.showExpired)}
-          >
-            Show recently expired
-          </button>
-        </div>
-      </details>
+        )}
+      </div>
     </div>
   );
 }

@@ -41,17 +41,41 @@
   }
 }
 
+/* "More filters" on the left, "Clear filters" pinned right on the same line.
+   flex-start keeps Clear level with the summary once the panel opens below it. */
+.filter-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.filter-more {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Styled like the card's Details toggle — a bordered button reads as pressable
+   where the old dim ghost text disappeared into the background. */
 .filter-more > summary {
   list-style: none;
   cursor: pointer;
+  gap: var(--sp-1);
 }
 
 .filter-more > summary::-webkit-details-marker {
   display: none;
 }
 
+.filter-more[open] > summary {
+  border-color: var(--border-strong);
+}
+
 .filter-more[open] > summary .chevron {
   transform: rotate(180deg);
+}
+
+.filter-clear {
+  flex-shrink: 0;
 }
 
 .filter-more-panel {
