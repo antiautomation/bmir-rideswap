@@ -21,6 +21,19 @@ export const DEFAULT_FILTERS: FilterState = {
   showExpired: false,
 };
 
+/** Is anything narrowing the board? Key-driven off DEFAULT_FILTERS so a filter
+ *  added later counts without touching this. */
+export function hasActiveFilters(f: FilterState): boolean {
+  return (Object.keys(DEFAULT_FILTERS) as (keyof FilterState)[]).some((key) => {
+    const value = f[key];
+    const initial = DEFAULT_FILTERS[key];
+    // Trim strings so a whitespace-only city query doesn't read as a filter.
+    return typeof value === 'string' && typeof initial === 'string'
+      ? value.trim() !== initial.trim()
+      : value !== initial;
+  });
+}
+
 interface HasId {
   has(id: string): boolean;
 }
