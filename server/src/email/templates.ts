@@ -5,7 +5,17 @@
 // lands logged-in on the right page — unlike the invite email, which carries no
 // tokens at all because invites get forwarded to friends.
 
-import { BRAND, button, card, esc, escBody, formatTimestamp, listingTypeLabel, shell } from './layout.js';
+import {
+  BRAND,
+  button,
+  card,
+  directionLabel,
+  esc,
+  escBody,
+  formatTimestamp,
+  listingTypeLabel,
+  shell,
+} from './layout.js';
 
 export interface DigestConversation {
   conversationId: string;
@@ -40,7 +50,8 @@ export interface DigestInput {
   newMatches: DigestMatch[];
   /** Unnotified matches beyond the ones rendered — shown as a "+N more" line. */
   extraMatchCount: number;
-  activeListings: { id: string; name: string }[];
+  /** Identified by direction, not name — every listing carries the poster's own name. */
+  activeListings: { id: string; direction: 'to_brc' | 'from_brc' }[];
 }
 
 export function renderDigest(input: DigestInput): { subject: string; html: string; text: string } {
@@ -151,10 +162,10 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
             : ''
         }`;
 
-  const cancelListingsHtml = activeListings
+  const deactivateListingsHtml = activeListings
     .map(
       (l) =>
-        `<div>Deactivate listing &quot;${esc(l.name)}&quot; &mdash; <a href="${esc(link(`/listing/${l.id}`))}" style="color:${BRAND};">Manage listing</a> (opens the listing — tap Deactivate there)</div>`,
+        `<div>Deactivate listing ${esc(directionLabel(l.direction))} &mdash; <a href="${esc(link(`/listing/${l.id}`))}" style="color:${BRAND};">Manage listing</a> (opens the listing — tap Deactivate there)</div>`,
     )
     .join('');
 
@@ -179,7 +190,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
                   &middot;
                   <a href="${esc(link('/me'))}" style="color:${BRAND};">View my profile</a>
                 </div>
-                ${cancelListingsHtml}
+                ${deactivateListingsHtml}
                 <div style="margin-top:10px;">You're getting this because you posted on RideFinder. Change email frequency or unsubscribe from your profile: <a href="${esc(link('/me'))}" style="color:${BRAND};">Email settings</a>.</div>`,
   });
 
@@ -205,8 +216,11 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     })
     .join('\n');
 
-  const cancelListingsText = activeListings
-    .map((l) => `Deactivate listing "${l.name}": ${link(`/listing/${l.id}`)} (opens the listing — tap Deactivate there)`)
+  const deactivateListingsText = activeListings
+    .map(
+      (l) =>
+        `Deactivate listing ${directionLabel(l.direction)}: ${link(`/listing/${l.id}`)} (opens the listing — tap Deactivate there)`,
+    )
     .join('\n');
 
   const matchesText =
@@ -232,7 +246,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
     ...(matchesText ? [matchesText, ''] : []),
     `See all messages: ${link('/messages')}`,
     `View my profile: ${link('/me')}`,
-    ...(cancelListingsText ? [cancelListingsText] : []),
+    ...(deactivateListingsText ? [deactivateListingsText] : []),
     '',
     "You're getting this because you posted on RideFinder. Change email frequency or unsubscribe from your profile:",
     `Email settings: ${link('/me')}`,
