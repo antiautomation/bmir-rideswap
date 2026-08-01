@@ -20,7 +20,8 @@ export interface Listing {
   timeSlot: string; // 'flexible' | 'HH:00 - HH:00'
   details: string | null;
   campInfo: string | null;
-  passengerSpace: number | null;
+  /** Seats offered (driver) or needed (rider). 0 on either side = cargo only. */
+  passengerSpace: number;
   cargoSpace: Belongings | null;
   routeDetails: string | null;
   riderStuff: Belongings | null;
@@ -143,6 +144,10 @@ export interface MatchReasons {
   /** Gear-fit tiers of slack between what the rider brings and what the driver can
    *  take: 0 = exact fit, 1 = one tier spare, 2+ = roomy. Absent on older rows. */
   capacityFit?: number;
+  /** Seats offered minus seats needed: 0 = exactly full, higher = spare seats.
+   *  Carries no points — a shortfall is a hard reject. Absent on rows scored
+   *  before seats were part of matching. */
+  seatFit?: number;
   /** How the two time windows relate. Absent on older rows. */
   timing?: 'aligned' | 'partial' | 'none';
   /** To-BRC only: extra calendar days the driver spends reaching the rider's city
@@ -171,7 +176,13 @@ export interface Match {
   score: number;
   reasons: MatchReasons;
   computedAt: string;
-  myListing: { id: string; type: ListingType; name: string; travelDate: string };
+  myListing: {
+    id: string;
+    type: ListingType;
+    name: string;
+    passengerSpace: number;
+    travelDate: string;
+  };
   /** The counterpart's full public listing. */
   listing: Listing;
 }

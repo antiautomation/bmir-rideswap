@@ -80,6 +80,14 @@ export function belongingsLabel(belongings: Belongings): string {
   return BELONGINGS_LABELS[belongings];
 }
 
+/** No seats on either side: a driver hauling gear in a trailer with nowhere to
+ *  sit, or someone who only needs their stuff moved. It's a derived state, not a
+ *  listing type — both sides of the market can be cargo-only, and a cargo
+ *  shipper still matches any driver with room to spare. */
+export function isCargoOnly(listing: { passengerSpace: number }): boolean {
+  return listing.passengerSpace === 0;
+}
+
 /** What each gear tier actually means — shown by the ⓘ on gear pills. */
 export const BELONGINGS_MEANINGS: Record<Belongings, string> = {
   minimal: 'a backpack',

@@ -3,6 +3,7 @@ import { db, pool } from '../db/client.js';
 import { conversations, listings, matches, messages, users } from '../db/schema.js';
 import { mintMagicToken } from '../auth/magic.js';
 import { sendEmail } from '../email/ses.js';
+import { listingTypeLabel } from '../email/layout.js';
 import { renderDigest, type DigestConversation, type DigestMatch } from '../email/templates.js';
 import { matchingConfig } from '../lib/settings.js';
 
@@ -33,6 +34,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
       senderName: sender.name,
       listingName: listings.name,
       listingType: listings.type,
+      listingPassengerSpace: listings.passengerSpace,
       listingOwnerId: listings.userId,
       listingDate: listings.travelDate,
     })
@@ -98,7 +100,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
   for (const m of unsent) {
     let group = byConversation.get(m.conversationId);
     if (!group) {
-      const kind = m.listingType === 'driver' ? '🚗 ride offer' : '🎒 ride request';
+      const kind = listingTypeLabel(m.listingType, m.listingPassengerSpace);
       const context =
         m.listingOwnerId === user.id
           ? `your ${kind} · ${friendlyDate(m.listingDate)}`
@@ -135,6 +137,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
       myListingName: mine.name,
       theirName: theirs.name,
       theirType: theirs.type,
+      theirPassengerSpace: theirs.passengerSpace,
       travelDate: theirs.travelDate,
       location: theirs.locationRaw,
       score: match.score,

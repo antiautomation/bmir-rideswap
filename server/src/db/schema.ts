@@ -89,7 +89,8 @@ export const listings = pgTable('listings', {
   timeSlot: text('time_slot').notNull().default('flexible'),
   details: text('details'),
   campInfo: text('camp_info'),
-  passengerSpace: smallint('passenger_space'),
+  /** Seats offered (driver) or needed (rider). 0 on either side = cargo only. */
+  passengerSpace: smallint('passenger_space').notNull(),
   cargoSpace: belongingsEnum('cargo_space'),
   routeDetails: text('route_details'),
   riderStuff: belongingsEnum('rider_stuff'),

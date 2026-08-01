@@ -26,6 +26,8 @@ export interface DigestMatch {
   myListingName: string;
   theirName: string;
   theirType: 'driver' | 'rider';
+  /** Seats offered/needed; 0 makes this a cargo-only post. */
+  theirPassengerSpace: number;
   travelDate: string; // YYYY-MM-DD
   location: string;
   score: number;
@@ -139,7 +141,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
         ${newMatches
           .map((m) =>
             card(`
-              <div style="font-size:14px;font-weight:bold;color:#2a2a2a;">${esc(m.theirName)} &middot; ${listingTypeLabel(m.theirType)}</div>
+              <div style="font-size:14px;font-weight:bold;color:#2a2a2a;">${esc(m.theirName)} &middot; ${listingTypeLabel(m.theirType, m.theirPassengerSpace)}</div>
               <div style="font-size:13px;color:#555;margin-top:2px;">${esc(matchDate(m.travelDate))} &middot; ${esc(m.location)} &middot; matches your &quot;${esc(m.myListingName)}&quot; listing</div>
               <div style="font-size:12px;color:#999;margin-top:2px;">Match strength ${m.score}/100</div>
               ${button(link(`/listing/${m.listingId}`), 'View & message →')}
@@ -216,7 +218,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
           .concat(
             newMatches.map(
               (m) =>
-                `── ${m.theirName} · ${listingTypeLabel(m.theirType)} · ${matchDate(m.travelDate)} · ${m.location} (matches "${m.myListingName}", strength ${m.score}/100)\n   View & message: ${link(`/listing/${m.listingId}`)}`,
+                `── ${m.theirName} · ${listingTypeLabel(m.theirType, m.theirPassengerSpace)} · ${matchDate(m.travelDate)} · ${m.location} (matches "${m.myListingName}", strength ${m.score}/100)\n   View & message: ${link(`/listing/${m.listingId}`)}`,
             ),
           )
           .concat(extraMatchCount > 0 ? [`…and ${extraMatchCount} more: ${link('/matches')}`] : [])

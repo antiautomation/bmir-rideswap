@@ -10,6 +10,8 @@ export interface PostConfirmationInput {
   recipientName: string | null;
   listingId: string;
   listingType: 'driver' | 'rider';
+  /** Seats offered/needed; 0 makes this a cargo-only post. */
+  passengerSpace: number;
   travelDate: string;
   /** Raw ml_… token. This email goes only to the verified poster. */
   magicToken: string;
@@ -23,8 +25,17 @@ export function renderPostConfirmation(input: PostConfirmationInput): {
   html: string;
   text: string;
 } {
-  const { appOrigin, recipientName, listingId, listingType, travelDate, magicToken, recoveryCode, magicLinkDays } =
-    input;
+  const {
+    appOrigin,
+    recipientName,
+    listingId,
+    listingType,
+    passengerSpace,
+    travelDate,
+    magicToken,
+    recoveryCode,
+    magicLinkDays,
+  } = input;
   const name = recipientName?.trim() || 'burner';
   const signIn = (next: string): string => `${appOrigin}/a/${magicToken}?next=${encodeURIComponent(next)}`;
   const subject = 'Your RideFinder post is live — save this email';
@@ -33,7 +44,7 @@ export function renderPostConfirmation(input: PostConfirmationInput): {
           <tr>
             <td style="padding:8px 24px 0;">
               <div style="font-size:15px;color:${INK};margin-bottom:10px;">Hey ${esc(name)} &mdash;</div>
-              <div style="font-size:19px;font-weight:bold;color:${INK};line-height:1.3;margin-bottom:12px;">Your ${esc(listingTypeLabel(listingType))} post for ${esc(travelDate)} is live 🔥</div>
+              <div style="font-size:19px;font-weight:bold;color:${INK};line-height:1.3;margin-bottom:12px;">Your ${esc(listingTypeLabel(listingType, passengerSpace))} post for ${esc(travelDate)} is live 🔥</div>
               <div style="font-size:14px;color:${INK_DIM};line-height:1.55;margin-bottom:12px;">
                 People can message you on the board now &mdash; replies land in your RideFinder inbox and
                 we&rsquo;ll email you about them on the schedule you picked.
@@ -69,7 +80,7 @@ export function renderPostConfirmation(input: PostConfirmationInput): {
 
   const text = `Hey ${name} —
 
-Your ${listingTypeLabel(listingType)} post for ${travelDate} is live on RideFinder. People can message you on the board now — we'll email you about replies on the schedule you picked.
+Your ${listingTypeLabel(listingType, passengerSpace)} post for ${travelDate} is live on RideFinder. People can message you on the board now — we'll email you about replies on the schedule you picked.
 
 SAVE THIS EMAIL — IT'S YOUR KEY
 View your post (signs you in): ${signIn(`/listing/${listingId}`)}

@@ -27,7 +27,13 @@ function toMatchDto(match: MatchRow, mine: ListingRow, theirs: ListingRow, viewe
     score: match.score,
     reasons: match.reasons as MatchReasons,
     computedAt: match.computedAt.toISOString(),
-    myListing: { id: mine.id, type: mine.type, name: mine.name, travelDate: mine.travelDate },
+    myListing: {
+      id: mine.id,
+      type: mine.type,
+      name: mine.name,
+      passengerSpace: mine.passengerSpace,
+      travelDate: mine.travelDate,
+    },
     listing: toListingDto(theirs, viewerId, theirAvatarVersion),
   };
 }

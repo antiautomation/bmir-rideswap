@@ -109,7 +109,9 @@ export default function BoardPage() {
         {showDrivers && (
           <section className="board-column board-column--drivers">
             <h2 className="board-column-title">
-              🚗 Drivers offering rides <span className="pill">{drivers.length}</span>
+              {/* "space" not "rides": a driver with a trailer and no spare seat
+                  is offering cargo room, and lands in this column too. */}
+              🚗 Drivers offering space <span className="pill">{drivers.length}</span>
               <Link
                 to={`/post?type=driver${directionParam}`}
                 className="board-column-post"
@@ -143,7 +145,7 @@ export default function BoardPage() {
         {showRiders && (
           <section className="board-column board-column--riders">
             <h2 className="board-column-title">
-              🎒 Riders looking for rides <span className="pill">{riders.length}</span>
+              🎒 Riders & cargo needing space <span className="pill">{riders.length}</span>
               <Link
                 to={`/post?type=rider${directionParam}`}
                 className="board-column-post"

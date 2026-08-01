@@ -155,6 +155,7 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'Reno, NV',
     travelDate: '2026-08-30',
     timeSlot: 'flexible',
+    passengerSpace: 1,
     riderStuff: 'minimal',
     details: 'First burn! Have gas money + snacks',
   },
@@ -165,6 +166,7 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'Oakland, CA',
     travelDate: '2026-08-29',
     timeSlot: '09:00 - 12:00',
+    passengerSpace: 1,
     riderStuff: 'standard',
     details: 'Just me + a duffel and a bike',
   },
@@ -175,6 +177,7 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'Salt Lake City, UT',
     travelDate: '2026-08-28',
     timeSlot: '06:00 - 09:00',
+    passengerSpace: 1,
     riderStuff: 'substantial',
     details: 'Bringing my trombone + camp gear, happy to split gas.',
   },
@@ -185,6 +188,7 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'Seattle, WA',
     travelDate: '2026-08-31',
     timeSlot: 'flexible',
+    passengerSpace: 2,
     riderStuff: 'minimal',
     details: "Flying into Reno instead if that's easier - flexible either way.",
   },
@@ -249,6 +253,7 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'San Francisco, CA',
     travelDate: '2026-09-06',
     timeSlot: 'flexible',
+    passengerSpace: 1,
     riderStuff: 'standard',
     campInfo: '7:30 & E, near Comfort & Joy',
     details: 'Ready to go home Sunday, have bin + bike.',
@@ -260,6 +265,7 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'Portland, OR',
     travelDate: '2026-09-05',
     timeSlot: 'flexible',
+    passengerSpace: 2,
     riderStuff: 'minimal',
     campInfo: '3:00 & F, blue dome',
     details: 'Heading north, minimal gear, easy rider.',
@@ -271,9 +277,52 @@ const DEMO_LISTINGS: DemoListingSeed[] = [
     locationRaw: 'Las Vegas, NV',
     travelDate: '2026-09-06',
     timeSlot: '09:00 - 12:00',
+    passengerSpace: 1,
     riderStuff: 'minimal',
     campInfo: '5:15 & H',
     details: "Detouring through Vegas for a few days, just need a ride that far.",
+  },
+
+  // --- cargo only (3) -------------------------------------------------------
+  // Zero seats on either side. These exercise the derived cargo-only state: a
+  // shipper still matches any driver with spare room, and the 0-seat driver
+  // below matches only the shippers, never a rider who needs to sit down.
+  {
+    userSlug: 'sarah-k',
+    type: 'rider',
+    direction: 'to_brc',
+    locationRaw: 'Sacramento, CA',
+    travelDate: '2026-08-29',
+    timeSlot: 'flexible',
+    passengerSpace: 0,
+    riderStuff: 'substantial',
+    details: 'Flying into Reno — just need my bin + bike hauled up. Will pay.',
+  },
+  {
+    userSlug: 'nova',
+    type: 'rider',
+    direction: 'from_brc',
+    locationRaw: 'Seattle, WA',
+    travelDate: '2026-09-06',
+    timeSlot: 'flexible',
+    passengerSpace: 0,
+    riderStuff: 'standard',
+    campInfo: '9:00 & C',
+    details: "Catching a flight out of Reno, but my gear can't come with me.",
+  },
+  {
+    key: 'trailer_hauler',
+    userSlug: 'ranger-rick',
+    type: 'driver',
+    direction: 'from_brc',
+    locationRaw: 'Reno, NV',
+    travelDate: '2026-09-06',
+    timeSlot: '06:00 - 09:00',
+    passengerSpace: 0,
+    cargoSpace: 'extensive',
+    campInfo: '4:30 & D',
+    routeDetails: 'BRC → Gerlach → Reno, straight shot.',
+    details: 'RV is full of people but the trailer is empty — happy to haul gear.',
   },
 ];
 
@@ -443,11 +492,13 @@ async function createListings(usersBySlug: Map<string, UserRow>): Promise<{
       timeSlot: seed.timeSlot,
       details: seed.details ?? null,
       campInfo: seed.campInfo ?? null,
-      passengerSpace: seed.type === 'driver' ? (seed.passengerSpace ?? null) : null,
+      passengerSpace: seed.passengerSpace ?? 1,
       cargoSpace: seed.type === 'driver' ? (seed.cargoSpace ?? null) : null,
       routeDetails: seed.type === 'driver' ? (seed.routeDetails ?? null) : null,
       riderStuff: seed.type === 'rider' ? (seed.riderStuff ?? null) : null,
-      expiresAt: computeExpiresAt(seed.travelDate, seed.timeSlot),
+      // Demo rows aren't geocoded, so there's no origin state to time-zone the
+      // expiry against; direction alone picks a sane default offset.
+      expiresAt: computeExpiresAt(seed.travelDate, seed.timeSlot, seed.direction, null),
       clientId: null,
       createdAt,
       updatedAt: createdAt,
@@ -525,15 +576,22 @@ async function main(): Promise<void> {
             .where(or(inArray(matches.driverListingId, listingIds), inArray(matches.riderListingId, listingIds)))
         : [];
 
+    // Cargo-only is derived from zero seats, so it's counted alongside the two
+    // types rather than as a third one.
     const byDirection = (direction: Direction, type: ListingType) =>
       allListings.filter((l) => l.direction === direction && l.type === type).length;
+    const cargoByDirection = (direction: Direction) =>
+      allListings.filter((l) => l.direction === direction && l.passengerSpace === 0).length;
+    const tally = (direction: Direction) =>
+      `drivers: ${byDirection(direction, 'driver')}, riders: ${byDirection(direction, 'rider')}` +
+      ` (cargo-only: ${cargoByDirection(direction)})`;
 
     console.log('');
     console.log('=== Demo seed summary ===');
     console.log(`Users created: ${usersBySlug.size}`);
     console.log(`Listings created: ${allListings.length}`);
-    console.log(`  to_brc   drivers: ${byDirection('to_brc', 'driver')}, riders: ${byDirection('to_brc', 'rider')}`);
-    console.log(`  from_brc drivers: ${byDirection('from_brc', 'driver')}, riders: ${byDirection('from_brc', 'rider')}`);
+    console.log(`  to_brc   ${tally('to_brc')}`);
+    console.log(`  from_brc ${tally('from_brc')}`);
     console.log(`Matches computed (involving demo listings): ${matchRows.length}`);
     console.log(`Conversations created: ${conversationCount}`);
   } catch (err) {

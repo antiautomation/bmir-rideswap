@@ -115,7 +115,9 @@ export function createListing(
     timeSlot: input.timeSlot,
     details: input.details ?? null,
     campInfo: input.campInfo ?? null,
-    passengerSpace: input.passengerSpace ?? null,
+    // The form always sends seats now; the fallback mirrors the server's own
+    // default for a request that predates that.
+    passengerSpace: input.passengerSpace ?? 1,
     cargoSpace: input.cargoSpace ?? null,
     routeDetails: input.routeDetails ?? null,
     riderStuff: input.riderStuff ?? null,

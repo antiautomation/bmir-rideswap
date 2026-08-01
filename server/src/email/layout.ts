@@ -75,7 +75,13 @@ export function card(innerHtml: string): string {
     </table>`;
 }
 
-export function listingTypeLabel(listingType: 'driver' | 'rider'): string {
+/** How a listing reads in email prose. Zero seats on either side means the post
+ *  is about gear only, which is a materially different offer from "come sit in
+ *  my car" — an RV with a trailer and no spare seat, or someone who just needs a
+ *  bin hauled. Every caller goes through here so the three variants stay in one
+ *  place. */
+export function listingTypeLabel(listingType: 'driver' | 'rider', passengerSpace: number): string {
+  if (passengerSpace === 0) return listingType === 'driver' ? '📦 cargo space' : '📦 cargo request';
   return listingType === 'driver' ? '🚗 ride offer' : '🎒 ride request';
 }
 

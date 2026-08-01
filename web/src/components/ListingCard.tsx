@@ -4,7 +4,7 @@ import Avatar from './Avatar';
 import type { Belongings, Listing } from '../api/types';
 import { useMe } from '../api/session';
 import { isExpired } from '../lib/expiry';
-import { BELONGINGS_MEANINGS, belongingsLabel, directionArrow, formatDepartureWindow, formatTravelDate } from '../lib/format';
+import { BELONGINGS_MEANINGS, belongingsLabel, directionArrow, formatDepartureWindow, formatTravelDate, isCargoOnly } from '../lib/format';
 
 /** Gear pill with an ⓘ that reveals what the tier means. Click/tap toggles
  *  (Safari doesn't focus buttons on click, so :focus CSS alone won't do);
@@ -44,9 +44,11 @@ interface ListingCardProps {
   forceExpanded?: boolean;
 }
 
-/** "1 seat" / "3 seats" — never bare "1 seats". */
-function seatsLabel(seats: number): string {
-  return `${seats} ${seats === 1 ? 'seat' : 'seats'}`;
+/** "1 seat" / "3 seats" — never bare "1 seats". Riders read as a need rather
+ *  than an offer, since the same number means opposite things per side. */
+function seatsLabel(seats: number, isDriver: boolean): string {
+  const noun = seats === 1 ? 'seat' : 'seats';
+  return isDriver ? `${seats} ${noun}` : `needs ${seats} ${noun}`;
 }
 
 export default function ListingCard({
@@ -64,6 +66,7 @@ export default function ListingCard({
   const isAdmin = me?.isAdmin ?? false;
   const expired = isExpired(listing);
   const isDriver = listing.type === 'driver';
+  const cargoOnly = isCargoOnly(listing);
   const hasMore = Boolean(listing.details || listing.campInfo || listing.routeDetails);
   const showDetails = hasMore && (forceExpanded || expanded);
   /** The toggle lives in the footer, so the footer also carries pending cards. */
@@ -140,16 +143,19 @@ export default function ListingCard({
 
       <div className="listing-card-meta">
         <span>{formatDepartureWindow(listing.timeSlot)}</span>
-        {isDriver ? (
-          <>
-            {listing.passengerSpace !== null && (
-              <span className="pill">{seatsLabel(listing.passengerSpace)}</span>
-            )}
-            {listing.cargoSpace !== null && <GearPill level={listing.cargoSpace} />}
-          </>
-        ) : (
-          listing.riderStuff !== null && <GearPill level={listing.riderStuff} />
-        )}
+        {/* Seats read on both sides now. Zero of them is the cargo-only case,
+            which keeps the card's own driver/rider rail and pill — it's a state
+            of a listing, not a third identity, so it gets no colour of its own. */}
+        <span className="pill">
+          {cargoOnly
+            ? isDriver
+              ? '📦 Cargo space only'
+              : '📦 Cargo only'
+            : seatsLabel(listing.passengerSpace, isDriver)}
+        </span>
+        {isDriver
+          ? listing.cargoSpace !== null && <GearPill level={listing.cargoSpace} />
+          : listing.riderStuff !== null && <GearPill level={listing.riderStuff} />}
         {listing.pending && <span className="pill pill-warn">Waiting to sync</span>}
         {expired && <span className="pill pill-warn">Expired</span>}
         {listing.cancelledAt && <span className="pill pill-dim">Deactivated</span>}
