@@ -2,42 +2,8 @@ import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Avatar from './Avatar';
 import { ApiError } from '../api/client';
+import { prepareImage, uploadErrorMessage, uploadImageBytes } from '../lib/image';
 import type { Me } from '../api/types';
-
-const MAX_BYTES = 10 * 1024 * 1024;
-
-/* The server (sharp) reads JPEG/PNG/WebP/GIF/TIFF/AVIF but not HEIC (its
-   prebuilt libvips omits libheif). Safari on Apple hardware CAN decode HEIC,
-   and Apple devices are where HEICs come from — so convert in the browser:
-   decode → canvas (capped at 2048px; the server only needs 512) → JPEG. */
-function isHeic(file: File): boolean {
-  return /image\/hei[cf]/.test(file.type) || /\.hei[cf]$/i.test(file.name);
-}
-
-async function heicToJpeg(file: File): Promise<File | null> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    const scale = Math.min(1, 2048 / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/jpeg', 0.9),
-    );
-    if (!blob) return null;
-    return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
-  } catch {
-    return null;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
 
 interface AvatarUploadProps {
   me: Me | null;
@@ -73,23 +39,15 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
     setError(null);
     setUploaded(false);
 
-    if (file.size > MAX_BYTES) {
-      setError('That image is over 10 MB — pick a smaller one');
+    const prepared = await prepareImage(file);
+    if ('error' in prepared) {
+      setError(prepared.error);
       return;
     }
 
-    if (isHeic(file)) {
-      const converted = await heicToJpeg(file);
-      if (!converted) {
-        setError("This browser can't read HEIC photos — export it as JPG or PNG and try again");
-        return;
-      }
-      file = converted;
-    }
-
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(file));
-    setPendingFile(file);
+    setPreviewUrl(URL.createObjectURL(prepared.file));
+    setPendingFile(prepared.file);
   }
 
   function handleCancel(): void {
@@ -104,22 +62,9 @@ export default function AvatarUpload({ me }: AvatarUploadProps) {
     setUploading(true);
     setError(null);
     try {
-      /* Raw bytes, not FormData: Safari corrupts multipart bodies sent from
-         service-worker-controlled pages (empty/mismatched boundary at the server). */
-      const res = await fetch('/api/me/avatar', {
-        method: 'POST',
-        body: pendingFile,
-        headers: { 'Content-Type': pendingFile.type || 'application/octet-stream' },
-        credentials: 'same-origin',
-      });
+      const res = await uploadImageBytes('/api/me/avatar', pendingFile);
       if (!res.ok) {
-        if (res.status === 400) {
-          setError("That file doesn't look like an image");
-        } else if (res.status === 413) {
-          setError('That image is over 10 MB — pick a smaller one');
-        } else {
-          setError('Upload failed — try again');
-        }
+        setError(uploadErrorMessage(res.status));
         return;
       }
       setPendingFile(null);

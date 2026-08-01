@@ -40,6 +40,9 @@ export function sendReply(
   queryClient: QueryClient,
   conversationId: string,
   input: SendMessageInput,
+  /** Local object URL of the attached photo, so the optimistic bubble can show it
+   *  before the server assigns the message id the photo endpoints are keyed by. */
+  pendingPhotoUrl?: string,
 ): void {
   const now = new Date().toISOString();
   const optimistic: Message = {
@@ -47,10 +50,14 @@ export function sendReply(
     conversationId,
     isMine: true,
     body: input.body,
+    photoId: null,
+    photoWidth: null,
+    photoHeight: null,
     sharedEmail: null,
     sharedPhone: null,
     createdAt: now,
     pending: true,
+    ...(pendingPhotoUrl ? { pendingPhotoUrl } : {}),
   };
 
   queryClient.setQueryData<ThreadResponse>(['thread', conversationId], (old) => {

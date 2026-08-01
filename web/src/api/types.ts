@@ -83,13 +83,25 @@ export interface Message {
   id: string;
   conversationId: string;
   isMine: boolean;
+  /** '' when the message is nothing but a photo. */
   body: string;
+  /** Photo endpoints are keyed by message id, not photo id:
+   *  /api/messages/{message.id}/photo-thumb and /photo */
+  photoId: string | null;
+  /** Dimensions of the stored photo, so the bubble can reserve its box before
+   *  the image loads and not shove the thread around. Null when there's no photo. */
+  photoWidth: number | null;
+  photoHeight: number | null;
   /** Contact snapshots — present only when the sender chose to share. */
   sharedEmail: string | null;
   sharedPhone: string | null;
   createdAt: string;
   /** Client-only: optimistic entries queued in the outbox. */
   pending?: boolean;
+  /** Client-only: local object URL for a photo on an optimistic entry. The real
+   *  endpoints are keyed by message id, which doesn't exist until the POST lands,
+   *  so without this the bubble would sit empty until the next 15s refetch. */
+  pendingPhotoUrl?: string;
 }
 
 export interface ConversationListing {
@@ -108,7 +120,7 @@ export interface ConversationSummary {
   iAmInitiator: boolean;
   counterpartName: string;
   counterpartAvatarVersion: number | null;
-  lastMessage: { body: string; createdAt: string; isMine: boolean } | null;
+  lastMessage: { body: string; hasPhoto: boolean; createdAt: string; isMine: boolean } | null;
   unreadCount: number;
   createdAt: string;
 }
@@ -129,6 +141,9 @@ export interface ThreadResponse {
 export interface SendMessageInput {
   clientId: string;
   body: string;
+  /** Uploaded before the send, so the queued JSON body stays small enough for the
+   *  localStorage-backed outbox. Attaching therefore needs a connection. */
+  photoId?: string;
   share?: { email?: boolean; phone?: boolean };
 }
 

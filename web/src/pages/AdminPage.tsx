@@ -101,6 +101,7 @@ interface AdminMessageInThread {
   fromThisUser: boolean;
   senderName: string;
   body: string;
+  hasPhoto: boolean;
   sharedEmail: string | null;
   sharedPhone: string | null;
   createdAt: string;
@@ -126,6 +127,7 @@ interface AdminUserDetailResponse {
 interface AdminMessageRow {
   id: string;
   body: string;
+  hasPhoto: boolean;
   sharedEmail: string | null;
   sharedPhone: string | null;
   createdAt: string;
@@ -218,6 +220,22 @@ function toNum(v: string | number | undefined): number {
 
 function fmtDateTime(iso: string | null): string {
   return iso ? new Date(iso).toLocaleString() : '—';
+}
+
+/** Attached photos are user-generated content, so moderation has to see the image
+ *  itself, not a note that one exists. The photo route lets admins through the
+ *  participant check, so the thumb loads here; it links to the full size. */
+function AdminMessagePhoto({ messageId }: { messageId: string }) {
+  return (
+    <a
+      href={`/api/messages/${messageId}/photo`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="admin-msg-photo"
+    >
+      <img src={`/api/messages/${messageId}/photo-thumb`} alt="Attached photo" loading="lazy" />
+    </a>
+  );
 }
 
 /** Renders leaked-contact info in a security-review conversation (the whole point of this view). */
@@ -684,6 +702,7 @@ function UserDetail({ userId, onBack, onViewUser }: { userId: string; onBack: ()
                     <strong>{m.senderName}</strong> <span className="muted">{fmtDateTime(m.createdAt)}</span>
                   </div>
                   <div className="admin-msg-body">{m.body}</div>
+                  {m.hasPhoto && <AdminMessagePhoto messageId={m.id} />}
                   <SharedContact email={m.sharedEmail} phone={m.sharedPhone} />
                 </div>
               ))}
@@ -987,6 +1006,7 @@ function MessagesTab({ onViewUser }: { onViewUser: (id: string) => void }) {
               </span>
             </div>
             <div className="admin-msg-body">{m.body}</div>
+            {m.hasPhoto && <AdminMessagePhoto messageId={m.id} />}
             <SharedContact email={m.sharedEmail} phone={m.sharedPhone} />
           </div>
         ))}

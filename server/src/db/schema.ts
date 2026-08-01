@@ -120,6 +120,20 @@ export const conversations = pgTable(
   (table) => [unique().on(table.listingId, table.initiatorUserId)],
 );
 
+/** Uploaded before the message that carries it, since the composer may still be
+ *  starting a conversation that has no id yet. Messages point here, not back. */
+export const messagePhotos = pgTable('message_photos', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerUserId: uuid('owner_user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  full: bytea('photo_full').notNull(),
+  thumb: bytea('photo_thumb').notNull(),
+  width: smallint('width').notNull(),
+  height: smallint('height').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const messages = pgTable('messages', {
   id: uuid('id').primaryKey().defaultRandom(),
   conversationId: uuid('conversation_id')
@@ -128,7 +142,9 @@ export const messages = pgTable('messages', {
   senderUserId: uuid('sender_user_id')
     .notNull()
     .references(() => users.id),
+  /** '' when the message is nothing but a photo. */
   body: text('body').notNull(),
+  photoId: uuid('photo_id').references(() => messagePhotos.id),
   sharedEmail: citext('shared_email'),
   sharedPhone: text('shared_phone'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

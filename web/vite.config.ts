@@ -57,6 +57,18 @@ export default defineConfig({
               cacheableResponse: { statuses: [200] },
             },
           },
+          // A sent photo never changes and its URL is keyed by message id, so
+          // cache-first needs no version param. Must stay ahead of the api-cache
+          // rule below, which would otherwise swallow it.
+          {
+            urlPattern: /\/api\/messages\/[^/]+\/photo-thumb/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'message-photos',
+              expiration: { maxEntries: 200, maxAgeSeconds: 30 * 86400 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // Workbox matches regexes against the full URL, not just the path.
             urlPattern: /\/api\/(listings|conversations|me|my)/,

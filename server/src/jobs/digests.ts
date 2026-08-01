@@ -28,6 +28,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
       messageId: messages.id,
       conversationId: messages.conversationId,
       body: messages.body,
+      photoId: messages.photoId,
       sharedEmail: messages.sharedEmail,
       sharedPhone: messages.sharedPhone,
       createdAt: messages.createdAt,
@@ -116,6 +117,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
     group.messages.push({
       senderName: m.senderName ?? 'A burner',
       body: m.body,
+      hasPhoto: m.photoId !== null,
       sharedEmail: m.sharedEmail,
       sharedPhone: m.sharedPhone,
       createdAt: m.createdAt,
