@@ -3,12 +3,15 @@ import { Link, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
+import MessagePhoto from '../components/MessagePhoto';
+import PhotoAttach, { type AttachedPhoto } from '../components/PhotoAttach';
 import { IntroduceYourselfFields, ShareContactFields } from '../components/MessageComposer';
 import { showToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 import { buildShareAndPatch, needsIntro, sendReply, useThread } from '../api/messages';
 import { useMe } from '../api/session';
 import { enqueue } from '../offline/outbox';
+import { useConnectivity } from '../offline/connectivity';
 import type { Message } from '../api/types';
 import { directionArrow, formatTravelDate, timeAgo } from '../lib/format';
 
@@ -39,7 +42,22 @@ function MessageBubble({ message, phonePref }: { message: Message; phonePref: 's
   return (
     <div className={message.isMine ? 'bubble-row bubble-row--mine' : 'bubble-row bubble-row--theirs'}>
       <div className={message.isMine ? 'bubble bubble--mine' : 'bubble bubble--theirs'}>
-        <p className="bubble-body">{message.body}</p>
+        {message.pendingPhotoUrl ? (
+          // Still queued: no server-side id yet, so show the local file. No
+          // lightbox — it's replaced by the real thing on the next refetch.
+          <img className="message-photo message-photo--pending" src={message.pendingPhotoUrl} alt="" />
+        ) : (
+          message.photoId && (
+            <MessagePhoto
+              messageId={message.id}
+              width={message.photoWidth}
+              height={message.photoHeight}
+            />
+          )
+        )}
+        {/* A photo on its own has no caption, and an empty <p> would still take
+            a line box under it. */}
+        {message.body && <p className="bubble-body">{message.body}</p>}
 
         {(message.sharedEmail || message.sharedPhone) && (
           <div className="contact-block">
@@ -72,6 +90,7 @@ export default function ThreadPage() {
   const { data: me } = useMe();
   const { data, isLoading, isError, error } = useThread(convId);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const sentPhotoUrls = useRef<string[]>([]);
 
   const [body, setBody] = useState('');
   const [showShare, setShowShare] = useState(false);
@@ -81,6 +100,10 @@ export default function ThreadPage() {
   const [newPhone, setNewPhone] = useState('');
   const [introName, setIntroName] = useState('');
   const [introEmail, setIntroEmail] = useState('');
+  const [photo, setPhoto] = useState<AttachedPhoto | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  // Text queues offline; a photo cannot, since the bytes go up before the send.
+  const { status: connectivity } = useConnectivity();
 
   const messages = data?.messages ?? [];
   const missing = needsIntro(me);
@@ -90,6 +113,15 @@ export default function ThreadPage() {
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight });
   }, [messages.length]);
+
+  // Previews handed to optimistic bubbles outlive the send, so they're released
+  // when the thread goes away rather than at send time.
+  useEffect(() => {
+    const urls = sentPhotoUrls.current;
+    return () => {
+      for (const url of urls) URL.revokeObjectURL(url);
+    };
+  }, []);
 
   if (!convId) {
     return <EmptyState title="Conversation not found" hint="Head back to your messages." />;
@@ -130,7 +162,8 @@ export default function ThreadPage() {
 
   function handleSend(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
-    if (!body.trim() || !convId) return;
+    // A photo on its own is a message; text alone still is too.
+    if ((!body.trim() && !photo) || !convId || uploadingPhoto) return;
 
     const { share, patch } = buildShareAndPatch(me, {
       shareEmail,
@@ -146,16 +179,27 @@ export default function ThreadPage() {
       void enqueue({ label: 'update contact', method: 'PATCH', path: '/api/me', body: patch });
     }
 
-    sendReply(queryClient, convId, {
-      clientId: crypto.randomUUID(),
-      body: body.trim(),
-      share,
-    });
+    sendReply(
+      queryClient,
+      convId,
+      {
+        clientId: crypto.randomUUID(),
+        body: body.trim(),
+        ...(photo ? { photoId: photo.photoId } : {}),
+        share,
+      },
+      // Handed to the optimistic bubble rather than revoked here — the real photo
+      // URL needs a server-assigned message id, which arrives on the next refetch.
+      // Ownership passes to sentPhotoUrls, which revokes on unmount.
+      photo?.previewUrl,
+    );
+    if (photo) sentPhotoUrls.current.push(photo.previewUrl);
 
     showToast(
       navigator.onLine ? 'Message sent' : "Message queued — it will send when you're online",
     );
 
+    setPhoto(null);
     setBody('');
     setShowShare(false);
     setShareEmail(false);
@@ -224,11 +268,19 @@ export default function ThreadPage() {
 
         <textarea
           className="composer-textarea"
-          placeholder="Write a reply…"
+          placeholder={photo ? 'Add a caption (optional)…' : 'Write a reply…'}
           maxLength={2000}
-          required
+          // Not required once a photo is attached — the photo is the message.
+          required={!photo}
           value={body}
           onChange={(e) => setBody(e.target.value)}
+        />
+
+        <PhotoAttach
+          photo={photo}
+          onChange={setPhoto}
+          onUploadingChange={setUploadingPhoto}
+          disabled={connectivity === 'offline'}
         />
 
         {showShare && (

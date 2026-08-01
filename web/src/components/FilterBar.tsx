@@ -22,6 +22,8 @@ const KIND_OPTIONS: { value: FilterState['kind']; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'drivers', label: '🚗 Drivers' },
   { value: 'riders', label: '🎒 Riders' },
+  // Spans both columns: cargo-only is zero seats, which either side can be.
+  { value: 'cargo', label: '📦 Cargo' },
 ];
 
 export default function FilterBar({ filters, onChange, days, cities, capacities }: FilterBarProps) {

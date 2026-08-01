@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import ListingForm from '../components/ListingForm';
+import ListingForm, { type PostKind } from '../components/ListingForm';
 import { createListing } from '../api/listings';
 import { useMe } from '../api/session';
 import { onOutboxFailure } from '../offline/outbox';
-import type { CreateListingInput, Direction, ListingType, UpdateListingInput } from '../api/types';
+import type { CreateListingInput, Direction, UpdateListingInput } from '../api/types';
 
-function parseType(value: string | null): ListingType | undefined {
-  return value === 'driver' || value === 'rider' ? value : undefined;
+function parseType(value: string | null): PostKind | undefined {
+  return value === 'driver' || value === 'rider' || value === 'cargo' ? value : undefined;
 }
 
 function parseDirection(value: string | null): Direction | undefined {

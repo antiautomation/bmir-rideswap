@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { ensureUser, requireUser } from '../auth/middleware.js';
 import type { SessionUser } from '../auth/tokens.js';
 import { db } from '../db/client.js';
-import { conversations, listings, messages, users } from '../db/schema.js';
+import { conversations, listings, messagePhotos, messages, users } from '../db/schema.js';
 import { isUniqueViolation } from '../lib/pg.js';
 import { allow } from '../lib/rateLimit.js';
 import { rateLimit } from '../lib/settings.js';
@@ -27,16 +27,25 @@ function requireContactComplete(user: SessionUser): void {
   if (!user.email) throw new HTTPException(400, { message: 'email_required' });
 }
 
-const sendSchema = z.object({
-  clientId: z.string().uuid(),
-  body: z.string().min(1).max(2000),
-  share: z
-    .object({
-      email: z.boolean().optional(),
-      phone: z.boolean().optional(),
-    })
-    .optional(),
-});
+const sendSchema = z
+  .object({
+    clientId: z.string().uuid(),
+    // Empty is allowed only alongside a photo — see the refinement below. The
+    // photo is uploaded first and referenced by id, because the offline outbox
+    // that carries this body is JSON in localStorage and cannot hold bytes.
+    body: z.string().max(2000),
+    photoId: z.string().uuid().optional(),
+    share: z
+      .object({
+        email: z.boolean().optional(),
+        phone: z.boolean().optional(),
+      })
+      .optional(),
+  })
+  .refine((data) => data.body.trim().length > 0 || data.photoId !== undefined, {
+    message: 'empty_message',
+    path: ['body'],
+  });
 
 type ConversationRow = typeof conversations.$inferSelect;
 type ListingRow = typeof listings.$inferSelect;
@@ -52,12 +61,24 @@ function snapshotShare(
   };
 }
 
-function toMessageDto(row: MessageRow, viewerId: string) {
+/** Dimensions travel with the message so the client can reserve the image's box
+ *  before the bytes arrive — the thread auto-scrolls on new messages, and a late
+ *  image would otherwise push the conversation out from under the reader. */
+interface PhotoMeta {
+  id: string;
+  width: number;
+  height: number;
+}
+
+function toMessageDto(row: MessageRow, viewerId: string, photo: PhotoMeta | null = null) {
   return {
     id: row.id,
     conversationId: row.conversationId,
     isMine: row.senderUserId === viewerId,
     body: row.body,
+    photoId: row.photoId,
+    photoWidth: photo?.width ?? null,
+    photoHeight: photo?.height ?? null,
     sharedEmail: row.sharedEmail,
     sharedPhone: row.sharedPhone,
     createdAt: row.createdAt.toISOString(),
@@ -93,6 +114,30 @@ async function findConversation(listingId: string, initiatorUserId: string): Pro
 async function findMessageByClientId(clientId: string): Promise<MessageRow | undefined> {
   const rows = await db.select().from(messages).where(eq(messages.clientId, clientId)).limit(1);
   return rows[0];
+}
+
+/** A photo id is a bearer token until it's attached, so attaching one has to
+ *  prove two things: the uploader is the sender, and no earlier message already
+ *  claimed it. Without the second check a guessed id could be re-attached into a
+ *  conversation its subject never agreed to be in. */
+async function claimPhoto(photoId: string | undefined, senderId: string): Promise<PhotoMeta | null> {
+  if (photoId === undefined) return null;
+  const rows = await db
+    .select({ id: messagePhotos.id, width: messagePhotos.width, height: messagePhotos.height })
+    .from(messagePhotos)
+    .where(and(eq(messagePhotos.id, photoId), eq(messagePhotos.ownerUserId, senderId)))
+    .limit(1);
+  const photo = rows[0];
+  if (!photo) throw new HTTPException(400, { message: 'invalid_photo' });
+
+  const already = await db
+    .select({ id: messages.id })
+    .from(messages)
+    .where(eq(messages.photoId, photoId))
+    .limit(1);
+  if (already[0]) throw new HTTPException(400, { message: 'photo_already_sent' });
+
+  return photo;
 }
 
 // Total unread across every conversation the user participates in (as initiator or as
@@ -174,6 +219,7 @@ conversationRoutes.post(
     if (!conversation) throw new HTTPException(500, { message: 'internal' });
 
     const shareSnap = snapshotShare(user, body.share);
+    const photo = await claimPhoto(body.photoId, user.id);
     try {
       const inserted = await db
         .insert(messages)
@@ -181,12 +227,16 @@ conversationRoutes.post(
           conversationId: conversation.id,
           senderUserId: user.id,
           body: body.body,
+          photoId: photo?.id ?? null,
           sharedEmail: shareSnap.sharedEmail,
           sharedPhone: shareSnap.sharedPhone,
           clientId: body.clientId,
         })
         .returning();
-      return c.json({ conversation: { id: conversation.id }, message: toMessageDto(inserted[0]!, user.id) }, 201);
+      return c.json(
+        { conversation: { id: conversation.id }, message: toMessageDto(inserted[0]!, user.id, photo) },
+        201,
+      );
     } catch (err) {
       if (isUniqueViolation(err)) {
         const replay = await findMessageByClientId(body.clientId);
@@ -218,6 +268,7 @@ conversationRoutes.get('/conversations', async (c) => {
     .select({
       conversationId: messages.conversationId,
       body: messages.body,
+      photoId: messages.photoId,
       createdAt: messages.createdAt,
       senderUserId: messages.senderUserId,
       readAt: messages.readAt,
@@ -226,12 +277,18 @@ conversationRoutes.get('/conversations', async (c) => {
     .where(inArray(messages.conversationId, convIds))
     .orderBy(desc(messages.createdAt));
 
-  const lastMessageByConv = new Map<string, { body: string; createdAt: Date; isMine: boolean }>();
+  const lastMessageByConv = new Map<
+    string,
+    { body: string; hasPhoto: boolean; createdAt: Date; isMine: boolean }
+  >();
   const unreadByConv = new Map<string, number>();
   for (const m of messageRows) {
     if (!lastMessageByConv.has(m.conversationId)) {
       lastMessageByConv.set(m.conversationId, {
         body: m.body,
+        // The inbox shows a preview line; a photo with no caption has no text
+        // to preview, so the row says so rather than rendering blank.
+        hasPhoto: m.photoId !== null,
         createdAt: m.createdAt,
         isMine: m.senderUserId === user.id,
       });
@@ -266,7 +323,14 @@ conversationRoutes.get('/conversations', async (c) => {
           iAmInitiator,
           counterpartName,
           counterpartAvatarVersion: counterpartAvatarById.get(counterpartUserId) ?? null,
-          lastMessage: last ? { body: last.body, createdAt: last.createdAt.toISOString(), isMine: last.isMine } : null,
+          lastMessage: last
+            ? {
+                body: last.body,
+                hasPhoto: last.hasPhoto,
+                createdAt: last.createdAt.toISOString(),
+                isMine: last.isMine,
+              }
+            : null,
           unreadCount: unreadByConv.get(r.conversation.id) ?? 0,
           createdAt: r.conversation.createdAt.toISOString(),
         },
@@ -306,10 +370,17 @@ conversationRoutes.get('/conversations/:id', async (c) => {
 
   // Newest window, oldest-first for display — an .orderBy(asc).limit(500)
   // would pin long threads to their oldest 500 and hide every new message.
+  // Left-joined for the photo's dimensions only — never its bytes, which would
+  // put megabytes of bytea through every thread poll.
   const messageRows = (
     await db
-      .select()
+      .select({
+        message: messages,
+        photoWidth: messagePhotos.width,
+        photoHeight: messagePhotos.height,
+      })
       .from(messages)
+      .leftJoin(messagePhotos, eq(messages.photoId, messagePhotos.id))
       .where(eq(messages.conversationId, id))
       .orderBy(desc(messages.createdAt))
       .limit(500)
@@ -332,7 +403,15 @@ conversationRoutes.get('/conversations/:id', async (c) => {
     counterpartName,
     counterpartAvatarVersion,
     counterpartPhonePref,
-    messages: messageRows.map((m) => toMessageDto(m, user.id)),
+    messages: messageRows.map((r) =>
+      toMessageDto(
+        r.message,
+        user.id,
+        r.message.photoId !== null && r.photoWidth !== null && r.photoHeight !== null
+          ? { id: r.message.photoId, width: r.photoWidth, height: r.photoHeight }
+          : null,
+      ),
+    ),
   });
 });
 
@@ -373,6 +452,7 @@ conversationRoutes.post(
     if (!allow(`msgburst:${user.id}`, 1, 5_000)) throw new HTTPException(429, { message: 'slow_down' });
 
     const shareSnap = snapshotShare(user, body.share);
+    const photo = await claimPhoto(body.photoId, user.id);
     try {
       const inserted = await db
         .insert(messages)
@@ -380,12 +460,13 @@ conversationRoutes.post(
           conversationId: conversation.id,
           senderUserId: user.id,
           body: body.body,
+          photoId: photo?.id ?? null,
           sharedEmail: shareSnap.sharedEmail,
           sharedPhone: shareSnap.sharedPhone,
           clientId: body.clientId,
         })
         .returning();
-      return c.json({ message: toMessageDto(inserted[0]!, user.id) }, 201);
+      return c.json({ message: toMessageDto(inserted[0]!, user.id, photo) }, 201);
     } catch (err) {
       if (isUniqueViolation(err)) {
         const replay = await findMessageByClientId(body.clientId);

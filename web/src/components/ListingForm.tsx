@@ -13,7 +13,8 @@ import type {
 
 interface ListingFormProps {
   mode: 'create' | 'edit';
-  initialType?: ListingType;
+  /** Pre-selects the chip in create mode (e.g. /post?type=cargo). */
+  initialType?: PostKind;
   /** Pre-selects the direction segment in create mode (e.g. /post?direction=from_brc). */
   initialDirection?: Direction;
   initial?: Listing;
@@ -42,6 +43,23 @@ interface FormState {
   details: string;
   email: string;
   phone: string;
+}
+
+/** What the three chips offer. Cargo isn't a listing type — it's a rider with no
+ *  seats, which is the shape of "just get my stuff there". The supply-side
+ *  version (a trailer with nothing but gear room) is a driver who picks 0 in the
+ *  seats select, so both sides land on the same derived state. */
+export type PostKind = 'driver' | 'rider' | 'cargo';
+
+const POST_KINDS: { value: PostKind; label: string }[] = [
+  { value: 'driver', label: '🚗 Driver' },
+  { value: 'rider', label: '🎒 Rider' },
+  { value: 'cargo', label: '📦 Cargo' },
+];
+
+function postKindOf(type: ListingType, passengerSpace: string): PostKind {
+  if (type === 'rider' && passengerSpace === '0') return 'cargo';
+  return type;
 }
 
 const MAX_DATE = '2026-12-31';
@@ -79,7 +97,7 @@ const BELONGINGS_OPTIONS: { value: Belongings; label: string }[] = [
 
 function buildInitialState(
   mode: 'create' | 'edit',
-  initialType?: ListingType,
+  initialType?: PostKind,
   initialDirection?: Direction,
   initial?: Listing,
 ): FormState {
@@ -91,7 +109,7 @@ function buildInitialState(
       location: initial.location,
       travelDate: initial.travelDate,
       timeSlot: initial.timeSlot,
-      passengerSpace: initial.passengerSpace !== null ? String(initial.passengerSpace) : '1',
+      passengerSpace: String(initial.passengerSpace ?? 1),
       cargoSpace: initial.cargoSpace ?? 'standard',
       routeDetails: initial.routeDetails ?? '',
       riderStuff: initial.riderStuff ?? 'standard',
@@ -102,13 +120,13 @@ function buildInitialState(
     };
   }
   return {
-    type: initialType ?? 'driver',
+    type: initialType === 'cargo' ? 'rider' : (initialType ?? 'driver'),
     direction: initialDirection ?? 'to_brc',
     name: '',
     location: '',
     travelDate: '',
     timeSlot: 'flexible',
-    passengerSpace: '1',
+    passengerSpace: initialType === 'cargo' ? '0' : '1',
     cargoSpace: 'standard',
     routeDetails: '',
     riderStuff: 'standard',
@@ -142,10 +160,26 @@ export default function ListingForm({
 
   const today = todayLocalDate();
   const isDriver = state.type === 'driver';
+  const postKind = postKindOf(state.type, state.passengerSpace);
+  const isCargo = postKind === 'cargo';
+  // Edit mode has no chips (type is immutable), so the seats select is the only
+  // way in and out of cargo-only there — it stays visible and keeps its 0.
+  const showSeats = mode === 'edit' || !isCargo;
+  const seatOptions = mode === 'edit' || isDriver ? [0, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5];
   const emailError = errors.email ?? (emailRequired ? EMAIL_REQUIRED_ERROR : undefined);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]): void {
     setState((prev) => ({ ...prev, [key]: value }));
+  }
+
+  /** The chips write two fields at once, so they can't go through set(). Leaving
+   *  cargo has to restore a seat, or the post would still read as cargo-only. */
+  function setPostKind(kind: PostKind): void {
+    setState((prev) => ({
+      ...prev,
+      type: kind === 'driver' ? 'driver' : 'rider',
+      passengerSpace: kind === 'cargo' ? '0' : prev.passengerSpace === '0' ? '1' : prev.passengerSpace,
+    }));
   }
 
   function validate(): FieldErrors {
@@ -187,7 +221,7 @@ export default function ListingForm({
       timeSlot: state.timeSlot,
       details: clearable(state.details),
       campInfo: clearable(state.campInfo),
-      passengerSpace: isDriver ? Number(state.passengerSpace) : undefined,
+      passengerSpace: Number(state.passengerSpace),
       cargoSpace: isDriver ? state.cargoSpace : undefined,
       routeDetails: isDriver ? clearable(state.routeDetails) : undefined,
       riderStuff: isDriver ? undefined : state.riderStuff,
@@ -232,20 +266,16 @@ export default function ListingForm({
         <div className="field-group">
           <span className="field-group-label">What are you posting?</span>
           <div className="seg seg-block" role="group" aria-label="Listing type">
-            <button
-              type="button"
-              aria-pressed={isDriver}
-              onClick={() => set('type', 'driver')}
-            >
-              🚗 Driver
-            </button>
-            <button
-              type="button"
-              aria-pressed={!isDriver}
-              onClick={() => set('type', 'rider')}
-            >
-              🎒 Rider
-            </button>
+            {POST_KINDS.map((kind) => (
+              <button
+                key={kind.value}
+                type="button"
+                aria-pressed={postKind === kind.value}
+                onClick={() => setPostKind(kind.value)}
+              >
+                {kind.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -345,23 +375,25 @@ export default function ListingForm({
         </div>
       </div>
 
-      {isDriver ? (
-        <div className="form-grid-2">
+      <div className={showSeats ? 'form-grid-2' : undefined}>
+        {showSeats && (
           <div className="field-group">
-            <label htmlFor="field-seats">Seats available</label>
+            <label htmlFor="field-seats">{isDriver ? 'Seats available' : 'Seats needed'}</label>
             <select
               id="field-seats"
               value={state.passengerSpace}
               onChange={(e) => set('passengerSpace', e.target.value)}
             >
-              {[1, 2, 3, 4, 5].map((n) => (
+              {seatOptions.map((n) => (
                 <option key={n} value={n}>
-                  {n === 5 ? '5+' : n}
+                  {n === 0 ? (isDriver ? '0 — cargo space only' : '0 — cargo only') : n === 5 ? '5+' : n}
                 </option>
               ))}
             </select>
           </div>
+        )}
 
+        {isDriver ? (
           <div className="field-group">
             <label htmlFor="field-cargo">Cargo space</label>
             <select
@@ -376,23 +408,25 @@ export default function ListingForm({
               ))}
             </select>
           </div>
-        </div>
-      ) : (
-        <div className="field-group">
-          <label htmlFor="field-rider-stuff">How much stuff are you bringing?</label>
-          <select
-            id="field-rider-stuff"
-            value={state.riderStuff}
-            onChange={(e) => set('riderStuff', e.target.value as Belongings)}
-          >
-            {BELONGINGS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+        ) : (
+          <div className="field-group">
+            <label htmlFor="field-rider-stuff">
+              {isCargo ? 'How much stuff needs moving?' : 'How much stuff are you bringing?'}
+            </label>
+            <select
+              id="field-rider-stuff"
+              value={state.riderStuff}
+              onChange={(e) => set('riderStuff', e.target.value as Belongings)}
+            >
+              {BELONGINGS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
 
       {isDriver && (
         <div className="field-group">

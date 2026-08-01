@@ -531,6 +531,18 @@ button.admin-stat:hover {
   white-space: pre-wrap;
 }
 
+.admin-msg-photo {
+  display: inline-block;
+  max-width: 120px;
+  margin-top: var(--sp-1);
+}
+
+.admin-msg-photo img {
+  display: block;
+  width: 100%;
+  border-radius: var(--r-sm);
+}
+
 .admin-shared {
   display: inline-flex;
   flex-wrap: wrap;

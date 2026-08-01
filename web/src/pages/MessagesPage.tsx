@@ -31,8 +31,12 @@ export default function MessagesPage() {
         {conversations.map((c) => {
           const cancelled = Boolean(c.listing.cancelledAt);
           const unread = c.unreadCount > 0;
+          // A photo sent without a caption has no text to preview, so say what
+          // it is rather than leaving the row blank.
           const previewText = c.lastMessage
-            ? `${c.lastMessage.isMine ? 'You: ' : ''}${c.lastMessage.body}`
+            ? `${c.lastMessage.isMine ? 'You: ' : ''}${
+                c.lastMessage.body || (c.lastMessage.hasPhoto ? '📷 Photo' : '')
+              }`
             : 'No messages yet';
           const when = c.lastMessage ? timeAgo(c.lastMessage.createdAt) : timeAgo(c.createdAt);
 

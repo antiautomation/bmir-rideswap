@@ -17,6 +17,7 @@ import { listingRoutes } from './routes/listings.js';
 import { adminRoutes, webhookRoutes } from './routes/admin.js';
 import { adminOutreachRoutes } from './routes/adminOutreach.js';
 import { avatarRoutes } from './routes/avatar.js';
+import { messagePhotoRoutes } from './routes/messagePhoto.js';
 import { magicRoutes } from './routes/magic.js';
 import { matchRoutes } from './routes/matches.js';
 import { sessionRoutes } from './routes/session.js';
@@ -93,6 +94,7 @@ async function main(): Promise<void> {
   app.route('/api', conversationRoutes);
   app.route('/api', matchRoutes);
   app.route('/api', avatarRoutes);
+  app.route('/api', messagePhotoRoutes);
   app.route('/api', adminRoutes);
   app.route('/api', adminOutreachRoutes);
   app.route('/api', webhookRoutes);

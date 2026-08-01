@@ -1,9 +1,12 @@
 import { BELONGINGS_ORDER, type Belongings, type Direction, type Listing } from '../api/types';
 import { isExpired } from './expiry';
+import { isCargoOnly } from './format';
 
 export interface FilterState {
   direction: 'all' | Direction;
-  kind: 'all' | 'drivers' | 'riders';
+  /** 'cargo' cuts across both sides rather than picking one — a cargo-only post
+   *  is still a driver or a rider, just one with no seats. */
+  kind: 'all' | 'drivers' | 'riders' | 'cargo';
   day: 'all' | string; // YYYY-MM-DD
   locationQuery: string;
   capacity: 'any' | Belongings;
@@ -61,7 +64,9 @@ interface MatchScope {
   /** Facets whose own filter to ignore. */
   skip?: readonly Facet[];
   /** Apply the drivers/riders toggle. The board honours it by hiding a whole
-   *  column instead, so it leaves this off; option building needs it applied. */
+   *  column instead, so it leaves this off; option building needs it applied.
+   *  The 'cargo' pick is exempt — it spans both columns, so no column can be
+   *  hidden to honour it and it has to filter for real every time. */
   kind?: boolean;
 }
 
@@ -77,7 +82,9 @@ function matchesFilters(
   if (hidden.has(listing.id)) return false;
   if (!f.showExpired && isExpired(listing, now)) return false;
   if (f.direction !== 'all' && listing.direction !== f.direction) return false;
-  if (scope.kind && f.kind !== 'all') {
+  if (f.kind === 'cargo') {
+    if (!isCargoOnly(listing)) return false;
+  } else if (scope.kind && f.kind !== 'all') {
     if (listing.type !== (f.kind === 'drivers' ? 'driver' : 'rider')) return false;
   }
   if (!skip.includes('day') && f.day !== 'all' && listing.travelDate !== f.day) return false;

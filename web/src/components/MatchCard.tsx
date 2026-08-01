@@ -18,7 +18,7 @@ function scoreTier(score: number): 'ok' | 'ember' | 'dim' {
 }
 
 /** Only dimensions that actually earned points get a pill — highest threshold wins per dimension. */
-function reasonPills(reasons: MatchReasons): string[] {
+function reasonPills(reasons: MatchReasons, cargoHaul: boolean): string[] {
   const pills: string[] = [];
 
   // dateDelta is authoritative — point thresholds shift whenever an admin tunes
@@ -51,6 +51,14 @@ function reasonPills(reasons: MatchReasons): string[] {
   else if (reasons.capacity >= 12) pills.push('🎒 Gear fits');
   else if (reasons.capacity >= 8) pills.push('🎒 Plenty of room');
 
+  // Seats never earn points — a shortfall is already a hard reject — so this
+  // reads the fit directly. Absent on rows computed before seats were matched.
+  // A rider needing zero seats is a gear haul, where seat fit says nothing.
+  if (cargoHaul) pills.push('📦 Cargo only');
+  else if (typeof reasons.seatFit === 'number') {
+    pills.push(reasons.seatFit === 0 ? '💺 Seats exactly fit' : '💺 Seats to spare');
+  }
+
   if (reasons.timing) {
     if (reasons.timing === 'aligned') pills.push('🕐 Times align');
     else if (reasons.timing === 'partial') pills.push('🕐 Flexible timing');
@@ -65,7 +73,10 @@ function reasonPills(reasons: MatchReasons): string[] {
 export default function MatchCard({ match, onMessage, isFavorite, onToggleFavorite, isHidden, onToggleHidden }: MatchCardProps) {
   const { listing, myListing } = match;
   const isDriver = listing.type === 'driver';
-  const pills = reasonPills(match.reasons);
+  // Whichever side of the pair is the rider is the one whose seat count decides
+  // whether this pairing is about people or purely about gear.
+  const riderSide = isDriver ? myListing : listing;
+  const pills = reasonPills(match.reasons, riderSide.passengerSpace === 0);
 
   return (
     <article className={isHidden ? 'card match-card match-card--hidden' : 'card match-card'}>
@@ -108,7 +119,8 @@ export default function MatchCard({ match, onMessage, isFavorite, onToggleFavori
       )}
 
       <p className="match-context">
-        Matches your &ldquo;{myListing.name}&rdquo; {myListing.type} listing
+        Matches your &ldquo;{myListing.name}&rdquo;{' '}
+        {myListing.passengerSpace === 0 ? 'cargo' : myListing.type} listing
       </p>
 
       <div className="card-footer">

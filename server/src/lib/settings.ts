@@ -12,6 +12,7 @@ export const RATE_LIMIT_DEFAULTS = {
   newConversationsPerHour: 5,
   listingFlagsPerHour: 10,
   avatarUploadsPerHour: 10,
+  messagePhotosPerHour: 20,
   anonSessionsPerHour: 10,
   recoveriesPerHour: 5,
   magicLinksPerHour: 30,

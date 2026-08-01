@@ -14,7 +14,9 @@ export interface DigestConversation {
   context: string;
   messages: {
     senderName: string;
+    /** '' when the message is nothing but a photo. */
     body: string;
+    hasPhoto: boolean;
     sharedEmail: string | null;
     sharedPhone: string | null;
     createdAt: Date;
@@ -26,6 +28,8 @@ export interface DigestMatch {
   myListingName: string;
   theirName: string;
   theirType: 'driver' | 'rider';
+  /** Seats offered/needed; 0 makes this a cargo-only post. */
+  theirPassengerSpace: number;
   travelDate: string; // YYYY-MM-DD
   location: string;
   score: number;
@@ -113,7 +117,11 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
           return `
           <div style="margin-bottom:10px;">
             <div style="font-weight:bold;font-size:14px;color:#2a2a2a;">${esc(m.senderName)}</div>
-            <div style="font-size:14px;color:#333;line-height:1.4;">${escBody(m.body)}</div>
+            <div style="font-size:14px;color:#333;line-height:1.4;">${m.body ? escBody(m.body) : ''}${
+              m.hasPhoto
+                ? `${m.body ? '<br>' : ''}<span style="color:#666;">📷 Photo &mdash; open the thread to see it</span>`
+                : ''
+            }</div>
             <div style="font-size:12px;color:#999;margin-top:2px;">${esc(formatTimestamp(m.createdAt))}</div>
             ${contactHtml}
           </div>`;
@@ -139,7 +147,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
         ${newMatches
           .map((m) =>
             card(`
-              <div style="font-size:14px;font-weight:bold;color:#2a2a2a;">${esc(m.theirName)} &middot; ${listingTypeLabel(m.theirType)}</div>
+              <div style="font-size:14px;font-weight:bold;color:#2a2a2a;">${esc(m.theirName)} &middot; ${listingTypeLabel(m.theirType, m.theirPassengerSpace)}</div>
               <div style="font-size:13px;color:#555;margin-top:2px;">${esc(matchDate(m.travelDate))} &middot; ${esc(m.location)} &middot; matches your &quot;${esc(m.myListingName)}&quot; listing</div>
               <div style="font-size:12px;color:#999;margin-top:2px;">Match strength ${m.score}/100</div>
               ${button(link(`/listing/${m.listingId}`), 'View & message →')}
@@ -190,7 +198,10 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
       const lines: string[] = [];
       lines.push(`── ${conv.counterpartName} · about ${conv.context}`);
       for (const m of conv.messages) {
-        lines.push(`${m.senderName}: ${m.body}`);
+        // No image is embedded — there's no attachment/CID path in the SES
+        // sender, so a photo-only message points at the thread instead.
+        const photoNote = m.hasPhoto ? `${m.body ? ' ' : ''}[📷 Photo — open the thread to see it]` : '';
+        lines.push(`${m.senderName}: ${m.body}${photoNote}`);
         lines.push(`  (${formatTimestamp(m.createdAt)})`);
         if (m.sharedEmail || m.sharedPhone) {
           const parts: string[] = [];
@@ -216,7 +227,7 @@ export function renderDigest(input: DigestInput): { subject: string; html: strin
           .concat(
             newMatches.map(
               (m) =>
-                `── ${m.theirName} · ${listingTypeLabel(m.theirType)} · ${matchDate(m.travelDate)} · ${m.location} (matches "${m.myListingName}", strength ${m.score}/100)\n   View & message: ${link(`/listing/${m.listingId}`)}`,
+                `── ${m.theirName} · ${listingTypeLabel(m.theirType, m.theirPassengerSpace)} · ${matchDate(m.travelDate)} · ${m.location} (matches "${m.myListingName}", strength ${m.score}/100)\n   View & message: ${link(`/listing/${m.listingId}`)}`,
             ),
           )
           .concat(extraMatchCount > 0 ? [`…and ${extraMatchCount} more: ${link('/matches')}`] : [])

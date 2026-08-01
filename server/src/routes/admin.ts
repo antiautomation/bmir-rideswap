@@ -352,7 +352,8 @@ adminRoutes.get('/admin/users/:id', async (c) => {
   const convIds = convRows.map((r) => r.conv.id);
   const allMessages = convIds.length
     ? await db.execute(sql`
-        SELECT m.id, m.conversation_id, m.sender_user_id, m.body, m.shared_email, m.shared_phone, m.created_at,
+        SELECT m.id, m.conversation_id, m.sender_user_id, m.body, m.photo_id,
+               m.shared_email, m.shared_phone, m.created_at,
                u.name AS sender_name
         FROM messages m JOIN users u ON u.id = m.sender_user_id
         WHERE m.conversation_id IN (SELECT unnest(ARRAY[${sql.join(convIds.map((cid) => sql`${cid}::uuid`), sql`, `)}]))
@@ -419,6 +420,7 @@ adminRoutes.get('/admin/users/:id', async (c) => {
           fromThisUser: String(m.sender_user_id) === id,
           senderName: String(m.sender_name ?? ''),
           body: String(m.body),
+          hasPhoto: m.photo_id != null,
           sharedEmail: (m.shared_email as string | null) ?? null,
           sharedPhone: (m.shared_phone as string | null) ?? null,
           createdAt: new Date(m.created_at as string).toISOString(),
@@ -568,7 +570,7 @@ adminRoutes.get('/admin/messages', async (c) => {
   requireAdmin(c);
   const limit = Math.min(Number(c.req.query('limit') ?? '100') || 100, 200);
   const result = await db.execute(sql`
-    SELECT m.id, m.body, m.shared_email, m.shared_phone, m.created_at, m.conversation_id,
+    SELECT m.id, m.body, m.photo_id, m.shared_email, m.shared_phone, m.created_at, m.conversation_id,
            s.id AS sender_id, s.name AS sender_name, (s.banned_at IS NOT NULL) AS sender_banned,
            r.id AS recipient_id, r.name AS recipient_name,
            l.name AS listing_name, l.id AS listing_id
@@ -583,6 +585,9 @@ adminRoutes.get('/admin/messages', async (c) => {
     messages: (result.rows as Record<string, unknown>[]).map((m) => ({
       id: String(m.id),
       body: String(m.body),
+      // Attachments are user-generated content on a public board, so moderation
+      // has to be able to see them, not just the text around them.
+      hasPhoto: m.photo_id != null,
       sharedEmail: (m.shared_email as string | null) ?? null,
       sharedPhone: (m.shared_phone as string | null) ?? null,
       createdAt: new Date(m.created_at as string).toISOString(),

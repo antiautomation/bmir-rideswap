@@ -27,14 +27,14 @@ export default function HelpPage() {
       <h2>How to use RideFinder</h2>
       <ol className="help-steps">
         <li>
-          <strong>Browse the board.</strong> The front page lists drivers offering seats and
-          riders looking for them. Filter by direction (to or from Black Rock City), date, and
+          <strong>Browse the board.</strong> The front page lists drivers offering space and
+          riders looking for it. Filter by direction (to or from Black Rock City), date, and
           departure area — or just scroll.
         </li>
         <li>
-          <strong>Post your ride.</strong> Hit <em>Post</em>, pick driver or rider, and fill in
-          your name (playa names welcome), city, travel date, how many seats or how much gear
-          space you&rsquo;ve got, and an email so replies can reach you. No account, no password
+          <strong>Post your ride.</strong> Hit <em>Post</em>, pick driver, rider or cargo, and
+          fill in your name (playa names welcome), city, travel date, how many seats or how much
+          gear space you&rsquo;ve got, and an email so replies can reach you. No account, no password
           — posting quietly creates a session on your device.
         </li>
         <li>
@@ -117,6 +117,19 @@ export default function HelpPage() {
           Drivers have a vehicle and seats to fill; riders need a seat. Pick whichever you are
           for that trip. Offering a ride up but need one back? Post two listings — one per
           direction, one per role.
+        </p>
+      </QA>
+      <QA q="What if I only need my stuff moved?">
+        <p>
+          Pick <em>📦 Cargo</em> when you post. It&rsquo;s a rider listing with zero seats — you
+          fly into Reno, your bins and bike ride up with someone else. Say honestly how much
+          there is; matching pairs it against what drivers say they can take.
+        </p>
+        <p>
+          The reverse works too: if you&rsquo;re driving with a full cab but an empty trailer,
+          post as a <em>driver</em> and set seats to <em>0 — cargo space only</em>. You&rsquo;ll
+          stop showing up for people who need somewhere to sit, and start showing up for people
+          who just need their gear hauled.
         </p>
       </QA>
       <QA q="What do the fields mean (gear space, time window)?">

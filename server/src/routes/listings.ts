@@ -80,7 +80,10 @@ const createSchema = z
     timeSlot: timeSlotSchema,
     details: z.string().max(1000).optional(),
     campInfo: z.string().max(1000).optional(),
-    passengerSpace: z.number().int().min(1).max(5).optional(),
+    // Seats offered (driver) or needed (rider); 0 on either side = cargo only.
+    // Still optional on the wire so a stale cached client, which only ever sent
+    // this for drivers, keeps working — the handler defaults it to 1.
+    passengerSpace: z.number().int().min(0).max(5).optional(),
     cargoSpace: belongingsSchema.optional(),
     routeDetails: z.string().max(1000).optional(),
     riderStuff: belongingsSchema.optional(),
@@ -95,9 +98,6 @@ const createSchema = z
   })
   .superRefine((data, ctx) => {
     if (data.type === 'driver') {
-      if (data.passengerSpace === undefined) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'passenger_space_required', path: ['passengerSpace'] });
-      }
       if (data.cargoSpace === undefined) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'cargo_space_required', path: ['cargoSpace'] });
       }
@@ -116,7 +116,7 @@ const updateSchema = z.object({
   timeSlot: timeSlotSchema.optional(),
   details: z.string().max(1000).optional(),
   campInfo: z.string().max(1000).optional(),
-  passengerSpace: z.number().int().min(1).max(5).optional(),
+  passengerSpace: z.number().int().min(0).max(5).optional(),
   cargoSpace: belongingsSchema.optional(),
   routeDetails: z.string().max(1000).optional(),
   riderStuff: belongingsSchema.optional(),
@@ -150,6 +150,7 @@ async function sendPostConfirmation(
     recipientName: user.name,
     listingId: listing.id,
     listingType: listing.type,
+    passengerSpace: listing.passengerSpace,
     travelDate: listing.travelDate,
     magicToken: await mintMagicToken(user.id),
     recoveryCode: user.recoveryCode,
@@ -296,7 +297,9 @@ listingRoutes.post(
       timeSlot: body.timeSlot,
       details: body.details ?? null,
       campInfo: body.campInfo ?? null,
-      passengerSpace: isDriver ? (body.passengerSpace ?? null) : null,
+      // Seats apply to both sides now. A stale client only ever sent this for
+      // drivers, so an absent value means the old implicit "one person".
+      passengerSpace: body.passengerSpace ?? 1,
       cargoSpace: isDriver ? (body.cargoSpace ?? null) : null,
       routeDetails: isDriver ? (body.routeDetails ?? null) : null,
       riderStuff: isDriver ? null : (body.riderStuff ?? null),
@@ -343,7 +346,8 @@ listingRoutes.patch(
     const mergedCargoSpace = body.cargoSpace ?? row.cargoSpace;
     const mergedRiderStuff = body.riderStuff ?? row.riderStuff;
 
-    if (row.type === 'driver' && (mergedPassengerSpace === null || mergedCargoSpace === null)) {
+    // Seats are non-null on every row now, so only the gear half is conditional.
+    if (row.type === 'driver' && mergedCargoSpace === null) {
       throw new HTTPException(400, { message: 'invalid' });
     }
     if (row.type === 'rider' && mergedRiderStuff === null) {

@@ -34,3 +34,33 @@ export async function processAvatar(input: Buffer): Promise<{ full: Buffer; thum
 
   return { full, thumb };
 }
+
+const PHOTO_SIZE = 1280;
+const PHOTO_THUMB_SIZE = 320;
+
+/** Message attachments. Shares processAvatar's decompression-bomb guard and its
+ *  .rotate() call — which both bakes in EXIF orientation and, since sharp drops
+ *  metadata unless asked to keep it, strips the GPS tags off a phone photo
+ *  before it reaches anyone. The framing is the opposite of an avatar's, though:
+ *  fit 'inside' and no mask, because a photo of a trailer full of gear must not
+ *  be cropped to a circle. */
+export async function processMessagePhoto(
+  input: Buffer,
+): Promise<{ full: Buffer; thumb: Buffer; width: number; height: number }> {
+  const full = await sharp(input, { limitInputPixels: 50_000_000 })
+    .rotate()
+    .resize(PHOTO_SIZE, PHOTO_SIZE, { fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer();
+
+  // Read the dimensions back off the output rather than the input: rotation may
+  // have swapped them, and the client sizes its placeholder from these.
+  const meta = await sharp(full).metadata();
+
+  const thumb = await sharp(full)
+    .resize(PHOTO_THUMB_SIZE, PHOTO_THUMB_SIZE, { fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: 65 })
+    .toBuffer();
+
+  return { full, thumb, width: meta.width ?? 0, height: meta.height ?? 0 };
+}

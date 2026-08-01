@@ -3,9 +3,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { buildShareAndPatch, needsIntro, startConversation } from '../api/messages';
 import { useMe } from '../api/session';
 import { enqueue } from '../offline/outbox';
+import { useConnectivity } from '../offline/connectivity';
 import type { Listing, Me, SendMessageInput } from '../api/types';
 import { directionArrow, formatTravelDate } from '../lib/format';
 import PhoneInput from './PhoneInput';
+import PhotoAttach, { type AttachedPhoto } from './PhotoAttach';
 import { showToast } from './Toast';
 
 interface MessageComposerProps {
@@ -172,6 +174,10 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
   const [newPhone, setNewPhone] = useState('');
   const [introName, setIntroName] = useState(me?.name ?? '');
   const [introEmail, setIntroEmail] = useState('');
+  const [photo, setPhoto] = useState<AttachedPhoto | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  // Text queues offline; a photo cannot, since the bytes go up before the send.
+  const { status: connectivity } = useConnectivity();
 
   if (listing.isMine) return null;
 
@@ -179,7 +185,8 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
 
   function handleSubmit(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
-    if (!body.trim()) return;
+    // A photo on its own is a message; text alone still is too.
+    if ((!body.trim() && !photo) || uploadingPhoto) return;
 
     const { share, patch } = buildShareAndPatch(me, {
       shareEmail,
@@ -199,9 +206,11 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
     const input: SendMessageInput = {
       clientId: crypto.randomUUID(),
       body: body.trim(),
+      ...(photo ? { photoId: photo.photoId } : {}),
       share,
     };
 
+    if (photo) URL.revokeObjectURL(photo.previewUrl);
     startConversation(queryClient, listing.id, input);
 
     showToast(
@@ -240,11 +249,18 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
             <textarea
               id="composer-body"
               autoFocus
-              required
+              // Not required once a photo is attached — the photo is the message.
+              required={!photo}
               maxLength={2000}
               rows={4}
               value={body}
               onChange={(e) => setBody(e.target.value)}
+            />
+            <PhotoAttach
+              photo={photo}
+              onChange={setPhoto}
+              onUploadingChange={setUploadingPhoto}
+              disabled={connectivity === 'offline'}
             />
           </div>
 

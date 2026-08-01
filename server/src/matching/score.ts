@@ -38,6 +38,10 @@ export interface MatchReasons {
    *  spare, 2+ = lots. Same purpose as dateDelta — the client labels the pill
    *  from the fit itself, not from a points threshold that admin tuning moves. */
   capacityFit: number;
+  /** Seats offered minus seats needed: 0 = exactly full, higher = spare seats.
+   *  Display only — a shortfall is already a hard reject, so this never carries
+   *  points and no admin weight moves it. 0 on both sides is a cargo-only pair. */
+  seatFit: number;
   /** 'aligned' = both flexible or slot starts within 3h, 'partial' = exactly one
    *  side flexible, 'none' = slots don't overlap. */
   timing: 'aligned' | 'partial' | 'none';
@@ -118,6 +122,13 @@ export function scorePair(
   const cargo = BELONGINGS_RANK[driver.cargoSpace ?? ''] ?? 0;
   const stuff = BELONGINGS_RANK[rider.riderStuff ?? ''] ?? 0;
   if (cargo === 0 || stuff === 0 || stuff > cargo) return null;
+
+  // Seats reject like gear does: a party of three is not a match for a driver
+  // with one seat. This is also what makes cargo-only work in both directions —
+  // a 0-seat rider clears every driver, and a 0-seat driver (RV or trailer, no
+  // room up front) is correctly kept away from riders who need to sit down.
+  const seatFit = driver.passengerSpace - rider.passengerSpace;
+  if (seatFit < 0) return null;
 
   const dateDelta = Math.round(delta);
   const date =
@@ -200,7 +211,7 @@ export function scorePair(
   else if (dateDelta === 2) score = Math.min(score, matchingConfig('scoreCapTwoDaysApart'));
 
   if (score < matchingConfig('minMatchScore')) return null;
-  const reasons: MatchReasons = { date, location, capacity, time, fresh, dateDelta, capacityFit, timing };
+  const reasons: MatchReasons = { date, location, capacity, time, fresh, dateDelta, capacityFit, seatFit, timing };
   if (pickupDaysLater >= 1) reasons.pickupDaysLater = pickupDaysLater;
   if (detourMi !== undefined) reasons.detourMi = detourMi;
   return { score, reasons };
