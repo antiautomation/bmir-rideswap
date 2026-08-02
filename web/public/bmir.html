@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RideFinder — a one-page guide for BMIR</title>
+<meta name="description" content="How RideFinder works: auto-matching, private messaging, email digests, and offline use on playa." />
+<!-- Shared by link, deliberately not linked from the app. Keep it out of search results. -->
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#e4622f" />
+<link rel="icon" href="/favicon.svg" />
+
+<!--
+  Source of truth for /bmir.pdf. After editing, regenerate the PDF from Chrome:
+  Print → Destination "Save as PDF", Paper "Letter", Margins "None",
+  "Background graphics" ON → save over web/public/bmir.pdf.
+
+  The @media print rules are tuned to fill exactly one US Letter page — at 96dpi
+  that page box is 1056px. If document.documentElement.scrollHeight exceeds 1056
+  while print media is emulated, the PDF silently becomes two pages, so re-check
+  after any edit. Screen styles are free to reflow; only the print block is
+  size-critical.
+
+  A linear, paste-into-Google-Docs version of the same content lives at
+  /bmir-doc.html — keep the two in sync when the content changes.
+-->
+
+<style>
+  :root {
+    --ember: #ff6b35;
+    --ember-deep: #d1400d;
+    --ember-soft: #fff1ea;
+    --ink: #1b1815;
+    --ink-2: #4a423a;
+    --ink-3: #6f665c;
+    --rule: #e2d9cf;
+    --page: #ffffff;
+    --behind: #efe9e1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { background: var(--behind); }
+
+  body {
+    font-family: 'Liberation Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--page);
+    font-size: 15px;
+    line-height: 1.45;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 30px 34px 26px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @media (min-width: 940px) {
+    body { margin: 26px auto; min-height: 0; box-shadow: 0 2px 18px rgba(0,0,0,0.13); border-radius: 4px; }
+  }
+
+  /* ---------- header ---------- */
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 9px;
+    border-bottom: 2.5px solid var(--ember);
+    padding-bottom: 5px;
+  }
+  .wordmark { font-size: 30px; font-weight: 800; color: var(--ember-deep); letter-spacing: -0.4px; line-height: 1.1; }
+  .tagline { font-size: 14px; color: var(--ink-3); font-weight: 600; }
+  .site { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--ink); }
+
+  .subhead {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  .subhead strong { color: var(--ink); font-size: 14px; }
+  .subhead .right { margin-left: auto; }
+
+  /* Screen-only print affordance. */
+  .grab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 7px 13px;
+    background: var(--ember);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  .grab:hover { background: var(--ember-deep); }
+
+  /* ---------- the BMIR callout ---------- */
+  .callout {
+    margin-top: 12px;
+    background: var(--ember-soft);
+    border-left: 3.5px solid var(--ember);
+    border-radius: 3px;
+    padding: 11px 14px;
+  }
+  .callout h2 { font-size: 16px; color: var(--ember-deep); margin-bottom: 4px; }
+  .callout p { color: var(--ink-2); }
+  .callout p + p { margin-top: 5px; }
+
+  /* ---------- columns ---------- */
+  /* Multi-column, not grid: grid forces equal-height rows and strands whitespace
+     under the shorter section in each pair. Columns let the sections flow. */
+  .cols {
+    margin-top: 14px;
+    column-count: 2;
+    column-gap: 26px;
+    flex: 1;
+  }
+  @media (max-width: 720px) {
+    .cols { column-count: 1; }
+    body { padding: 22px 20px 20px; font-size: 15.5px; }
+    .site { margin-left: 0; width: 100%; }
+    .subhead .right { margin-left: 0; }
+  }
+
+  section { break-inside: avoid; margin-bottom: 13px; }
+
+  h3 {
+    font-size: 15.5px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  h3 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--ember);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    flex: none;
+  }
+
+  p { color: var(--ink-2); }
+  p + p { margin-top: 5px; }
+  b, strong { color: var(--ink); font-weight: 700; }
+
+  ul { list-style: none; }
+  li { position: relative; padding-left: 12px; color: var(--ink-2); margin-top: 4px; }
+  li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--ember);
+  }
+
+  ol.steps { list-style: none; counter-reset: s; }
+  ol.steps li { padding-left: 19px; margin-top: 5px; }
+  ol.steps li::before {
+    counter-increment: s;
+    content: counter(s);
+    background: none;
+    color: var(--ember-deep);
+    font-weight: 800;
+    font-size: 14px;
+    width: auto; height: auto;
+    border-radius: 0;
+    top: 0;
+  }
+
+  .chip {
+    display: inline-block;
+    background: #f4efe8;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .chip-row { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .privacy {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: #f7f3ee;
+    border-radius: 3px;
+    color: var(--ink-2);
+  }
+
+  .tight { margin-top: 6px; }
+
+  /* ---------- footer ---------- */
+  .footer {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.5;
+  }
+  .footer .big { font-size: 13px; color: var(--ink); font-weight: 700; }
+  .footer a { color: var(--ember-deep); }
+
+  /* ---------- print: exactly one US Letter page ---------- */
+  @page { size: Letter; margin: 0; }
+
+  @media print {
+    html { background: #fff; }
+    html, body { width: 8.5in; height: 11in; }
+    body {
+      margin: 0;
+      min-height: 0;
+      box-shadow: none;
+      border-radius: 0;
+      font-size: 9.1pt;
+      line-height: 1.38;
+      padding: 0.42in 0.5in 0.28in;
+    }
+    .no-print { display: none !important; }
+
+    .wordmark { font-size: 21pt; letter-spacing: -0.35px; }
+    .tagline, .site { font-size: 9.4pt; }
+    .subhead { font-size: 8.3pt; margin-top: 5px; }
+    .subhead strong { font-size: 9.2pt; }
+
+    .callout { margin-top: 9px; padding: 8px 11px; }
+    .callout h2 { font-size: 10pt; margin-bottom: 2.5px; }
+    .callout p + p { margin-top: 3px; }
+
+    .cols { margin-top: 7px; column-gap: 20px; column-count: 2; }
+    section { margin-bottom: 6px; }
+
+    h3 { font-size: 9.5pt; padding-bottom: 2.5px; margin-bottom: 4.5px; gap: 5px; }
+    h3 .num { width: 13px; height: 13px; font-size: 7.4pt; }
+
+    p + p { margin-top: 3.5px; }
+    li { padding-left: 10px; margin-top: 2.5px; }
+    li::before { top: 5px; }
+    ol.steps li { padding-left: 17px; margin-top: 3px; }
+    ol.steps li::before { font-size: 8.6pt; }
+
+    .chip { font-size: 7.8pt; padding: 0.5px 6px; border-radius: 9px; }
+    .chip-row { margin-top: 4px; gap: 3px; }
+    .privacy { margin-top: 4px; padding: 5px 8px; font-size: 8.5pt; }
+    .tight { margin-top: 4px; }
+
+    .footer { padding-top: 5px; font-size: 7.5pt; line-height: 1.45; }
+    .footer .big { font-size: 8.4pt; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <span class="wordmark">RideFinder</span>
+    <span class="tagline">rides to &amp; from Black Rock City</span>
+    <span class="site">ridefinder.site</span>
+  </div>
+  <div class="subhead">
+    <strong>A one-page guide for BMIR</strong>
+    <span>· free · no accounts · built by burners</span>
+    <span class="right">Version 2 · 2026</span>
+  </div>
+
+  <a class="grab no-print" href="/bmir.pdf">↓ Download the printable one-pager (PDF)</a>
+
+  <div class="callout">
+    <h2>Replacing the whiteboard</h2>
+    <p>BMIR is pointing participants to RideFinder instead of the ride-board whiteboard. A whiteboard
+      can only be read by someone standing in front of it — it can't match a rider to a driver, can't
+      tell you when someone answers, and vanishes the moment you walk away. RideFinder does all three,
+      and it still works with no signal.</p>
+    <p><b>A computer station is available at BMIR</b> for anyone whose phone is dead, dusty, or absent.
+      Nothing needs to be installed and there's no account to create — participants can post a ride, read
+      replies, and message a driver from that station in a couple of minutes, then pick the conversation
+      back up later on their own phone.</p>
+  </div>
+
+  <div class="cols">
+
+    <section>
+      <h3><span class="num">1</span> How it works</h3>
+      <ol class="steps">
+        <li><b>Browse.</b> Drivers offering seats on one side, riders looking for seats on the other.
+          Filter by direction (heading in / exodus), day, city, and how much gear a ride can take.
+          No login to look.</li>
+        <li><b>Post.</b> Pick Driver or Rider and fill in the basics — date, 3-hour departure window,
+          seats and gear. Posting is what creates your session; there is no signup screen.</li>
+        <li><b>Connect.</b> RideFinder matches your listing automatically, and you message people
+          privately inside the app.</li>
+      </ol>
+      <p class="tight"><b>Your session code</b> — something like <span class="chip">dusty-camel-8214</span>
+        — appears the first time you post. That code is the whole account. Type it into any other device
+        to bring your listings, matches, and messages with you.</p>
+    </section>
+
+    <section>
+      <h3><span class="num">2</span> Auto-matching</h3>
+      <p>Every time a listing is posted or edited, RideFinder scores it against every compatible listing
+        heading the same way. It weighs:</p>
+      <ul>
+        <li><b>Date</b> — how close the travel days are</li>
+        <li><b>Route</b> — not just same-city. It knows where Black Rock City is and measures the extra
+          miles a driver would drive to collect someone en route, so a rider on the way still matches</li>
+        <li><b>Gear</b> — whether the stuff physically fits in the vehicle</li>
+        <li><b>Timing</b> — whether the departure windows overlap</li>
+        <li><b>Freshness</b> — recently active listings rank higher</li>
+      </ul>
+      <p class="tight">Each match gets a <b>0–100 strength score</b> and explains itself in plain
+        English, so nobody has to trust a black box:</p>
+      <div class="chip-row">
+        <span class="chip">Same day</span><span class="chip">Same area</span>
+        <span class="chip">Gear fits</span><span class="chip">Times line up</span>
+      </div>
+      <p class="tight">Matches are listed best-first in the <b>Matches</b> tab, with a banner on
+        the board when new ones appear.</p>
+    </section>
+
+    <section>
+      <h3><span class="num">3</span> Private messaging</h3>
+      <p>Tap <b>Message</b> on any listing to start a conversation inside the app. No phone number, no
+        email address, no social handle.</p>
+      <div class="privacy">
+        <b>Contact details never appear on the public board.</b> Sharing is per message and off by
+        default — tick "share my email" or "share my phone" on one message and only that person receives
+        it, as a tappable text / call / email link. Everything else stays private, and you can keep
+        talking without ever sharing anything.
+      </div>
+      <p class="tight">This is the part a whiteboard can't do: no phone number written
+        in marker for the whole camp to read.</p>
+    </section>
+
+    <section>
+      <h3><span class="num">4</span> Email digest</h3>
+      <p>RideFinder emails from <b>matching@ridefinder.site</b> only when something actually happened —
+        a new message, or a new potential match. Each person picks the pace:</p>
+      <div class="chip-row">
+        <span class="chip">Instant</span><span class="chip">Hourly (default)</span>
+        <span class="chip">Daily</span><span class="chip">Never</span>
+      </div>
+      <p class="tight">Digests group messages by conversation and carry links that drop you
+        straight into the right thread, already signed in — handy if you posted from the BMIR station and
+        are reading on your phone later. Every email can change your frequency or unsubscribe.</p>
+    </section>
+
+    <section>
+      <h3><span class="num">5</span> It works offline</h3>
+      <p>The feature that matters most on playa. RideFinder installs to a phone's home screen like an app
+        and keeps working when the network doesn't:</p>
+      <ul>
+        <li>The app and the last board you loaded open <b>instantly, with or without signal</b></li>
+        <li>An amber bar tells you how stale the data is — <i>"Offline — showing rides from 23 min ago"</i>
+          — so you're never guessing</li>
+        <li>Anything you post or send while offline is queued as <b>"Waiting to sync"</b> and sends itself
+          exactly once when signal returns. Nothing is lost and nothing double-posts.</li>
+      </ul>
+      <p class="tight"><b>To install:</b> Android/Chrome — accept the "Install RideFinder" banner
+        or menu → Add to Home screen. iPhone/Safari — Share ↑ → Add to Home Screen. Best done in town,
+        before you're on the playa.</p>
+    </section>
+
+    <section>
+      <h3><span class="num">6</span> Good to know</h3>
+      <ul>
+        <li><b>Free.</b> No ads, no data selling, no accounts. A community project.</li>
+        <li><b>Deactivate your listing</b> once your ride is settled — it takes the post off the board but
+          keeps your messages. It's what keeps the board honest.</li>
+        <li>Up to 5 posts a day, 3 active per direction, so nobody floods the board.</li>
+        <li>Listings retire on their own a few hours after the travel window; "show recently expired"
+          brings back the last week.</li>
+        <li>Something off about a post? Report it from the ⋯ menu. Repeat reports hide it for review.</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span class="big">ridefinder.site</span> &nbsp;·&nbsp; questions &amp; feedback:
+    <a href="mailto:matching@ridefinder.site">matching@ridefinder.site</a>
+    &nbsp;·&nbsp; A fuller 9-page user manual is available for anyone staffing the station.<br />
+    Not affiliated with Burning Man Project or Black Rock City LLC. Ride at your own judgment — meet in
+    public spots for first pickups and trust your instincts, on and off playa. Leave no trace.
+  </div>
+
+</body>
+</html>
