@@ -43,18 +43,17 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Standalone docs (the BMIR one-pager and its paste-into-Docs twin) are
-        // shared by link and read once — no reason to ship them to every
-        // installed app's precache.
-        globIgnores: ['**/bmir.html', '**/bmir-doc.html'],
+        // The BMIR one-pager is shared by link and read once — no reason to ship
+        // it to every installed app's precache.
+        globIgnores: ['**/bmir.html'],
         navigateFallback: '/index.html',
-        // …and without the denylist entry the fallback would answer those URLs
-        // with the SPA shell, which has no route for them.
+        // …and without the denylist entry the fallback would answer that URL
+        // with the SPA shell, which has no route for it.
         navigateFallbackDenylist: [
           /^\/api\//,
           /^\/a\//,
           /^\/healthz/,
-          /^\/bmir(-doc)?\.html$/,
+          /^\/bmir\.html$/,
           /^\/bmir\.pdf$/,
         ],
         runtimeCaching: [
