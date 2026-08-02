@@ -43,8 +43,20 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Standalone docs (the BMIR one-pager and its paste-into-Docs twin) are
+        // shared by link and read once — no reason to ship them to every
+        // installed app's precache.
+        globIgnores: ['**/bmir.html', '**/bmir-doc.html'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/a\//, /^\/healthz/],
+        // …and without the denylist entry the fallback would answer those URLs
+        // with the SPA shell, which has no route for them.
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/a\//,
+          /^\/healthz/,
+          /^\/bmir(-doc)?\.html$/,
+          /^\/bmir\.pdf$/,
+        ],
         runtimeCaching: [
           // Thumbs are content-addressed via ?v={avatarVersion}, so cache-first is
           // safe: a new upload changes the URL, stale entries age out via expiration.
