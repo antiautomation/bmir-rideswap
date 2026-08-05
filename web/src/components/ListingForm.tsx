@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { EmailTakenNotice } from './EmailSignInLink';
 import LocationAutocomplete from './LocationAutocomplete';
 import PhoneInput from './PhoneInput';
+import { checkCity, type CityVerdict } from '../lib/cityCheck';
 import type {
   Belongings,
   CreateListingInput,
@@ -156,6 +157,17 @@ export default function ListingForm({
     buildInitialState(mode, initialType, initialDirection, initial),
   );
   const [errors, setErrors] = useState<FieldErrors>({});
+  /** Set when submit found the location isn't a known city — renders the
+   *  "did you mean" prompt instead of posting. */
+  const [cityPrompt, setCityPrompt] = useState<Extract<
+    CityVerdict,
+    { kind: 'suggest' } | { kind: 'unknown' }
+  > | null>(null);
+  /** Location value that no longer needs checking: it came back clean, the
+   *  user took the suggestion, or they insisted on their own words. Editing
+   *  the field naturally invalidates it (values stop matching). */
+  const [approvedLocation, setApprovedLocation] = useState<string | null>(null);
+  const [checkingCity, setCheckingCity] = useState(false);
   const honeypotRef = useRef<HTMLInputElement>(null);
 
   const today = todayLocalDate();
@@ -202,12 +214,30 @@ export default function ListingForm({
     return next;
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
+    // One soft gate before the post goes out: if the location isn't a city we
+    // know, ask once. Accepted, corrected, or offline — never a hard block.
+    const location = state.location.trim();
+    if (location !== approvedLocation && !checkingCity) {
+      setCheckingCity(true);
+      const verdict = await checkCity(location);
+      setCheckingCity(false);
+      if (verdict.kind !== 'clean') {
+        setCityPrompt(verdict);
+        return;
+      }
+      setApprovedLocation(location);
+    }
+
+    finishSubmit(location);
+  }
+
+  function finishSubmit(location: string): void {
     // Create: omit empty optional text (nothing to store). Edit: send '' so the
     // server actually clears the field — omitting means "keep the old text".
     const clearable = (value: string): string | undefined =>
@@ -216,7 +246,7 @@ export default function ListingForm({
     const shared = {
       direction: state.direction,
       name: state.name.trim(),
-      location: state.location.trim(),
+      location,
       travelDate: state.travelDate,
       timeSlot: state.timeSlot,
       details: clearable(state.details),
@@ -333,7 +363,11 @@ export default function ListingForm({
           required
           maxLength={80}
           value={state.location}
-          onChange={(v) => set('location', v)}
+          onChange={(v) => {
+            set('location', v);
+            // Any edit voids an open "did you mean" — it was about the old text.
+            if (cityPrompt) setCityPrompt(null);
+          }}
           ariaDescribedBy={errors.location ? 'error-location' : undefined}
           ariaInvalid={Boolean(errors.location)}
           placeholder={state.direction === 'to_brc' ? 'e.g. Oakland, CA' : 'e.g. Reno, NV'}
@@ -343,6 +377,50 @@ export default function ListingForm({
           <p id="error-location" className="field-error">
             {errors.location}
           </p>
+        )}
+        {cityPrompt && (
+          <div className="loc-confirm" role="alert">
+            <p>
+              &ldquo;{state.location.trim()}&rdquo; doesn&rsquo;t look like a city we know
+              {cityPrompt.kind === 'suggest' ? (
+                <>
+                  {' '}
+                  — did you mean <strong>{cityPrompt.city.label}</strong>?
+                </>
+              ) : (
+                <>. One major city name matches best.</>
+              )}
+            </p>
+            <div className="loc-confirm-actions">
+              {cityPrompt.kind === 'suggest' && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    const label = cityPrompt.city.label;
+                    set('location', label);
+                    setApprovedLocation(label);
+                    setCityPrompt(null);
+                    finishSubmit(label);
+                  }}
+                >
+                  Use {cityPrompt.city.label}
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => {
+                  const loc = state.location.trim();
+                  setApprovedLocation(loc);
+                  setCityPrompt(null);
+                  finishSubmit(loc);
+                }}
+              >
+                Post as typed
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -535,7 +613,7 @@ export default function ListingForm({
         </div>
       )}
 
-      <button type="submit" className="btn form-submit">
+      <button type="submit" className="btn form-submit" disabled={checkingCity}>
         {mode === 'create' ? 'Post listing' : 'Save changes'}
       </button>
     </form>
