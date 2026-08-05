@@ -6,9 +6,17 @@ import { db } from '../db/client.js';
 import { cities } from '../db/schema.js';
 import { normalizeLocation } from './listingRules.js';
 
-/* GeoNames US+CA cities (pop >15k, CC-BY) bundled as JSON and loaded into
-   Postgres on first boot. Powers the /api/cities typeahead and listing
-   geocoding for corridor ("on the way") matching. */
+/* City lookup powering the /api/cities typeahead and listing geocoding for
+   corridor ("on the way") matching. Two bundles:
+   - cities-na.json    — GeoNames US cities, pop >15k (CC-BY)
+   - cities-camx.json  — curated Canadian + Mexican cities (burners drive from
+     BC and Baja too). Names are ASCII-folded on purpose: normalizeLocation
+     turns accented characters into spaces, so "Montréal" could never match a
+     typed "montreal". State is a 2-letter code always — the normalizer strips
+     a trailing 2-letter token, which is what lets a pasted "Tijuana, MX" or
+     "Vancouver, BC" resolve back to its city. */
+
+const DATA_FILES = ['cities-na.json', 'cities-camx.json'];
 
 interface CityRow {
   n: string;
@@ -20,10 +28,19 @@ interface CityRow {
 }
 
 export async function ensureCitiesLoaded(): Promise<void> {
+  const dataDir = join(dirname(fileURLToPath(import.meta.url)), '../../data');
+  const rows: CityRow[] = [];
+  for (const file of DATA_FILES) {
+    rows.push(...(JSON.parse(await readFile(join(dataDir, file), 'utf8')) as CityRow[]));
+  }
+
+  // The table is a pure derivative of the bundled files (nothing else writes to
+  // it), so a size mismatch means a new bundle shipped — rebuild wholesale.
+  // A bare "already populated" check would strand production on the old list
+  // forever, since its table predates any addition.
   const [{ n }] = (await db.select({ n: count() }).from(cities)) as [{ n: number }];
-  if (n > 0) return;
-  const dataPath = join(dirname(fileURLToPath(import.meta.url)), '../../data/cities-na.json');
-  const rows = JSON.parse(await readFile(dataPath, 'utf8')) as CityRow[];
+  if (n === rows.length) return;
+
   const values = rows.map((r) => ({
     name: r.n,
     state: r.s,
@@ -33,10 +50,11 @@ export async function ensureCitiesLoaded(): Promise<void> {
     lng: r.lng,
     population: r.p,
   }));
+  await db.delete(cities);
   for (let i = 0; i < values.length; i += 500) {
     await db.insert(cities).values(values.slice(i, i + 500));
   }
-  console.log(`loaded ${values.length} cities`);
+  console.log(n > 0 ? `reloaded cities: ${n} -> ${values.length}` : `loaded ${values.length} cities`);
 }
 
 export interface CitySuggestion {
