@@ -320,7 +320,14 @@ export default function ListingForm({
       </div>
 
       <div className="field-group">
-        <label htmlFor="field-location">Where from / to?</label>
+        {/* The label follows the direction toggle above, so the field only ever
+            asks for ONE end of the trip — the old "Where from / to?" invited
+            people to type "Reno to BRC", which poisons route matching. */}
+        <label htmlFor="field-location">
+          {state.direction === 'to_brc'
+            ? 'What city are you leaving from?'
+            : 'What city are you headed to after BRC?'}
+        </label>
         <LocationAutocomplete
           id="field-location"
           required
@@ -329,11 +336,8 @@ export default function ListingForm({
           onChange={(v) => set('location', v)}
           ariaDescribedBy={errors.location ? 'error-location' : undefined}
           ariaInvalid={Boolean(errors.location)}
-          hint={
-            state.direction === 'to_brc'
-              ? 'Your actual departure city only — the app automatically finds people along your route. Adding anything else (neighborhoods, “to BRC”, notes) breaks that matching.'
-              : 'Your actual destination city only — where you\u2019re headed after the burn. The app automatically finds people along your route; adding anything else breaks that matching.'
-          }
+          placeholder={state.direction === 'to_brc' ? 'e.g. Oakland, CA' : 'e.g. Reno, NV'}
+          hint='One major city name, nothing else — matching automatically finds people along your whole route. Extra words ("to BRC", neighborhoods, notes) break it.'
         />
         {errors.location && (
           <p id="error-location" className="field-error">

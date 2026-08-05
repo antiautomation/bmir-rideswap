@@ -13,6 +13,8 @@ interface LocationAutocompleteProps {
   ariaDescribedBy?: string;
   /** Direction-aware guidance shown under the field. */
   hint?: string;
+  /** Example value shown in the empty field (e.g. "Oakland, CA"). */
+  placeholder?: string;
 }
 
 /**
@@ -28,6 +30,7 @@ export default function LocationAutocomplete({
   ariaInvalid,
   ariaDescribedBy,
   hint,
+  placeholder,
 }: LocationAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<City[]>([]);
   const [open, setOpen] = useState(false);
@@ -125,6 +128,7 @@ export default function LocationAutocomplete({
         role="combobox"
         required={required}
         maxLength={maxLength}
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
