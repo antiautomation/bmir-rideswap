@@ -68,6 +68,12 @@ export function initConnectivity(): void {
   if (initialized) return;
   initialized = true;
 
+  // A page can be LOADED offline — the service worker serves the whole app from
+  // cache, so nothing fails and the 'offline' event never fires (it only marks
+  // transitions). Without this seed, an app opened in the dust believes it is
+  // online until the first probe or hard failure.
+  if (!navigator.onLine) setStatus('offline');
+
   onRequestOutcome((ok) => setStatus(ok ? 'online' : 'offline'));
 
   window.addEventListener('offline', () => setStatus('offline'));

@@ -81,6 +81,12 @@ export default function BoardPage() {
   return (
     <>
       <h1 className="visually-hidden">Ride board</h1>
+      {/* Ahead of the filters on purpose: this renders once per visitor ever,
+          and its pitch — post before you browse — has to be the first thing a
+          newcomer reads, not paragraph one below a wall of controls they can't
+          use meaningfully yet. Everyone else never sees it, so the filters stay
+          on top for returning users. */}
+      <WelcomeCard />
       <FilterBar
         filters={filters}
         onChange={setFilters}
@@ -89,7 +95,6 @@ export default function BoardPage() {
         capacities={capacities}
       />
 
-      <WelcomeCard />
       <MatchesTeaser />
 
       {isError && listings.length > 0 && (

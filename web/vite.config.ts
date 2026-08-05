@@ -80,6 +80,18 @@ export default defineConfig({
               cacheableResponse: { statuses: [200] },
             },
           },
+          // Full-size photos cache on first view, so a photo opened with signal
+          // stays openable in the dust. Fewer entries than thumbs: these run
+          // 100-300 KB each, and only the ones someone actually tapped matter.
+          {
+            urlPattern: /\/api\/messages\/[^/]+\/photo$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'message-photos-full',
+              expiration: { maxEntries: 60, maxAgeSeconds: 30 * 86400 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // Workbox matches regexes against the full URL, not just the path.
             urlPattern: /\/api\/(listings|conversations|me|my)/,
@@ -87,7 +99,14 @@ export default defineConfig({
             options: {
               cacheName: 'api-cache',
               networkTimeoutSeconds: 8,
-              expiration: { maxEntries: 60, maxAgeSeconds: 86400 },
+              // 14 days, not 24h: the PWA's offline job is reading your
+              // conversations ON PLAYA, and the expiration plugin refuses to
+              // serve anything older than this — a 24h ceiling made every
+              // thread unreadable by day two of the burn. NetworkFirst still
+              // refreshes the moment there's signal; this only bounds how old
+              // an offline fallback may be, and the StatusBar already labels
+              // stale data with its age.
+              expiration: { maxEntries: 60, maxAgeSeconds: 14 * 86400 },
             },
           },
         ],

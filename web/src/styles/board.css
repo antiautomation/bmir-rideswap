@@ -455,9 +455,11 @@
    prefers-reduced-motion block, so every base position/opacity below is also
    the frozen frame and has to look intentional on its own. */
 
-/* Outer layer is the 1px gradient ring (border-image can't follow a radius). */
+/* Outer layer is the 1px gradient ring (border-image can't follow a radius).
+   Sits above the filters as the first thing a new visitor reads, so the gap
+   goes below it (the shell's padding already separates it from the header). */
 .welcome-banner {
-  margin-top: var(--sp-4);
+  margin-block: var(--sp-2) var(--sp-4);
   padding: 1px;
   border-radius: var(--r-lg);
   background: linear-gradient(120deg, var(--ember), var(--violet), var(--ember));

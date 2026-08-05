@@ -357,6 +357,27 @@
   cursor: default;
 }
 
+/* Thumb never arrived (usually: offline and this one wasn't viewed with
+   signal). Same reserved box, so the thread doesn't reflow when it resolves. */
+.message-photo--missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface);
+  cursor: default;
+  min-height: 72px;
+}
+
+.message-photo-missing-note {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  text-align: center;
+}
+
 .photo-attach {
   margin-top: var(--sp-2);
 }
