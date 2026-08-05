@@ -58,6 +58,14 @@ const POST_KINDS: { value: PostKind; label: string }[] = [
   { value: 'cargo', label: '📦 Cargo' },
 ];
 
+/** One line under the chips defining whichever is selected — the chip names
+ *  alone don't tell a newcomer what Cargo means. */
+const POST_KIND_HINTS: Record<PostKind, string> = {
+  driver: 'You have a vehicle with seats or cargo room to share.',
+  rider: 'You need a seat in someone else’s vehicle.',
+  cargo: 'Your gear needs the ride — you’re getting there another way.',
+};
+
 function postKindOf(type: ListingType, passengerSpace: string): PostKind {
   if (type === 'rider' && passengerSpace === '0') return 'cargo';
   return type;
@@ -294,7 +302,7 @@ export default function ListingForm({
       />
       {mode === 'create' && (
         <div className="field-group">
-          <span className="field-group-label">What are you posting?</span>
+          <span className="field-group-label">Who are you posting as?</span>
           <div className="seg seg-block" role="group" aria-label="Listing type">
             {POST_KINDS.map((kind) => (
               <button
@@ -307,6 +315,7 @@ export default function ListingForm({
               </button>
             ))}
           </div>
+          <p className="field-hint">{POST_KIND_HINTS[postKind]}</p>
         </div>
       )}
 
@@ -580,7 +589,8 @@ export default function ListingForm({
               aria-invalid={Boolean(emailError)}
             />
             <p id="hint-email" className="field-hint">
-              Required — it&rsquo;s how replies reach you. We&rsquo;ll email you once with your
+              Required — it&rsquo;s how replies reach you. <strong>Never shown to other users</strong>{' '}
+              unless you explicitly share it in a message. We&rsquo;ll email you once with your
               sign-in link when you post; after that, only the message &amp; match updates you
               choose. Unsubscribing forever is one click.
             </p>
