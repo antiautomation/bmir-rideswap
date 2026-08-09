@@ -10,7 +10,7 @@ import { allow, clientIp } from '../lib/rateLimit.js';
 import { appConfig, rateLimit } from '../lib/settings.js';
 import { normalizePhone } from '../lib/phone.js';
 import { computeExpiresAt, normalizeLocation, TIME_SLOT_RE } from '../lib/listingRules.js';
-import { geocodeLocation } from '../lib/cities.js';
+import { canonicalizeLocation, geocodeLocation } from '../lib/cities.js';
 import { mintMagicToken } from '../auth/magic.js';
 import { renderPostConfirmation } from '../email/postConfirmation.js';
 import { sendEmail } from '../email/ses.js';
@@ -278,8 +278,11 @@ listingRoutes.post(
       );
     if (activeSameDirectionRows[0]!.n >= appConfig('maxActiveListingsPerDirection')) throw new HTTPException(429, { message: 'active_limit' });
 
-    // Step 4: insert.
-    const locationNorm = normalizeLocation(body.location);
+    // Step 4: insert. A missed dropdown tap shouldn't strand "Reno" when
+    // "Reno, NV" is the only thing it can mean — and offline-queued posts
+    // never saw the dropdown at all, so this is the layer that guarantees it.
+    const location = (await canonicalizeLocation(body.location)) ?? body.location;
+    const locationNorm = normalizeLocation(location);
     const origin = await geocodeLocation(locationNorm);
     const expiresAt = computeExpiresAt(body.travelDate, body.timeSlot, body.direction, origin?.state ?? null);
     const isDriver = body.type === 'driver';
@@ -289,7 +292,7 @@ listingRoutes.post(
       type: body.type,
       direction: body.direction,
       name: body.name,
-      locationRaw: body.location,
+      locationRaw: location,
       locationNorm,
       originLat: origin?.lat ?? null,
       originLng: origin?.lng ?? null,
@@ -395,8 +398,11 @@ listingRoutes.patch(
 
     let origin: Awaited<ReturnType<typeof geocodeLocation>> | undefined;
     if (body.location !== undefined) {
-      updates.locationRaw = body.location;
-      updates.locationNorm = normalizeLocation(body.location);
+      // Same missed-dropdown-tap rule as create: an unambiguous "Reno" is
+      // stored as "Reno, NV".
+      const location = (await canonicalizeLocation(body.location)) ?? body.location;
+      updates.locationRaw = location;
+      updates.locationNorm = normalizeLocation(location);
       origin = await geocodeLocation(updates.locationNorm);
       updates.originLat = origin?.lat ?? null;
       updates.originLng = origin?.lng ?? null;

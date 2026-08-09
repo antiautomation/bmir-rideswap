@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { api } from '../api/client';
 import type { CitiesResponse, City } from '../api/types';
+import { namesCityExactly } from '../lib/location';
 
 interface LocationAutocompleteProps {
   id: string;
@@ -39,6 +40,10 @@ export default function LocationAutocomplete({
   // Set right before a programmatic value change (picking a suggestion) so the
   // fetch effect doesn't immediately reopen the dropdown for the chosen label.
   const skipFetch = useRef(false);
+  // Latest value, readable from the async blur resolution without re-binding it.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const resolveController = useRef<AbortController | undefined>(undefined);
 
   useEffect(() => {
     if (skipFetch.current) {
@@ -73,7 +78,43 @@ export default function LocationAutocomplete({
     };
   }, [value]);
 
-  useEffect(() => () => window.clearTimeout(blurTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(blurTimer.current);
+      resolveController.current?.abort();
+    },
+    [],
+  );
+
+  /** The missed-dropdown-tap rule, client half (the server enforces the same at
+   *  create/edit): leaving the field with text that names exactly one of its
+   *  suggestions outright adopts the canonical label — the poster sees "Reno"
+   *  become "Reno, NV" instead of finding out from an admin fixing it later.
+   *  Named-outright, not suggestion-count: trigram fuzz means "Reno" also
+   *  suggests El Reno, OK. Fetches fresh rather than trusting `suggestions`,
+   *  which lags the debounce and may belong to an earlier keystroke. */
+  function resolveIfUnique(): void {
+    const typed = valueRef.current;
+    const q = typed.trim();
+    if (q.length < 2) return;
+    resolveController.current?.abort();
+    const controller = new AbortController();
+    resolveController.current = controller;
+    api<CitiesResponse>(`/api/cities?q=${encodeURIComponent(q)}`, { signal: controller.signal })
+      .then((res) => {
+        const named = (res.cities ?? []).filter((c) => namesCityExactly(q, c));
+        if (named.length !== 1) return;
+        const city = named[0]!;
+        // The field may have been refocused and edited while this was in
+        // flight — never overwrite text the resolution wasn't asked about.
+        if (valueRef.current !== typed || city.label === typed) return;
+        skipFetch.current = true;
+        onChange(city.label);
+      })
+      .catch(() => {
+        // Offline or aborted — the server applies the same rule at post time.
+      });
+  }
 
   function pick(city: City): void {
     skipFetch.current = true;
@@ -133,6 +174,7 @@ export default function LocationAutocomplete({
         }}
         onBlur={() => {
           blurTimer.current = window.setTimeout(() => setOpen(false), 120);
+          resolveIfUnique();
         }}
         autoComplete="off"
         aria-expanded={open}
