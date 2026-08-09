@@ -422,9 +422,39 @@ button.admin-stat:hover {
   padding: var(--sp-1) var(--sp-2);
 }
 
+/* The listings table holds a fixed set of narrow fields; below this width the
+   columns crush into vertical letter-soup ("202/6-/08-/27"). The wrapper already
+   scrolls horizontally, so insist on room instead of wrapping. */
+.admin-table--listings {
+  min-width: 760px;
+}
+
+.admin-cell-nowrap {
+  white-space: nowrap;
+}
+
+.admin-cell-actions {
+  /* Wide enough for the longest action set (Unhide · Restore · Edit · Open) so
+     the row doesn't reflow when a state change swaps the buttons in and out. */
+  width: 1%;
+  white-space: nowrap;
+}
+
 .admin-actions {
   flex-wrap: wrap;
   gap: var(--sp-1);
+}
+
+/* In-table actions: one quiet line, not a 200px stack of full-height buttons. */
+.admin-cell-actions .admin-actions {
+  flex-wrap: nowrap;
+}
+
+.admin-cell-actions .btn-ghost,
+.admin-cell-actions .btn-danger {
+  height: 28px;
+  padding-inline: var(--sp-2);
+  font-size: var(--fs-xs);
 }
 
 /* ---------- Inline "link" buttons (drill-in from tables/threads into Users tab) ---------- */

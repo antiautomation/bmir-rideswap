@@ -47,17 +47,55 @@ export interface CitySuggestion {
   lng: number;
 }
 
+/** searchCities' first-pass normalization: lowercase, strip punctuation, collapse
+ *  whitespace — unlike normalizeLocation it keeps a trailing state abbreviation. */
+export function lightNormalize(raw: string): string {
+  return raw.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export async function searchCities(q: string, limit = 8): Promise<CitySuggestion[]> {
   // Light normalization only: normalizeLocation()'s trailing-2-letter drop is
   // for state abbreviations on complete inputs, but here it eats mid-word
   // typing ("san fr" → "san"). Fall back to the dropped form so a pasted
   // "Berkeley, CA" still finds Berkeley.
-  const light = q.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const light = lightNormalize(q);
   const results = await searchCitiesNorm(light, limit);
   if (results.length > 0) return results;
   const dropped = normalizeLocation(q);
   if (dropped && dropped !== light) return searchCitiesNorm(dropped, limit);
   return results;
+}
+
+/** Does the typed text name this city outright — the bare city name, or name +
+ *  state, in any casing/punctuation? A fuzzy hit ("Renoo") is not outright:
+ *  rewriting typos would guess, and a guess stored silently is worse than the
+ *  typo. Pure so it can be tested without a database. */
+export function namesCityExactly(raw: string, city: { name: string; state: string }): boolean {
+  const light = lightNormalize(raw);
+  return (
+    light === lightNormalize(city.name) ||
+    light === lightNormalize(`${city.name} ${city.state}`) ||
+    normalizeLocation(raw) === normalizeLocation(city.name)
+  );
+}
+
+/** The dropdown's missed-tap rule, enforced where it can't be missed: when the
+ *  typed text names exactly one of its suggestions outright, return that city's
+ *  canonical "Name, ST" label to store instead. Counting outright matches — not
+ *  raw suggestions — is the load-bearing part: trigram fuzz means "Reno" also
+ *  suggests El Reno, OK, but only one of those is what "Reno" says. Ambiguous
+ *  ("Springfield" names eight of them), fuzzy, or unknown text returns null and
+ *  the raw text stands — this is help, not validation, same as the typeahead. */
+export async function canonicalizeLocation(raw: string): Promise<string | null> {
+  const q = raw.trim();
+  if (q.length < 2) return null; // same floor as /api/cities
+  // Wider net than the dropdown's 8: more room to surface a second same-named
+  // city, and more results can only make "exactly one" stricter, never looser.
+  const results = await searchCities(q, 20);
+  const named = results.filter((city) => namesCityExactly(q, city));
+  if (named.length !== 1) return null;
+  const city = named[0]!;
+  return city.label === raw ? null : city.label;
 }
 
 async function searchCitiesNorm(norm: string, limit: number): Promise<CitySuggestion[]> {
