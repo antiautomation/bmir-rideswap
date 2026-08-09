@@ -911,14 +911,13 @@ function ListingsTab({
       )}
       {listings.data && (
         <div className="admin-table-wrap">
-          <table className="admin-table">
+          <table className="admin-table admin-table--listings">
             <thead>
               <tr>
                 <th>Type</th>
                 <th>Name</th>
                 <th>Location</th>
                 <th>Date</th>
-                <th>Owner</th>
                 <th>Flags</th>
                 <th>State</th>
                 <th>Actions</th>
@@ -929,30 +928,33 @@ function ListingsTab({
                 <tr key={l.id}>
                   <td>{l.type === 'driver' ? '🚗' : '🎒'}</td>
                   <td>
-                    <Link to={`/listing/${l.id}`}>{l.name}</Link>
-                  </td>
-                  <td>{l.locationRaw}</td>
-                  <td>{l.travelDate}</td>
-                  <td>
-                    {l.ownerId && (
+                    {/* One name, one destination: this drills into the owner
+                        (profile, all their posts); the listing itself is the
+                        Open ↗ action. A separate Owner column repeated the
+                        same name in nearly every row. */}
+                    {l.ownerId ? (
                       <button className="btn-ghost admin-inline-link" onClick={() => onViewUser(l.ownerId!)}>
-                        {l.ownerName}
+                        {l.name}
                       </button>
+                    ) : (
+                      l.name
                     )}
                     {l.ownerBanned && <span className="pill pill-warn">⛔</span>}
                   </td>
+                  <td>{l.locationRaw}</td>
+                  <td className="admin-cell-nowrap">{l.travelDate}</td>
                   <td>{l.flagCount > 0 ? <span className="pill pill-warn">{l.flagCount}</span> : l.flagCount}</td>
                   <td>
                     <StatePills l={l} />
                   </td>
-                  <td>
+                  <td className="admin-cell-actions">
                     <ListingActions listing={l} onChanged={refresh} />
                   </td>
                 </tr>
               ))}
               {listings.data.listings.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="muted">
+                  <td colSpan={7} className="muted">
                     No listings found.
                   </td>
                 </tr>
