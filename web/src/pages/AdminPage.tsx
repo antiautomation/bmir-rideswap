@@ -1148,6 +1148,10 @@ function MetricsTab() {
   const m = metrics.data;
   const maxVisitors = Math.max(1, ...m.traffic.map((r) => toNum(r.visitors)));
   const maxActivity = Math.max(1, ...m.activity.map((r) => toNum(r.new_listings) + toNum(r.messages)));
+  // The API returns days ascending; the admin reads these lists top-down for
+  // "how are we doing lately", so today belongs at the top.
+  const traffic = [...m.traffic].reverse();
+  const activity = [...m.activity].reverse();
 
   return (
     <div className="admin-detail">
@@ -1185,7 +1189,7 @@ function MetricsTab() {
       <section className="card">
         <h2>Traffic</h2>
         <div className="admin-chart">
-          {m.traffic.map((r) => (
+          {traffic.map((r) => (
             <div key={r.day} className="admin-chart-row">
               <span className="admin-chart-label">{new Date(r.day).toLocaleDateString()}</span>
               <div className="admin-chart-bars">
@@ -1197,14 +1201,14 @@ function MetricsTab() {
               </span>
             </div>
           ))}
-          {m.traffic.length === 0 && <p className="muted">No traffic recorded yet.</p>}
+          {traffic.length === 0 && <p className="muted">No traffic recorded yet.</p>}
         </div>
       </section>
 
       <section className="card">
         <h2>Activity</h2>
         <div className="admin-chart">
-          {m.activity.map((r) => (
+          {activity.map((r) => (
             <div key={r.day} className="admin-chart-row">
               <span className="admin-chart-label">{new Date(r.day).toLocaleDateString()}</span>
               <div className="admin-chart-bars">
@@ -1216,7 +1220,7 @@ function MetricsTab() {
               </span>
             </div>
           ))}
-          {m.activity.length === 0 && <p className="muted">No activity recorded yet.</p>}
+          {activity.length === 0 && <p className="muted">No activity recorded yet.</p>}
         </div>
       </section>
 
