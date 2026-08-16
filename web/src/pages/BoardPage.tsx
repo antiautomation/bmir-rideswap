@@ -17,11 +17,20 @@ import {
   type FilterState,
 } from '../lib/filters';
 import { useIdSet, useStoredState } from '../lib/prefs';
+import { isTerminal } from '../lib/terminal';
 
 export default function BoardPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useListings();
-  const [filters, setFilters] = useStoredState<FilterState>('ridefinder-filters-v1', DEFAULT_FILTERS);
+  // The entry console's audience is on playa arranging the ride OUT, so its
+  // board opens on the BRC → view — one less filter to learn at the station.
+  // The default only applies when nothing is stored, and every terminal reset
+  // wipes storage, so each walk-up user starts here while staying free to tap
+  // over to All or → BRC (their pick persists until the next reset).
+  const [filters, setFilters] = useStoredState<FilterState>(
+    'ridefinder-filters-v1',
+    isTerminal() ? { ...DEFAULT_FILTERS, direction: 'from_brc' } : DEFAULT_FILTERS,
+  );
   const favorites = useIdSet('ridefinder-favorites-v1');
   const hidden = useIdSet('ridefinder-hidden-v1');
   const [messageTarget, setMessageTarget] = useState<Listing | null>(null);
