@@ -31,6 +31,16 @@ const AUGUST_STATE_OFFSETS: Record<string, string> = {
   CA: '-07:00', NV: '-07:00', OR: '-07:00', WA: '-07:00',
   // Alaska (AKDT) / Hawaii (no DST)
   AK: '-08:00', HI: '-10:00',
+  // Canadian provinces (no code collides with a US state). SK skips DST.
+  BC: '-07:00', YT: '-07:00',
+  AB: '-06:00', SK: '-06:00',
+  MB: '-05:00',
+  ON: '-04:00', QC: '-04:00',
+  NS: '-03:00',
+  // Mexico carries one code for the whole country, so this is Baja/Pacific —
+  // by far the likeliest driving origin. Off by an hour or two for the
+  // interior, which only shifts expiry grace, not matching.
+  MX: '-07:00',
 };
 
 export type Direction = 'to_brc' | 'from_brc';
