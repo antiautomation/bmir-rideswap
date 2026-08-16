@@ -1,0 +1,55 @@
+/* BMIR entry console ("terminal") — the kiosk chrome around the ordinary app. */
+
+/* The always-on strip: mode name, THIS user's code, idle countdown, reset. It
+   shares the top block with the status bar and header, distinct on purpose —
+   staff and users should see at a glance that the machine is in console mode. */
+.terminal-banner {
+  /* Above page-content floaters (the city dropdown sits at z-index 20): the
+     station's chrome — code, timer, reset — must never be painted over. */
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--ember-soft);
+  border-bottom: 1px solid var(--border-strong);
+  font-size: var(--fs-sm);
+}
+
+.terminal-banner-title {
+  font-weight: 700;
+  color: var(--ember);
+  white-space: nowrap;
+}
+
+.terminal-banner-code strong {
+  font-family: var(--font-mono);
+  color: var(--ember);
+  letter-spacing: 0.04em;
+}
+
+.terminal-banner-spacer {
+  flex: 1;
+}
+
+.terminal-banner-timer {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The post-success handoff: the code is the entire point, so it gets the
+   largest type on the sheet; the fuse below it is calm, not alarming. */
+.terminal-posted-code {
+  font-size: var(--fs-2xl);
+}
+
+.terminal-posted-timer {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
