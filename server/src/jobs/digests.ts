@@ -125,7 +125,7 @@ async function digestForUser(user: UserRow, appOrigin: string): Promise<void> {
   }
 
   const activeListings = await db
-    .select({ id: listings.id, name: listings.name })
+    .select({ id: listings.id, direction: listings.direction })
     .from(listings)
     .where(and(eq(listings.userId, user.id), isNull(listings.deletedAt), isNull(listings.cancelledAt)))
     .limit(10);

@@ -85,6 +85,10 @@ export function listingTypeLabel(listingType: 'driver' | 'rider', passengerSpace
   return listingType === 'driver' ? '🚗 ride offer' : '🎒 ride request';
 }
 
+export function directionLabel(direction: 'to_brc' | 'from_brc'): string {
+  return direction === 'to_brc' ? 'to BRC' : 'from BRC';
+}
+
 export interface ShellInput {
   /** Used as <title>; not shown in the body. */
   title: string;
