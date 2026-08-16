@@ -41,7 +41,7 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
-      <div className="app-top">
+      <div className={isTerminal() ? 'app-top app-top--terminal' : 'app-top'}>
         <StatusBar />
         {isTerminal() && <TerminalBanner />}
         <Header />
