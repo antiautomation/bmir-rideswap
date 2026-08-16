@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMe } from '../api/session';
 import { useStoredState } from '../lib/prefs';
+import { isTerminal } from '../lib/terminal';
 
 /* Fixed spots rather than random: the reduced-motion frame is these exact
    positions frozen, so they have to read as deliberate decoration. They hug the
@@ -27,7 +28,11 @@ export default function WelcomeCard() {
   const { data: me, isLoading } = useMe();
   const [dismissed, setDismissed] = useStoredState('ridefinder-welcome-dismissed-v1', false);
 
-  if (dismissed || isLoading || me) return null;
+  // Having a session normally means "not new here" — but the entry console
+  // mints one eagerly just to show its code, so on the station only an actual
+  // dismissal hides the intro. Resets wipe the dismissal, so every walk-up
+  // user starts from it.
+  if (dismissed || isLoading || (me && !isTerminal())) return null;
 
   return (
     <div className="welcome-banner">

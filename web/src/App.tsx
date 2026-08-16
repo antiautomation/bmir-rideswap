@@ -10,6 +10,8 @@ import StatusBar from './components/StatusBar';
 import InstallPrompt from './components/InstallPrompt';
 import BannedScreen from './components/BannedScreen';
 import RadioPlayer from './components/RadioPlayer';
+import { TerminalBanner } from './components/TerminalChrome';
+import { isTerminal } from './lib/terminal';
 
 /** SPA navigation keeps the old scroll position — jump to the top on every
  *  route change. The board ('/') is exempt so returning to it (e.g. back from
@@ -41,6 +43,7 @@ export default function App() {
       <ScrollToTop />
       <div className="app-top">
         <StatusBar />
+        {isTerminal() && <TerminalBanner />}
         <Header />
       </div>
       <main className="app-main">
@@ -48,9 +51,11 @@ export default function App() {
         <Footer />
       </main>
       <RadioPlayer />
-      <InstallPrompt />
+      {/* The station is a shared machine: never invite installing the PWA on
+          it, and the terminal's own code displays replace the recovery modal. */}
+      {!isTerminal() && <InstallPrompt />}
       <TabBar />
-      <RecoveryCodeNotice />
+      {!isTerminal() && <RecoveryCodeNotice />}
       <ToastHost />
     </>
   );

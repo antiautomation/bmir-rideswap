@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import ListingForm, { type PostKind } from '../components/ListingForm';
+import { TerminalPostedModal } from '../components/TerminalChrome';
+import { isTerminal } from '../lib/terminal';
 import { createListing } from '../api/listings';
 import { useMe } from '../api/session';
 import { onOutboxFailure } from '../offline/outbox';
@@ -38,6 +40,9 @@ export default function PostPage() {
   const [emailTaken, setEmailTaken] = useState<string | null>(null);
   const [emailRequired, setEmailRequired] = useState(false);
   const [rejection, setRejection] = useState<string | null>(null);
+  /** Terminal mode ends a post in the write-your-code-down handoff instead of
+   *  a plain navigation home. */
+  const [terminalPosted, setTerminalPosted] = useState(false);
 
   // Posting needs an email now, so ask whenever the account hasn't got one — a
   // phone on file no longer satisfies the server.
@@ -83,6 +88,10 @@ export default function PostPage() {
       setRejection(friendlyRejection(rejectedCode));
       return;
     }
+    if (isTerminal()) {
+      setTerminalPosted(true);
+      return;
+    }
     navigate('/', { replace: true });
   }
 
@@ -99,10 +108,17 @@ export default function PostPage() {
           {rejection}
         </p>
       )}
+      {terminalPosted && <TerminalPostedModal />}
       <ListingForm
         mode="create"
         initialType={parseType(searchParams.get('type'))}
-        initialDirection={parseDirection(searchParams.get('direction'))}
+        // The station's audience is overwhelmingly people already ON playa
+        // arranging their ride OUT — defaulting the direction to "Leaving BRC"
+        // removes the most common entry error. An explicit ?direction= (the
+        // board column CTAs) still wins, and the toggle stays fully usable.
+        initialDirection={
+          parseDirection(searchParams.get('direction')) ?? (isTerminal() ? 'from_brc' : undefined)
+        }
         needsContact={needsContact}
         emailTaken={emailTaken}
         emailRequired={emailRequired}

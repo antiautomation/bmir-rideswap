@@ -11,6 +11,7 @@ import ThreadPage from './pages/ThreadPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import PrivacyPage from './pages/PrivacyPage';
+import TerminalPage from './pages/TerminalPage';
 import AboutPage from './pages/AboutPage';
 import HelpPage from './pages/HelpPage';
 
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: 'me', element: <ProfilePage /> },
       { path: 'admin', element: <AdminPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
+      { path: 'terminal', element: <TerminalPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: 'help', element: <HelpPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
