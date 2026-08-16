@@ -13,7 +13,13 @@
   gap: var(--sp-3);
   flex-wrap: wrap;
   padding: var(--sp-2) var(--sp-4);
-  background: var(--ember-soft);
+  /* The strip lives inside the sticky .app-top, which has no background of its
+     own — every child must paint opaquely or scrolled cards read through it.
+     --ember-soft alone is 15% alpha, so composite that tint over the page
+     background: same look, no bleed. */
+  background:
+    linear-gradient(var(--ember-soft), var(--ember-soft)),
+    var(--bg);
   border-bottom: 1px solid var(--border-strong);
   font-size: var(--fs-sm);
 }
@@ -39,6 +45,15 @@
   font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* The normal header is frosted glass on purpose (92% bg + blur) — subtle on a
+   phone, but on the station it reads as content bleeding through the chrome.
+   Kiosk legibility wins: the whole top block goes fully opaque in terminal
+   mode, and only there. */
+.app-top--terminal .header {
+  background: var(--bg);
+  backdrop-filter: none;
 }
 
 /* The post-success handoff: the code is the entire point, so it gets the
