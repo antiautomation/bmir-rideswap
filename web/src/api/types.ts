@@ -138,6 +138,20 @@ export interface ThreadResponse {
   messages: Message[];
 }
 
+/** The composer's "reuse last message" prefill. photoThumbUrl is keyed by the
+ *  previous MESSAGE's id (that's how photo routes address photos); the photoId
+ *  is what gets re-attached to the new message. Share fields are booleans —
+ *  the composer re-snapshots actual contact values at send time. */
+export interface LastSentMessage {
+  body: string;
+  photoId: string | null;
+  photoWidth: number | null;
+  photoHeight: number | null;
+  photoThumbUrl: string | null;
+  sharedEmail: boolean;
+  sharedPhone: boolean;
+}
+
 export interface SendMessageInput {
   clientId: string;
   body: string;

@@ -1,7 +1,14 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { api, ApiError } from './client';
 import { enqueue } from '../offline/outbox';
-import type { ConversationsResponse, Me, Message, SendMessageInput, ThreadResponse } from './types';
+import type {
+  ConversationsResponse,
+  LastSentMessage,
+  Me,
+  Message,
+  SendMessageInput,
+  ThreadResponse,
+} from './types';
 
 export function useConversations() {
   return useQuery({
@@ -26,6 +33,24 @@ export function useThread(id: string | undefined) {
     queryFn: () => api<ThreadResponse>(`/api/conversations/${id}`),
     refetchInterval: 15_000,
     enabled: Boolean(id),
+  });
+}
+
+/** The composer's "reuse last message" prefill. Mounted only while a composer
+ *  is open; a 401 (brand-new visitor with no session yet) just means there is
+ *  nothing to reuse. */
+export function useLastSentMessage() {
+  return useQuery({
+    queryKey: ['last-sent-message'],
+    queryFn: async (): Promise<{ message: LastSentMessage | null }> => {
+      try {
+        return await api<{ message: LastSentMessage | null }>('/api/me/last-sent-message');
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) return { message: null };
+        throw err;
+      }
+    },
+    staleTime: 0,
   });
 }
 
