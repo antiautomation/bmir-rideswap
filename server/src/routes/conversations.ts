@@ -116,10 +116,14 @@ async function findMessageByClientId(clientId: string): Promise<MessageRow | und
   return rows[0];
 }
 
-/** A photo id is a bearer token until it's attached, so attaching one has to
- *  prove two things: the uploader is the sender, and no earlier message already
- *  claimed it. Without the second check a guessed id could be re-attached into a
- *  conversation its subject never agreed to be in. */
+/** A photo id is a bearer token, so attaching one must prove the uploader is
+ *  the sender — that ownership check is the whole gate against a guessed id
+ *  being pulled into someone else's conversation. A photo MAY be attached to
+ *  more than one message by its owner: that is the "reuse last message" flow,
+ *  which re-sends the same stored bytes instead of forcing a re-upload, and it
+ *  costs nothing — every serving route resolves the photo through its own
+ *  message's participant check, and the orphan sweep only collects photos with
+ *  no message at all. */
 async function claimPhoto(photoId: string | undefined, senderId: string): Promise<PhotoMeta | null> {
   if (photoId === undefined) return null;
   const rows = await db
@@ -129,14 +133,6 @@ async function claimPhoto(photoId: string | undefined, senderId: string): Promis
     .limit(1);
   const photo = rows[0];
   if (!photo) throw new HTTPException(400, { message: 'invalid_photo' });
-
-  const already = await db
-    .select({ id: messages.id })
-    .from(messages)
-    .where(eq(messages.photoId, photoId))
-    .limit(1);
-  if (already[0]) throw new HTTPException(400, { message: 'photo_already_sent' });
-
   return photo;
 }
 
@@ -246,6 +242,44 @@ conversationRoutes.post(
     }
   },
 );
+
+/* The "reuse last message" prefill: people blasting the same intro to many
+ * listings were copy/pasting text and re-uploading the same photo every time.
+ * This returns the most recent message the caller sent, shaped for rebuilding
+ * composer state — body, the photo by reference (with the thumb URL, which is
+ * keyed by MESSAGE id, not photo id), and whether contact info was shared
+ * (booleans only; the composer re-snapshots the actual values at send). */
+conversationRoutes.get('/me/last-sent-message', async (c) => {
+  const user = requireUser(c);
+  const rows = await db
+    .select({
+      id: messages.id,
+      body: messages.body,
+      photoId: messages.photoId,
+      photoWidth: messagePhotos.width,
+      photoHeight: messagePhotos.height,
+      sharedEmail: messages.sharedEmail,
+      sharedPhone: messages.sharedPhone,
+    })
+    .from(messages)
+    .leftJoin(messagePhotos, eq(messages.photoId, messagePhotos.id))
+    .where(eq(messages.senderUserId, user.id))
+    .orderBy(desc(messages.createdAt))
+    .limit(1);
+  const m = rows[0];
+  if (!m) return c.json({ message: null });
+  return c.json({
+    message: {
+      body: m.body,
+      photoId: m.photoId,
+      photoWidth: m.photoWidth,
+      photoHeight: m.photoHeight,
+      photoThumbUrl: m.photoId ? `/api/messages/${m.id}/photo-thumb` : null,
+      sharedEmail: m.sharedEmail !== null,
+      sharedPhone: m.sharedPhone !== null,
+    },
+  });
+});
 
 conversationRoutes.get('/conversations', async (c) => {
   const user = requireUser(c);

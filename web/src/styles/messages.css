@@ -382,6 +382,14 @@
   margin-top: var(--sp-2);
 }
 
+/* "Reuse last message" — one tap refills the composer from the previous send. */
+.composer-reuse {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+
 .photo-attach-actions {
   display: flex;
   align-items: center;

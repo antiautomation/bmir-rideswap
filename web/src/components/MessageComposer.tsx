@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { buildShareAndPatch, needsIntro, startConversation } from '../api/messages';
+import { buildShareAndPatch, needsIntro, startConversation, useLastSentMessage } from '../api/messages';
 import { useMe } from '../api/session';
 import { enqueue } from '../offline/outbox';
 import { useConnectivity } from '../offline/connectivity';
@@ -178,10 +178,36 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   // Text queues offline; a photo cannot, since the bytes go up before the send.
   const { status: connectivity } = useConnectivity();
+  // People messaging many listings resend near-identical intros; one tap pulls
+  // the previous text, photo, and share choices back in, all still editable.
+  const { data: lastSent } = useLastSentMessage();
+  const [reuseApplied, setReuseApplied] = useState(false);
 
   if (listing.isMine) return null;
 
   const missing = needsIntro(me);
+  const last = lastSent?.message ?? null;
+  const canReuse = last !== null && !reuseApplied;
+
+  function handleReuse(): void {
+    if (!last) return;
+    setBody(last.body);
+    setPhoto(
+      last.photoId && last.photoThumbUrl && last.photoWidth !== null && last.photoHeight !== null
+        ? {
+            photoId: last.photoId,
+            width: last.photoWidth,
+            height: last.photoHeight,
+            // A server URL, not an object URL: the previous upload previews
+            // straight from the API (revokeObjectURL on it is a harmless no-op).
+            previewUrl: last.photoThumbUrl,
+          }
+        : null,
+    );
+    setShareEmail(last.sharedEmail);
+    setSharePhone(last.sharedPhone);
+    setReuseApplied(true);
+  }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
@@ -234,6 +260,18 @@ export default function MessageComposer({ listing, onClose }: MessageComposerPro
         </p>
 
         <form className="composer-form" onSubmit={handleSubmit}>
+          {canReuse && (
+            <div className="composer-reuse">
+              <button type="button" className="btn-secondary" onClick={handleReuse}>
+                ↩️ Reuse last message
+              </button>
+              <span className="field-hint">
+                Fills in your previous text{last?.photoId ? ', photo,' : ' and'} share settings —
+                edit anything before sending.
+              </span>
+            </div>
+          )}
+
           <IntroduceYourselfFields
             me={me}
             recipientName={listing.name}
